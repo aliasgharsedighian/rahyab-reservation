@@ -22,9 +22,9 @@ export const reserveBasketSlice = createSlice({
       );
       if (itemInCart) {
         // itemInCart.count++;
-        toast.error(
-          "آیتم در سبد شما موجود می باشد\n\n برای تغییرات به سبد خرید بروید.",
-        );
+        // toast.error(
+        //   "آیتم در سبد شما موجود می باشد\n\n برای تغییرات به سبد خرید بروید.",
+        // );
         return;
       }
       // else if (state.cart.length > 4) {
@@ -32,9 +32,9 @@ export const reserveBasketSlice = createSlice({
       //   return;
       // }
       else {
-        console.log(action.payload);
+        // console.log(action.payload);
         state.cart.push({ ...action.payload });
-        toast.success("آیتم به سبد شما اضافه شد.");
+        // toast.success("آیتم به سبد شما اضافه شد.");
       }
       // state.items = [...state.items, action.payload];
     },
@@ -61,8 +61,8 @@ export const reserveBasketSlice = createSlice({
     },
     decrementReserveCount: (state, action: PayloadAction<cartType>) => {
       const item = state.cart.find((item: any) => item.id === action.payload);
-      if (item.count === 1) {
-        item.count = 1;
+      if (item.count === 0) {
+        item.count = 0;
       } else {
         item.count--;
       }

@@ -9,7 +9,7 @@
     @apply rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10;
   }
   .max-width {
-    @apply max-w-[95vw] md:max-w-[92vw] xl:max-w-[86vw];
+    @apply max-w-[95vw] md:max-w-[93vw] xl:max-w-[90vw];
   }
   .text-dark {
     @apply text-[var(--main-dark-background)];
