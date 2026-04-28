@@ -2,11 +2,8 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
-import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const mainFont = localFont({
   src: "./components/iransanswebfanum.ttf",
@@ -47,12 +44,7 @@ export default function RootLayout({
     <html
       lang="fa"
       dir="rtl"
-      className={cn(
-        mainFont.variable,
-        boldFont.variable,
-        "font-sans",
-        geist.variable,
-      )}
+      className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
       <body>
         <ReduxProvider>

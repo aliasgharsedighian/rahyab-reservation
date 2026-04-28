@@ -39,8 +39,8 @@ function FoodReserveInvoice({
   }, []);
 
   const itemToBasket = {
-    id: food_id,
-    weekly_menu_id,
+    id: weekly_menu_id,
+    food_id,
     name,
     price,
     day,
@@ -67,7 +67,7 @@ function FoodReserveInvoice({
                   );
                 }, 100);
                 setTimeout(() => {
-                  dispatch(incrementReserveCount(food_id));
+                  dispatch(incrementReserveCount(weekly_menu_id));
                 }, 300);
               }}
             >
@@ -95,7 +95,7 @@ function FoodReserveInvoice({
               disabled={countInput <= 0}
               onClick={() => {
                 setCountInput((prev) => prev - 1);
-                dispatch(decrementReserveCount(food_id));
+                dispatch(decrementReserveCount(weekly_menu_id));
               }}
             >
               <svg
