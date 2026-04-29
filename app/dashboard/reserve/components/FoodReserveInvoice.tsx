@@ -5,6 +5,7 @@ import {
   addToReserveBasket,
   decrementReserveCount,
   incrementReserveCount,
+  removeFromReserveBasket,
   reserveSelectItems,
 } from "@/redux/features/reserveBasketSlice";
 import React, { useEffect, useState } from "react";
@@ -29,7 +30,8 @@ function FoodReserveInvoice({
     if (reserveCart.length === 0) {
       return;
     } else {
-      const item = reserveCart.find((item: any) => item.id === food_id);
+      const item = reserveCart.find((item: any) => item.id === weekly_menu_id);
+
       if (item) {
         setCountInput(item?.count);
       } else {
@@ -96,6 +98,10 @@ function FoodReserveInvoice({
               onClick={() => {
                 setCountInput((prev) => prev - 1);
                 dispatch(decrementReserveCount(weekly_menu_id));
+
+                if (countInput - 1 === 0) {
+                  dispatch(removeFromReserveBasket({ id: weekly_menu_id }));
+                }
               }}
             >
               <svg
