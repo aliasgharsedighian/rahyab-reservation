@@ -87,7 +87,7 @@ function DashboardPage() {
   };
   return (
     <div className="w-full block md:hidden">
-      <div className="flex flex-col">
+      {/* <div className="flex flex-col">
         {dashboardList.map((item) => (
           <Link
             className="flex items-center gap-4 border-b last:border-none p-3 hover:bg-gray-100 transition-all duration ease-out"
@@ -106,7 +106,7 @@ function DashboardPage() {
           <LogOutIcon className="size-5" />
           <p>خروج از حساب کاربری</p>
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }

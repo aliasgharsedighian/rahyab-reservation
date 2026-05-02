@@ -113,7 +113,7 @@ function FoodReserveCart({ revalidateData, refresh }: any) {
   };
 
   return (
-    <div className="flex flex-col w-full border rounded-md">
+    <div className="sticky top-10 flex flex-col w-full border rounded-md">
       <div className="bg-zinc-800 text-white p-2 rounded-t-md">
         <p>خلاصه رزرو هفته</p>
       </div>

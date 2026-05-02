@@ -3,6 +3,7 @@ import { refresh } from "next/cache";
 import { revalidatePath } from "next/cache";
 import FoodReserveCart from "./components/FoodReserveCart";
 import FoodReserveTabs from "./components/FoodReserveTabs";
+import ClientReservePage from "./components/ClientReservePage";
 
 interface Props {
   searchParams: Promise<{
@@ -50,15 +51,11 @@ export default async function ReservePage({ searchParams }: Props) {
 
   return (
     <div className="flex gap-6">
-      <div className="basis-8/12">
-        <FoodReserveTabs reserveList={reserveList} />
-      </div>
-      <div className="basis-4/12 w-full">
-        <FoodReserveCart
-          revalidateData={revalidateData}
-          refresh={refreshPage}
-        />
-      </div>
+      <ClientReservePage
+        reserveList={reserveList}
+        revalidateData={revalidateData}
+        refreshPage={refreshPage}
+      />
     </div>
   );
 }
