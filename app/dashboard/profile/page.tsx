@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import ClientProfilePage from "./components/ClientProfilePage";
 
 interface Props {
   searchParams: Promise<{
@@ -39,5 +40,9 @@ export default async function ProfilePage({ searchParams }: Props) {
     revalidatePath(`/dashboard/profile`);
   }
 
-  return <div>{profile.id}</div>;
+  return (
+    <div className="flex gap-6">
+      <ClientProfilePage profile={profile} revalidateData={revalidateData} />
+    </div>
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,21 +33,26 @@ import {
   ClockIcon,
   HomeIcon,
   ListIcon,
+  LogOutIcon,
   PanelRight,
   UserIcon,
   WalletIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDispatch } from "react-redux";
+import { logOut } from "@/redux/features/auth-slice";
+import logoutCookiesAction from "@/actions/logoutCookiesAction";
+import { toast } from "sonner";
 
 const dashboardList = [
-  {
-    id: 1,
-    accordion: false,
-    accordionLinks: [],
-    text: "خانه",
-    link: "/dashboard/home",
-    icon: <HomeIcon className="size-5 text-gray-500" />,
-  },
+  // {
+  //   id: 1,
+  //   accordion: false,
+  //   accordionLinks: [],
+  //   text: "خانه",
+  //   link: "/dashboard/home",
+  //   icon: <HomeIcon className="size-5 text-gray-500" />,
+  // },
   {
     id: 2,
     accordion: false,
@@ -63,12 +68,12 @@ const dashboardList = [
       {
         id: 1,
         text: "رزروهای گذشته",
-        href: "/dashboard/history-reserve",
+        href: "/dashboard/history-reserve?page=1",
       },
       {
         id: 2,
         text: "رزروهای پیش رو",
-        href: "/dashboard/upcoming-reserve",
+        href: "/dashboard/upcoming-reserve?page=1",
       },
     ],
     text: "تاریخچه رزروها",
@@ -95,6 +100,9 @@ const dashboardList = [
 
 function SidebarApp() {
   const pathname = usePathname();
+  const dispatch = useDispatch();
+  const [isPending, startTransition] = useTransition();
+  const { push } = useRouter();
 
   const {
     state,
@@ -108,9 +116,43 @@ function SidebarApp() {
 
   // const [openDropDown, setOpenDropDown] = useState(false);
 
+  const handleLogoutUser = () => {
+    const token = localStorage.getItem("token");
+    var myHeaders = new Headers();
+    myHeaders.append("Accept", "application/json");
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    startTransition(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_ADDRESS}auth/logout`,
+          {
+            method: "POST",
+            headers: myHeaders,
+            credentials: "include",
+          },
+        );
+        const result = await res.json();
+        if (result.status === 200) {
+          localStorage.removeItem("token");
+          dispatch(logOut());
+          logoutCookiesAction();
+          push("/");
+          toast.success(result.message);
+        } else {
+          localStorage.removeItem("token");
+          dispatch(logOut());
+          push("/");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+  };
+
   return (
     <Sidebar className="" side="right" variant="sidebar" collapsible="icon">
-      <SidebarHeader className="p-0 gap-0 flex flex-row w-full">
+      <SidebarHeader className="p-2 gap-0 flex flex-row w-full">
         {/* <Link
           href="/dashboard"
           className={` bg-white w-full py-3 items-center ${
@@ -120,7 +162,7 @@ function SidebarApp() {
           
         </Link> */}
         <Button
-          className="rounded-none h-full text-white"
+          className="rounded-none h-full text-black"
           onClick={toggleSidebar}
           variant={"ghost"}
         >
@@ -139,10 +181,10 @@ function SidebarApp() {
                     }
                   }}
                   key={item.id}
-                  className={`cursor-pointer hover:text-yellow-600 ${
+                  className={`cursor-pointer hover:text-black ${
                     pathname === item.link
-                      ? "text-yellow-600 font-IRANSansBold"
-                      : "text-black"
+                      ? "text-black font-IRANSansBold"
+                      : "text-zinc-700"
                   }`}
                 >
                   {item.icon}
@@ -150,10 +192,10 @@ function SidebarApp() {
               ) : (
                 <div
                   key={item.id}
-                  className={`w-full hover:text-yellow-600 ${
+                  className={`w-full hover:text-black ${
                     pathname.startsWith(item.link)
-                      ? "text-yellow-600 font-IRANSansBold"
-                      : "text-black"
+                      ? "text-black font-IRANSansBold"
+                      : "text-zinc-700"
                   }`}
                 >
                   <Accordion
@@ -165,7 +207,10 @@ function SidebarApp() {
                     <AccordionItem value="acceptors" className="border-none">
                       <AccordionTrigger className="font-IRANSansBold">
                         <SidebarMenuItem className="w-full" key={item.id}>
-                          <SidebarMenuButton asChild>
+                          <SidebarMenuButton
+                            className="h-full hover:bg-transparent"
+                            asChild
+                          >
                             <div>
                               {item.icon}
                               <span>{item.text}</span>
@@ -179,10 +224,10 @@ function SidebarApp() {
                             <Link
                               key={item.href}
                               href={item.href}
-                              className={`hover:text-yellow-600 ${
+                              className={`hover:black h-8 ${
                                 pathname === item.href
-                                  ? "text-yellow-600"
-                                  : "text-black"
+                                  ? "text-black"
+                                  : "text-zinc-700"
                               }`}
                             >
                               {item.text}
@@ -197,13 +242,13 @@ function SidebarApp() {
             ) : (
               <SidebarMenuItem
                 key={item.id}
-                className={`w-full hover:text-yellow-600 flex items-center justify-center ${
+                className={`w-full h-13.5 hover:text-yellow-600 flex items-center justify-center rounded-md ${
                   pathname === item.link
-                    ? "text-yellow-600 font-IRANSansBold"
-                    : "text-black"
+                    ? "text-black font-IRANSansBold bg-blue-100"
+                    : "text-zinc-700"
                 }`}
               >
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton className="h-full hover:bg-blue-100" asChild>
                   <Link href={item.link}>
                     {item.icon}
                     <span>{item.text}</span>
@@ -213,6 +258,17 @@ function SidebarApp() {
             ),
           )}
         </SidebarMenu>
+
+        {isMobile ? (
+          <Button
+            className="p-3 items-start justify-start gap-4 h-full text-[var(--main-red)]"
+            variant="ghost"
+            onClick={handleLogoutUser}
+          >
+            <LogOutIcon className="size-5" />
+            <p>خروج از حساب کاربری</p>
+          </Button>
+        ) : null}
       </SidebarContent>
     </Sidebar>
   );

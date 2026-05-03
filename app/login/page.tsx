@@ -47,7 +47,7 @@ function LoginPage() {
     values: z.infer<typeof signinFormSchema>,
   ) => {
     const copyData = { ...values };
-    console.log(copyData);
+    // console.log(copyData);
 
     try {
       startTransitionLogin(async () => {

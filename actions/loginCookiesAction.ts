@@ -10,7 +10,7 @@ export default async function loginCookiesAction(
   const cookieStore = await cookies();
   cookieStore.set("user_token", token);
   if (registered) {
-    redirect("/dashboard");
+    redirect("/dashboard/reserve");
   } else {
     redirect("/dashboard/profile");
   }

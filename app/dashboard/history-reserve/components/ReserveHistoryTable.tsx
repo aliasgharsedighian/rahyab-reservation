@@ -32,10 +32,10 @@ function ReserveHistoryTable({ reserveHistory }: any) {
             {item.quantity}
           </div>
           <div className="lg:col-span-3 p-2 border-l flex items-center">
-            {item.unit_price}
+            {item.unit_price.toLocaleString()}
           </div>
           <div className="lg:col-span-2 p-2 flex items-center">
-            {item.total_paid}
+            {item.total_paid.toLocaleString()}
           </div>
         </div>
       ))}

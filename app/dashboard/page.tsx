@@ -17,12 +17,12 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 const dashboardList = [
-  {
-    id: 1,
-    text: "خانه",
-    link: "/dashboard/home",
-    icon: <HomeIcon className="size-5 text-gray-500" />,
-  },
+  // {
+  //   id: 1,
+  //   text: "خانه",
+  //   link: "/dashboard/home",
+  //   icon: <HomeIcon className="size-5 text-gray-500" />,
+  // },
   {
     id: 2,
     text: "رزرو غذا",

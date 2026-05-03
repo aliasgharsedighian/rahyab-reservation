@@ -21,12 +21,12 @@ import { toast } from "sonner";
 import SidebarApp from "./SidebarApp";
 
 const dashboardList = [
-  {
-    id: 1,
-    text: "خانه",
-    link: "/dashboard/home",
-    icon: <HomeIcon className="size-5 text-gray-500" />,
-  },
+  // {
+  //   id: 1,
+  //   text: "خانه",
+  //   link: "/dashboard/home",
+  //   icon: <HomeIcon className="size-5 text-gray-500" />,
+  // },
   {
     id: 2,
     text: "رزرو غذا",
