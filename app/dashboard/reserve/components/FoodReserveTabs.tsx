@@ -43,7 +43,7 @@ function FoodReserveTabs({ reserveList }: any) {
                       day.foods.map((food: any) => (
                         <div
                           key={food.food_id}
-                          className="flex flex-col gap-1 justify-between h-full items-start border-l last:border-none pl-2"
+                          className="flex flex-col gap-1 justify-between h-full items-start border-b md:border-b-0 pb-4 md:border-l last:border-none pl-2"
                         >
                           <div className="relative h-full">
                             <img
@@ -69,7 +69,7 @@ function FoodReserveTabs({ reserveList }: any) {
                         </div>
                       ))
                     ) : (
-                      <div>غذایی برای این روز از طرف شرکت انتخاب نشده است</div>
+                      <div>غذایی برای این روز وجود ندارد</div>
                     )}
                   </div>
                 </div>
