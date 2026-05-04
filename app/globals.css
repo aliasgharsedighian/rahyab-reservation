@@ -11,6 +11,9 @@
   .max-width {
     @apply max-w-[95vw] md:max-w-[93vw] xl:max-w-[90vw];
   }
+  .dashboard-max-width {
+    @apply max-w-[97vw] md:max-w-[95vw] xl:max-w-[93vw];
+  }
   .text-dark {
     @apply text-[var(--main-dark-background)];
   }

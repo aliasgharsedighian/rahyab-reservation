@@ -20,9 +20,9 @@ function FoodReserveCart({
   sendDataToApi,
 }: any) {
   return (
-    <div className="sticky top-10 flex flex-col w-full border rounded-md">
+    <div className="sticky top-20 flex flex-col w-full border rounded-md">
       <div className="bg-zinc-800 text-white p-2 rounded-t-md">
-        <p>خلاصه رزرو هفته</p>
+        <p>خلاصه رزرو </p>
       </div>
       <div
         className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
@@ -31,7 +31,7 @@ function FoodReserveCart({
           sortedReserveCart.map((item: any) => (
             <div
               key={item.id}
-              className="flex items-center justify-between border-b pb-2 last:border-none"
+              className="text-sm lg:text-base flex items-center justify-between border-b pb-2 last:border-none"
             >
               <p>
                 {item.day} {item.jalali_date} {item.name}
@@ -46,19 +46,23 @@ function FoodReserveCart({
           </div>
         )}
       </div>
-      <div className="min-h-16 border-t">
-        <div className="flex items-center justify-between px-3 pt-3">
-          <p className="iranSansBold">قیمت کل</p>
-          <span className="flex items-center gap-7 iranSansBold text-sm md:text-base">
-            {totalPrice.toLocaleString()}
+      {reserveCart.length !== 0 ? (
+        <>
+          <div className="min-h-16 border-t">
+            <div className="flex items-center justify-between px-3 pt-3">
+              <p className="iranSansBold">قیمت کل</p>
+              <span className="flex items-center gap-7 iranSansBold text-sm md:text-base">
+                {totalPrice.toLocaleString()}
 
-            {"تومان"}
-          </span>
-        </div>
-      </div>
-      <Button size="lg" onClick={sendDataToApi}>
-        پرداخت
-      </Button>
+                {"تومان"}
+              </span>
+            </div>
+          </div>
+          <Button size="lg" onClick={sendDataToApi}>
+            پرداخت
+          </Button>
+        </>
+      ) : null}
     </div>
   );
 }

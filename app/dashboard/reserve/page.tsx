@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import FoodReserveCart from "./components/FoodReserveCart";
 import FoodReserveTabs from "./components/FoodReserveTabs";
 import ClientReservePage from "./components/ClientReservePage";
+import DashboardHeader from "../components/DashboardHeader";
 
 interface Props {
   searchParams: Promise<{
@@ -50,7 +51,8 @@ export default async function ReservePage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-6 w-full mb-40 md:mb-10">
+      <DashboardHeader title={"رزرو غذا"} />
       <ClientReservePage
         reserveList={reserveList}
         revalidateData={revalidateData}

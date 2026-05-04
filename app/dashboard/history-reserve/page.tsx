@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import DashboardPagination from "../components/DashboardPagination";
 import ReserveHistoryTable from "./components/ReserveHistoryTable";
+import DashboardHeader from "../components/DashboardHeader";
 
 interface Props {
   searchParams: Promise<{
@@ -48,21 +49,24 @@ export default async function HistoryReservePage({ searchParams }: Props) {
   if (!reserveHistory.items) return;
 
   return (
-    <div className="w-full flex flex-col gap-3">
-      {reserveHistory.items.length === 0 ? (
-        <div className="w-full flex flex-col gap-3">
-          <p>لیست رزروهای شما خالی است.</p>
-        </div>
-      ) : (
-        <>
-          <ReserveHistoryTable reserveHistory={reserveHistory?.items} />
-          <DashboardPagination
-            per_page={per_page}
-            page={page}
-            posts={reserveHistory?.pagination.total || per_page}
-          />
-        </>
-      )}
+    <div className="flex flex-col gap-6 w-full mb-10">
+      <DashboardHeader title={"رزروهای گذشته"} />
+      <div className="w-full flex flex-col gap-3 ">
+        {reserveHistory.items.length === 0 ? (
+          <div className="w-full flex flex-col gap-3">
+            <p>لیست رزروهای شما خالی است.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 mx-2 md:mx-6">
+            <ReserveHistoryTable reserveHistory={reserveHistory?.items} />
+            <DashboardPagination
+              per_page={per_page}
+              page={page}
+              posts={reserveHistory?.pagination.total || per_page}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

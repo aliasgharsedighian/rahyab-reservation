@@ -10,7 +10,7 @@ function ReserveHistoryTable({ reserveHistory }: any) {
         </div>
         <div className="lg:col-span-2 p-2 border flex items-center">تعداد</div>
         <div className="lg:col-span-3 p-2 border flex items-center">
-          قیمت واحد
+          قیمت واحد (تومان)
         </div>
         <div className="lg:col-span-2 p-2 border flex items-center">
           جمع کل (تومان)

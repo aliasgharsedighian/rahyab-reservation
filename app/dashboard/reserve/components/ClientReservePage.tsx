@@ -116,8 +116,8 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
   };
 
   return (
-    <>
-      <div className="w-full md:basis-8/12">
+    <div className="flex gap-6 w-full">
+      <div className="w-full md:basis-8/12 mx-2 md:mr-6">
         <FoodReserveTabs reserveList={reserveList} />
       </div>
       {isMobile ? (
@@ -128,7 +128,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           sendDataToApi={sendDataToApi}
         />
       ) : (
-        <div className="basis-4/12 w-full">
+        <div className="basis-4/12 w-full ml-6">
           <FoodReserveCart
             revalidateData={revalidateData}
             refresh={refreshPage}
@@ -139,7 +139,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           />
         </div>
       )}
-    </>
+    </div>
   );
 }
 

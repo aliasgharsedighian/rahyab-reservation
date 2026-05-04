@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import DashboardPagination from "../components/DashboardPagination";
 import ReserveUpcomingTable from "./components/ReserveUpcomingTable";
+import DashboardHeader from "../components/DashboardHeader";
 
 interface Props {
   searchParams: Promise<{
@@ -48,21 +49,24 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
   if (!reserveUpcoming.items) return;
 
   return (
-    <div className="w-full flex flex-col gap-3">
-      {reserveUpcoming.items.length === 0 ? (
-        <div className="w-full flex flex-col gap-3">
-          <p>لیست رزروهای شما خالی است.</p>
-        </div>
-      ) : (
-        <>
-          <ReserveUpcomingTable reserveUpcoming={reserveUpcoming?.items} />
-          <DashboardPagination
-            per_page={per_page}
-            page={page}
-            posts={reserveUpcoming?.pagination.total || per_page}
-          />
-        </>
-      )}
+    <div className="flex flex-col gap-6 w-full mb-10">
+      <DashboardHeader title={"رزروهای پیش رو"} />
+      <div className="w-full flex flex-col gap-3">
+        {reserveUpcoming.items.length === 0 ? (
+          <div className="w-full flex flex-col gap-3">
+            <p>لیست رزروهای شما خالی است.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 mx-2 md:mx-6">
+            <ReserveUpcomingTable reserveUpcoming={reserveUpcoming?.items} />
+            <DashboardPagination
+              per_page={per_page}
+              page={page}
+              posts={reserveUpcoming?.pagination.total || per_page}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

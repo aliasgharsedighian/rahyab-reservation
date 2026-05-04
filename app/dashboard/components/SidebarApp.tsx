@@ -85,7 +85,7 @@ const dashboardList = [
     accordion: false,
     accordionLinks: [],
     text: "کیف پول",
-    link: "/dashboard/wallet",
+    link: "/dashboard/wallet?page=1",
     icon: <WalletIcon className="size-5 text-gray-500" />,
   },
   {

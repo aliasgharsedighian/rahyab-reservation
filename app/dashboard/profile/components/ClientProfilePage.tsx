@@ -52,15 +52,15 @@ function ClientProfilePage({ profile, revalidateData }: any) {
   };
 
   return (
-    <>
-      <div className="w-full md:basis-8/12">
+    <div className="flex gap-6 w-full">
+      <div className="w-full md:basis-9/12 mx-4">
         <ProfileForm profile={profile} />
       </div>
       {isMobile ? null : (
-        <div className="basis-4/12 w-full">
+        <div className="basis-3/12 w-full">
           <div>
             <Button
-              className="p-3 items-start justify-start gap-4 h-full text-[var(--main-red)]"
+              className="p-3 items-start justify-start gap-4 h-full text-red-500"
               variant="ghost"
               onClick={handleLogoutUser}
             >
@@ -70,7 +70,7 @@ function ClientProfilePage({ profile, revalidateData }: any) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

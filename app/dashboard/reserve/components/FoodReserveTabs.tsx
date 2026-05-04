@@ -34,11 +34,11 @@ function FoodReserveTabs({ reserveList }: any) {
                   className="flex flex-col gap-2 border-b pb-4 last:border-none"
                 >
                   <div className="relative flex items-center gap-3">
-                    <span className="h-6 w-0.5 bg-zinc-900"></span>
-                    <p>{day.day_name}</p>
+                    <span className="h-7 w-0.5 bg-zinc-900"></span>
+                    <p className="text-lg font-IRANSansBold">{day.day_name}</p>
                     <span>{day.jalali_date}</span>
                   </div>
-                  <div className="flex items-start gap-2">
+                  <div className="flex flex-col md:flex-row items-start gap-2">
                     {day.foods.length !== 0 ? (
                       day.foods.map((food: any) => (
                         <div

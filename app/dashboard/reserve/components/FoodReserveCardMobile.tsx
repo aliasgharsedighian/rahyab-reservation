@@ -42,9 +42,7 @@ function FoodReserveCardMobile({
           <DrawerDescription></DrawerDescription>
           <DialogTitle></DialogTitle>
           <DrawerHeader>
-            <DrawerClose>
-              <Button variant="outline">بستن</Button>
-            </DrawerClose>
+            <DrawerClose>بستن</DrawerClose>
           </DrawerHeader>
           <div
             className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
@@ -69,30 +67,28 @@ function FoodReserveCardMobile({
             )}
           </div>
 
-          <div className="flex items-center pt-3">
-            <div className="flex items-center justify-between px-6">
-              <p className="font-IRANSansBold">قیمت کل</p>
-              <span className="flex items-center gap-7 font-IRANSansBold pl-14 text-sm md:text-base">
-                {totalPrice.toLocaleString()}
-
-                {process.env.price}
-              </span>
+          <DrawerFooter className="border-t">
+            {" "}
+            <div className="flex items-center pt-3 w-full">
+              <div className="flex items-center justify-between px-6 gap-2">
+                <p className="font-IRANSansBold">قیمت کل: </p>{" "}
+                <span className="flex items-center gap-7 font-IRANSansBold pl-14 text-sm md:text-base">
+                  {totalPrice.toLocaleString()} {"تومان"}
+                </span>
+              </div>
+              <Button type="button" onClick={sendDataToApi} className="w-fit">
+                پرداخت
+              </Button>
             </div>
-            <Button type="button" onClick={sendDataToApi} className="w-fit">
-              پرداخت
-            </Button>
-          </div>
-          <DrawerFooter></DrawerFooter>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
 
       <div className="flex items-center pt-3 w-full">
-        <div className="flex items-center justify-between px-6">
-          <p className="font-IRANSansBold">قیمت کل</p>
+        <div className="flex items-center justify-between px-6 gap-2">
+          <p className="font-IRANSansBold">قیمت کل: </p>{" "}
           <span className="flex items-center gap-7 font-IRANSansBold pl-14 text-sm md:text-base">
-            {totalPrice.toLocaleString()}
-
-            {process.env.price}
+            {totalPrice.toLocaleString()} {"تومان"}
           </span>
         </div>
         <Button type="button" onClick={sendDataToApi} className="w-fit">

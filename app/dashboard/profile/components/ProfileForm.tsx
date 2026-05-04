@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { PhoneCallIcon, LetterTextIcon, User2Icon } from "lucide-react";
 
 type Profile = {
   id: number;
@@ -40,6 +41,7 @@ type Profile = {
 
 export default function ProfileForm({ profile }: { profile: Profile }) {
   const fileInputRef = useRef<any>(null);
+  const [activeEdit, setActiveEdit] = useState(false);
   const [preview, setPreview] = useState<string | null>(profile.avatar_url);
   const [file, setFile] = useState<File | null>(null);
 
@@ -89,124 +91,228 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6" dir="rtl">
-      <h2 className="text-xl font-bold">پروفایل کاربر</h2>
+      <Card className="">
+        {activeEdit ? (
+          <>
+            {" "}
+            <CardHeader>
+              <CardTitle>
+                {/* Avatar Section */}
+                <div className="w-full flex items-start justify-between">
+                  <div className="flex flex-col items-start gap-3">
+                    <div className="flex flex-col items-center justify-center relative w-24 h-24">
+                      <Image
+                        src={preview || "/default-avatar.png"}
+                        alt="avatar"
+                        fill
+                        className="rounded-full object-cover border"
+                        onClick={() => fileInputRef.current.click()}
+                      />
+                    </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {/* Avatar Section */}
-            <div className="flex flex-col items-start gap-3">
-              <div className="flex flex-col items-center justify-center relative w-24 h-24">
-                <Image
-                  src={preview || "/default-avatar.png"}
-                  alt="avatar"
-                  fill
-                  className="rounded-full object-cover border"
-                  onClick={() => fileInputRef.current.click()}
-                />
-              </div>
+                    {/* <label className="cursor-pointer text-sm text-blue-600"> */}
+                    {/* تغییر تصویر */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    {/* </label> */}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveEdit(false)}
+                  >
+                    انصراف
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                    {/* Name (editable) */}
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>نام</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-              {/* <label className="cursor-pointer text-sm text-blue-600"> */}
-              {/* تغییر تصویر */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarChange}
-              />
-              {/* </label> */}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                {/* Name (editable) */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
+                    {/* Family (editable) */}
+                    <FormField
+                      control={form.control}
+                      name="family"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>نام خانوادگی</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Disabled fields */}
+                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
                     <FormItem className="w-full">
-                      <FormLabel>نام</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <FormLabel>موبایل</FormLabel>
+                      <Input value={profile.mobile} disabled />
                     </FormItem>
-                  )}
-                />
 
-                {/* Family (editable) */}
-                <FormField
-                  control={form.control}
-                  name="family"
-                  render={({ field }) => (
                     <FormItem className="w-full">
-                      <FormLabel>نام خانوادگی</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <FormLabel>ایمیل</FormLabel>
+                      <Input value={profile.email} disabled />
                     </FormItem>
-                  )}
-                />
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                    <FormItem className="w-full">
+                      <FormLabel>کد پرسنلی</FormLabel>
+                      <Input value={profile.employee_code} disabled />
+                    </FormItem>
+
+                    <FormItem className="w-full">
+                      <FormLabel>شرکت</FormLabel>
+                      <Input value={profile.company_name} disabled />
+                    </FormItem>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                    <FormItem className="w-full">
+                      <FormLabel>دپارتمان</FormLabel>
+                      <Input value={profile.departeman_name} disabled />
+                    </FormItem>
+
+                    <FormItem className="w-full">
+                      <FormLabel>دسترسی</FormLabel>
+                      <Input
+                        value={profile.is_admin ? "ادمین" : "کاربر عادی"}
+                        disabled
+                      />
+                    </FormItem>
+                  </div>
+
+                  <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between w-full">
+                    <Button
+                      type="submit"
+                      size={"lg"}
+                      className="w-full basis-1/2"
+                    >
+                      ذخیره تغییرات
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </>
+        ) : (
+          <>
+            {" "}
+            <CardHeader>
+              <CardTitle>
+                {/* Avatar Section */}
+                <div className="w-full flex items-start justify-between">
+                  <div className="flex flex-col items-start gap-3">
+                    <div className="flex flex-col items-center justify-center relative w-24 h-24">
+                      <Image
+                        src={preview || "/default-avatar.png"}
+                        alt="avatar"
+                        fill
+                        className="rounded-full object-cover border"
+                        // onClick={() => fileInputRef.current.click()}
+                      />
+                    </div>
+
+                    {/* <label className="cursor-pointer text-sm text-blue-600"> */}
+                    {/* تغییر تصویر */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    {/* </label> */}
+                  </div>
+                  <Button onClick={() => setActiveEdit(true)}>
+                    ویرایش پروفایل
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full flex items-center gap-4 justify-between border-b pb-4">
+                <div className="w-full flex flex-col items-start justify-center">
+                  <div className="flex flex-col items-start justify-center">
+                    <p>
+                      {profile.name} {profile.family}
+                    </p>
+                    <p>
+                      {profile.departeman_name} - {profile.company_name}
+                    </p>
+                  </div>
+                </div>
+                <div className="w-full flex flex-col items-end justify-center">
+                  <div className="flex flex-col items-start justify-center">
+                    <p>کد پرسنلی</p>
+                    <p>{profile.employee_code}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Disabled fields */}
-              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                <FormItem className="w-full">
-                  <FormLabel>موبایل</FormLabel>
-                  <Input value={profile.mobile} disabled />
-                </FormItem>
-
-                <FormItem className="w-full">
-                  <FormLabel>ایمیل</FormLabel>
-                  <Input value={profile.email} disabled />
-                </FormItem>
+              <div className="grid grid-cols-2 gap-4 md:gap-8 pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PhoneCallIcon />
+                    <p>شماره موبایل</p>
+                  </div>
+                  <p>{profile.mobile}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <LetterTextIcon />
+                    <p>ایمیل</p>
+                  </div>
+                  <p>{profile.mobile}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PhoneCallIcon />
+                    <p>شرکت</p>
+                  </div>
+                  <p>{profile.company_name}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User2Icon />
+                    <p>سمت شغلی</p>
+                  </div>
+                  <p>{profile.departeman_name}</p>
+                </div>
               </div>
-
-              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                <FormItem className="w-full">
-                  <FormLabel>کد پرسنلی</FormLabel>
-                  <Input value={profile.employee_code} disabled />
-                </FormItem>
-
-                <FormItem className="w-full">
-                  <FormLabel>شرکت</FormLabel>
-                  <Input value={profile.company_name} disabled />
-                </FormItem>
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                <FormItem className="w-full">
-                  <FormLabel>دپارتمان</FormLabel>
-                  <Input value={profile.departeman_name} disabled />
-                </FormItem>
-
-                <FormItem className="w-full">
-                  <FormLabel>دسترسی</FormLabel>
-                  <Input
-                    value={profile.is_admin ? "ادمین" : "کاربر عادی"}
-                    disabled
-                  />
-                </FormItem>
-              </div>
-
-              <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between w-full">
-                <Button type="submit" size={"lg"} className="w-full basis-1/2">
-                  ذخیره تغییرات
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter>
-          <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">
-            <span>اعتبار کیف پول</span>
-            <span>{profile.wallet_balance.toLocaleString()} تومان</span>
-          </div>
-        </CardFooter>
+            </CardContent>
+          </>
+        )}
       </Card>
+
+      <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">
+        <span>اعتبار کیف پول</span>
+        <span>{profile.wallet_balance.toLocaleString()} تومان</span>
+      </div>
     </div>
   );
 }

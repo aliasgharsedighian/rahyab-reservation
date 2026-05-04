@@ -8,6 +8,7 @@ import {
   removeFromReserveBasket,
   reserveSelectItems,
 } from "@/redux/features/reserveBasketSlice";
+import { RecycleIcon, Trash2Icon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -56,11 +57,11 @@ function FoodReserveInvoice({
         <div className="flex items-center justify-between text-[14px] text-[var(--base-gray)]">
           {/* <label htmlFor="count-input">تعداد</label> */}
           <div
-            className={`border rounded-md shadow-md flex items-center justify-between py-1 px-2 gap-3`}
+            className={`border rounded-md shadow-md flex items-center justify-between gap-3`}
           >
             <Button
               variant={"ghost"}
-              className="!border-none"
+              className="border-none!"
               onClick={() => {
                 setCountInput((prev) => prev + 1);
                 setTimeout(() => {
@@ -93,7 +94,7 @@ function FoodReserveInvoice({
             </div>
             <Button
               variant={"ghost"}
-              className="!border-none"
+              className="border-none!"
               disabled={countInput <= 0}
               onClick={() => {
                 setCountInput((prev) => prev - 1);
@@ -104,22 +105,24 @@ function FoodReserveInvoice({
                 }
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className={`w-5 h-5 ${
-                  countInput !== 1 && "text-[var(--base-blue)]"
-                }`}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M18 12H6"
-                />
-              </svg>
+              {countInput - 1 === 0 ? (
+                <Trash2Icon className="size-4" />
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className={`w-5 h-5 ${countInput !== 1 && ""}`}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18 12H6"
+                  />
+                </svg>
+              )}
             </Button>
           </div>
         </div>
