@@ -15,9 +15,9 @@ function FoodReserveTabs({ reserveList }: any) {
       className="w-full rtl"
     >
       <div className="flex flex-col gap-4">
-        <TabsList className="rtl w-full">
+        <TabsList className="rtl w-full bg-(--light-green)">
           {reserveList.weeks.map((item: any, index: number) => (
-            <TabsTrigger key={index} value={item.range}>
+            <TabsTrigger key={index} value={item.range} className="">
               {item.is_current_week
                 ? "هفته جاری"
                 : `${item.week_number} هفته بعد `}
@@ -27,45 +27,53 @@ function FoodReserveTabs({ reserveList }: any) {
 
         {reserveList.weeks.map((item: any, index: number) => (
           <TabsContent key={index} value={item.range}>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4 md:gap-6">
               {item.days.map((day: any) => (
                 <div
                   key={day.date}
-                  className="flex flex-col gap-2 border-b pb-4 last:border-none"
+                  className="flex flex-col gap-2 border p-2 rounded-lg shadow-md"
                 >
-                  <div className="relative flex items-center gap-3">
-                    <span className="h-7 w-0.5 bg-zinc-900"></span>
-                    <p className="text-lg font-IRANSansBold">{day.day_name}</p>
+                  <div className="text-lg relative flex items-center gap-3">
+                    <span className="h-8 w-0.5 bg-(--base-green)"></span>
+                    <p className="text-(--base-black) font-bold">
+                      {day.day_name}
+                    </p>
                     <span>{day.jalali_date}</span>
                   </div>
-                  <div className="flex flex-col md:flex-row items-start gap-2">
+                  <div className="flex flex-col items-start gap-2">
                     {day.foods.length !== 0 ? (
                       day.foods.map((food: any) => (
                         <div
                           key={food.food_id}
-                          className="flex flex-col gap-1 justify-between h-full items-start border-b md:border-b-0 pb-4 md:border-l last:border-none pl-2"
+                          className="w-full flex flex-row gap-3 justify-between h-full items-start pb-4 border-b last:border-none pl-2"
                         >
-                          <div className="relative h-full">
+                          <div className="basis-1/2 h-full flex flex-col gap-2 justify-between">
+                            <h3 className="text-lg font-bold text-(--base-black)">
+                              {food.name}
+                            </h3>
+                            <p className="text-(--secondary-text)">
+                              {food.description}
+                            </p>
+                            <span className="text-(--base-black) text-lg">
+                              {food.price.toLocaleString()} تومان
+                            </span>
+                            <FoodReserveInvoice
+                              food_id={food.food_id}
+                              weekly_menu_id={food.weekly_menu_id}
+                              name={food.name}
+                              price={food.price}
+                              day={day.day_name}
+                              jalali_date={day.jalali_date}
+                              date={day.date}
+                            />
+                          </div>
+                          <div className="basis-1/2 relative h-full">
                             <img
-                              className="w-full max-w-3xs rounded-2xl"
+                              className="w-full h-full max-w-3xs rounded-2xl"
                               src={food.image_url}
                               alt={food.name}
                             />
-                            <span className="absolute p-1 rounded-md right-1 top-1 bg-white">
-                              {food.price.toLocaleString()} تومان
-                            </span>
                           </div>
-                          <p>{food.name}</p>
-                          <p>{food.description}</p>
-                          <FoodReserveInvoice
-                            food_id={food.food_id}
-                            weekly_menu_id={food.weekly_menu_id}
-                            name={food.name}
-                            price={food.price}
-                            day={day.day_name}
-                            jalali_date={day.jalali_date}
-                            date={day.date}
-                          />
                         </div>
                       ))
                     ) : (

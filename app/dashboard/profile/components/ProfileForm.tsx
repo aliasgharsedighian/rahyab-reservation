@@ -12,6 +12,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import {
   Card,
@@ -23,7 +24,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { PhoneCallIcon, LetterTextIcon, User2Icon } from "lucide-react";
+import {
+  PhoneCallIcon,
+  LetterTextIcon,
+  User2Icon,
+  Edit2,
+  CameraIcon,
+} from "lucide-react";
 
 type Profile = {
   id: number;
@@ -37,6 +44,9 @@ type Profile = {
   wallet_balance: number;
   avatar_url: string | null;
   is_admin: boolean;
+  current_password: string;
+  password: string;
+  password_confirmation: string;
 };
 
 export default function ProfileForm({ profile }: { profile: Profile }) {
@@ -53,6 +63,8 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     const token = localStorage.getItem("token");
     const formData = new FormData();
     var myHeaders = new Headers();
+
+    myHeaders.append("Accept", "*/*");
     myHeaders.append("Accept", "application/json");
     myHeaders.append("Authorization", `Bearer ${token}`);
 
@@ -79,6 +91,39 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     }
   };
 
+  const onSubmitChangePassword = async (values: Profile) => {
+    const current_password = values.current_password;
+    const password = values.password;
+    const password_confirmation = values.password_confirmation;
+
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    var myHeaders = new Headers();
+    myHeaders.append("Accept", "*/*");
+    myHeaders.append("Accept", "application/json");
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    formData.append("current_password", current_password);
+    formData.append("password", password);
+    formData.append("password_confirmation", password_confirmation);
+
+    // مثال API
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_ADDRESS}profile/change-password`,
+      {
+        method: "POST",
+        body: formData,
+        headers: myHeaders,
+      },
+    );
+
+    const response = await res.json();
+
+    if (res.status === 200) {
+      toast.success(response.message);
+    }
+  };
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
@@ -90,229 +135,241 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6" dir="rtl">
-      <Card className="">
-        {activeEdit ? (
-          <>
-            {" "}
-            <CardHeader>
-              <CardTitle>
-                {/* Avatar Section */}
-                <div className="w-full flex items-start justify-between">
-                  <div className="flex flex-col items-start gap-3">
-                    <div className="flex flex-col items-center justify-center relative w-24 h-24">
-                      <Image
-                        src={preview || "/default-avatar.png"}
-                        alt="avatar"
-                        fill
-                        className="rounded-full object-cover border"
-                        onClick={() => fileInputRef.current.click()}
-                      />
-                    </div>
+    <div className="w-full ml-auto flex flex-col max-w-2xl gap-6" dir="rtl">
+      <div className="w-full flex border p-4 rounded-xl">
+        {/* Avatar Section */}
 
-                    {/* <label className="cursor-pointer text-sm text-blue-600"> */}
-                    {/* تغییر تصویر */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                    {/* </label> */}
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setActiveEdit(false)}
-                  >
-                    انصراف
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                    {/* Name (editable) */}
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>نام</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
+        <div className="w-full flex flex-col gap-3 items-start justify-center">
+          <div className="flex items-center gap-2">
+            <p className="iranSansBold text-xl">
+              {profile.name} {profile.family}
+            </p>
+          </div>
+          <div className="text-(--secondary-text) flex flex-col gap-3 items-start justify-center text-sm">
+            <div className="flex items-center gap-2">
+              <PhoneCallIcon className="size-4" />
+              <p>
+                {profile.departeman_name} - {profile.company_name}
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PhoneCallIcon className="size-4" />
+                <p>شماره موبایل : </p>
+              </div>
+              <p> {profile.mobile}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LetterTextIcon className="size-4" />
+                <p>ایمیل</p>
+              </div>
+              <p>{profile.mobile}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <User2Icon className="size-4" />
+                <p>کد پرسنلی</p>
+              </div>
+              <p>{profile.employee_code}</p>
+            </div>
+          </div>
+        </div>
+        <div className="w-full flex items-start justify-between">
+          <div className="flex flex-col items-start gap-3">
+            <div className="flex flex-col items-center justify-center relative w-30 h-30">
+              <img
+                src={preview || profile.avatar_url || ""}
+                alt="avatar"
+                // fill
+                className="rounded-full object-cover border h-36 w-36"
+                onClick={() => fileInputRef.current.click()}
+              />
+              <div className="bg-white absolute -bottom-1 -right-1 p-2 border border-(--base-green) rounded-full">
+                <CameraIcon className="text-(--base-green)" />
+              </div>
+            </div>
 
-                    {/* Family (editable) */}
-                    <FormField
-                      control={form.control}
-                      name="family"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>نام خانوادگی</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+            {/* <label className="cursor-pointer text-sm text-blue-600"> */}
+            {/* تغییر تصویر */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            {/* </label> */}
+          </div>
+        </div>
+      </div>
 
-                  {/* Disabled fields */}
-                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+      <div className="flex flex-col gap-4 w-full border p-4 rounded-xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex flex-row items-center justify-between w-full">
+              <h2 className="text-lg iranSansBold">اطلاعات شخصی</h2>
+              <Button
+                variant="outline"
+                type="submit"
+                size={"lg"}
+                className="flex justify-between px-12 text-(--base-green) border-(--base-green)"
+              >
+                <Edit2 />
+                ویرایش اطلاعات
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                {/* Name (editable) */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
                     <FormItem className="w-full">
-                      <FormLabel>موبایل</FormLabel>
-                      <Input value={profile.mobile} disabled />
+                      <FormLabel>نام</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                     </FormItem>
+                  )}
+                />
 
+                {/* Family (editable) */}
+                <FormField
+                  control={form.control}
+                  name="family"
+                  render={({ field }) => (
                     <FormItem className="w-full">
-                      <FormLabel>ایمیل</FormLabel>
-                      <Input value={profile.email} disabled />
+                      <FormLabel>نام خانوادگی</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                     </FormItem>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                    <FormItem className="w-full">
-                      <FormLabel>کد پرسنلی</FormLabel>
-                      <Input value={profile.employee_code} disabled />
-                    </FormItem>
-
-                    <FormItem className="w-full">
-                      <FormLabel>شرکت</FormLabel>
-                      <Input value={profile.company_name} disabled />
-                    </FormItem>
-                  </div>
-
-                  <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
-                    <FormItem className="w-full">
-                      <FormLabel>دپارتمان</FormLabel>
-                      <Input value={profile.departeman_name} disabled />
-                    </FormItem>
-
-                    <FormItem className="w-full">
-                      <FormLabel>دسترسی</FormLabel>
-                      <Input
-                        value={profile.is_admin ? "ادمین" : "کاربر عادی"}
-                        disabled
-                      />
-                    </FormItem>
-                  </div>
-
-                  <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between w-full">
-                    <Button
-                      type="submit"
-                      size={"lg"}
-                      className="w-full basis-1/2"
-                    >
-                      ذخیره تغییرات
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </>
-        ) : (
-          <>
-            {" "}
-            <CardHeader>
-              <CardTitle>
-                {/* Avatar Section */}
-                <div className="w-full flex items-start justify-between">
-                  <div className="flex flex-col items-start gap-3">
-                    <div className="flex flex-col items-center justify-center relative w-24 h-24">
-                      <Image
-                        src={preview || "/default-avatar.png"}
-                        alt="avatar"
-                        fill
-                        className="rounded-full object-cover border"
-                        // onClick={() => fileInputRef.current.click()}
-                      />
-                    </div>
-
-                    {/* <label className="cursor-pointer text-sm text-blue-600"> */}
-                    {/* تغییر تصویر */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                    {/* </label> */}
-                  </div>
-                  <Button onClick={() => setActiveEdit(true)}>
-                    ویرایش پروفایل
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="w-full flex items-center gap-4 justify-between border-b pb-4">
-                <div className="w-full flex flex-col items-start justify-center">
-                  <div className="flex flex-col items-start justify-center">
-                    <p>
-                      {profile.name} {profile.family}
-                    </p>
-                    <p>
-                      {profile.departeman_name} - {profile.company_name}
-                    </p>
-                  </div>
-                </div>
-                <div className="w-full flex flex-col items-end justify-center">
-                  <div className="flex flex-col items-start justify-center">
-                    <p>کد پرسنلی</p>
-                    <p>{profile.employee_code}</p>
-                  </div>
-                </div>
+                  )}
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 md:gap-8 pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PhoneCallIcon />
-                    <p>شماره موبایل</p>
-                  </div>
-                  <p>{profile.mobile}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <LetterTextIcon />
-                    <p>ایمیل</p>
-                  </div>
-                  <p>{profile.mobile}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PhoneCallIcon />
-                    <p>شرکت</p>
-                  </div>
-                  <p>{profile.company_name}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User2Icon />
-                    <p>سمت شغلی</p>
-                  </div>
-                  <p>{profile.departeman_name}</p>
-                </div>
-              </div>
-            </CardContent>
-          </>
-        )}
-      </Card>
+              {/* Disabled fields */}
+              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                <FormItem className="w-full">
+                  <FormLabel>موبایل</FormLabel>
+                  <Input value={profile.mobile} disabled />
+                </FormItem>
 
-      <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">
+                <FormItem className="w-full">
+                  <FormLabel>ایمیل</FormLabel>
+                  <Input value={profile.email} disabled />
+                </FormItem>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                <FormItem className="w-full">
+                  <FormLabel>کد پرسنلی</FormLabel>
+                  <Input value={profile.employee_code} disabled />
+                </FormItem>
+
+                <FormItem className="w-full">
+                  <FormLabel>شرکت</FormLabel>
+                  <Input value={profile.company_name} disabled />
+                </FormItem>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
+                <FormItem className="w-full">
+                  <FormLabel>دپارتمان</FormLabel>
+                  <Input value={profile.departeman_name} disabled />
+                </FormItem>
+
+                <FormItem className="w-full">
+                  <FormLabel>دسترسی</FormLabel>
+                  <Input
+                    value={profile.is_admin ? "ادمین" : "کاربر عادی"}
+                    disabled
+                  />
+                </FormItem>
+              </div>
+
+              <div className="mt-6 flex flex-col md:flex-row gap-4 justify-between w-full"></div>
+            </div>
+          </form>
+        </Form>
+      </div>
+
+      <div className="w-1/2 space-y-4 flex flex-col border p-4 rounded-xl">
+        <h2 className="text-lg iranSansBold">تغییر رمز عبور</h2>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmitChangePassword)}
+            className="space-y-5"
+          >
+            <FormField
+              control={form.control}
+              name="current_password"
+              render={({ field }) => (
+                <FormItem>
+                  {/* <FormLabel>Current Password</FormLabel> */}
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="رمز عبور فعلی"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  {/* <FormLabel>New Password</FormLabel> */}
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="رمز عبور جدید"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password_confirmation"
+              render={({ field }) => (
+                <FormItem>
+                  {/* <FormLabel>Confirm New Password</FormLabel> */}
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="تکرار رمز عبور جدید"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" className="w-full">
+              تغییر رمز عبور
+            </Button>
+          </form>
+        </Form>
+      </div>
+
+      {/* <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">
         <span>اعتبار کیف پول</span>
         <span>{profile.wallet_balance.toLocaleString()} تومان</span>
-      </div>
+      </div> */}
     </div>
   );
 }

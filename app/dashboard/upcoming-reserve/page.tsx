@@ -24,7 +24,7 @@ const getReserveUpcoming = async (
     headers: myHeaders,
   };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/upcoming?per_page=${per_page}&page=${page}`,
+    `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/upcoming?count=${per_page}&page=${page}`,
     requestOptions,
   );
 
@@ -35,7 +35,7 @@ const getReserveUpcoming = async (
 };
 
 export default async function UpcomingReservePage({ searchParams }: Props) {
-  const per_page = "10";
+  const per_page = "6";
   const { page } = await searchParams;
 
   const reserveUpcoming = await getReserveUpcoming(per_page, page);
@@ -58,6 +58,12 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="flex flex-col gap-4 mx-2 md:mx-6">
+            <div className="mb-6 flex flex-col gap-3">
+              <h2 className="text-2xl font-bold">رزرو‌های پیش رو</h2>
+              <p className="text-(--secondary-text)">
+                لیست غذاهای رزرو شده پیش روی شما
+              </p>
+            </div>
             <ReserveUpcomingTable reserveUpcoming={reserveUpcoming?.items} />
             <DashboardPagination
               per_page={per_page}

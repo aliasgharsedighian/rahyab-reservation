@@ -42,7 +42,7 @@ export default async function ProfilePage({ searchParams }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full mb-10">
+    <div className="flex flex-col gap-6 w-full mb-40 md:mb-10">
       <DashboardHeader title={"پروفایل کاربری"} />
       <ClientProfilePage profile={profile} revalidateData={revalidateData} />
     </div>

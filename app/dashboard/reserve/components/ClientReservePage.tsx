@@ -128,7 +128,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           sendDataToApi={sendDataToApi}
         />
       ) : (
-        <div className="basis-4/12 w-full ml-6">
+        <div className="basis-4/12 w-full ml-6 border-r">
           <FoodReserveCart
             revalidateData={revalidateData}
             refresh={refreshPage}

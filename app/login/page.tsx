@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { setToken } from "@/redux/features/auth-slice";
+import { logIn, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -68,6 +68,7 @@ function LoginPage() {
             // console.log(result);
             localStorage.setItem("token", result.data.token);
             dispatch(setToken(result.data.token));
+            dispatch(logIn(result.data.user));
 
             return result.message;
           },

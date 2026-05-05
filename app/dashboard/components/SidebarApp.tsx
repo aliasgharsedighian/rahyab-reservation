@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -33,6 +34,7 @@ import {
   ClockIcon,
   HomeIcon,
   ListIcon,
+  ListStart,
   LogOutIcon,
   PanelRight,
   UserIcon,
@@ -59,33 +61,53 @@ const dashboardList = [
     accordionLinks: [],
     text: "رزرو غذا",
     link: "/dashboard/reserve",
+    href: "/dashboard/reserve",
     icon: <ListIcon className="size-5 text-gray-500" />,
   },
   {
-    id: 3,
-    accordion: true,
-    accordionLinks: [
-      {
-        id: 1,
-        text: "رزروهای گذشته",
-        href: "/dashboard/history-reserve?page=1",
-      },
-      {
-        id: 2,
-        text: "رزروهای پیش رو",
-        href: "/dashboard/upcoming-reserve?page=1",
-      },
-    ],
-    text: "تاریخچه رزروها",
+    id: 10,
+    text: "رزروهای گذشته",
+    accordion: false,
+    accordionLinks: [],
     link: "/dashboard/history-reserve",
+    href: "/dashboard/history-reserve?page=1",
     icon: <ClockIcon className="size-5 text-gray-500" />,
   },
+  {
+    id: 11,
+    text: "رزروهای پیش رو",
+    accordion: false,
+    accordionLinks: [],
+    link: "/dashboard/upcoming-reserve",
+    href: "/dashboard/upcoming-reserve?page=1",
+    icon: <ListStart className="size-5 text-gray-500" />,
+  },
+  // {
+  //   id: 3,
+  //   accordion: true,
+  //   accordionLinks: [
+  //     {
+  //       id: 1,
+  //       text: "رزروهای گذشته",
+  //       href: "/dashboard/history-reserve?page=1",
+  //     },
+  //     {
+  //       id: 2,
+  //       text: "رزروهای پیش رو",
+  //       href: "/dashboard/upcoming-reserve?page=1",
+  //     },
+  //   ],
+  //   text: "تاریخچه رزروها",
+  //   link: "/dashboard/history-reserve",
+  //   icon: <ClockIcon className="size-5 text-gray-500" />,
+  // },
   {
     id: 4,
     accordion: false,
     accordionLinks: [],
     text: "کیف پول",
-    link: "/dashboard/wallet?page=1",
+    link: "/dashboard/wallet",
+    href: "/dashboard/wallet?page=1",
     icon: <WalletIcon className="size-5 text-gray-500" />,
   },
   {
@@ -94,6 +116,7 @@ const dashboardList = [
     accordionLinks: [],
     text: "پروفایل کاربری",
     link: "/dashboard/profile",
+    href: "/dashboard/profile",
     icon: <UserIcon className="size-5 text-gray-500" />,
   },
 ];
@@ -151,16 +174,26 @@ function SidebarApp() {
   };
 
   return (
-    <Sidebar className="" side="right" variant="sidebar" collapsible="icon">
-      <SidebarHeader className="p-2 gap-0 flex flex-row w-full">
-        {/* <Link
+    <Sidebar
+      className="shadow-xl"
+      side="right"
+      variant="sidebar"
+      collapsible="icon"
+    >
+      <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21">
+        <Link
           href="/dashboard"
           className={` bg-white w-full py-3 items-center ${
             open ? "flex" : "hidden"
           }`}
         >
-          
-        </Link> */}
+          <Image
+            width={300}
+            height={113}
+            src="/assets/images/logo-green.webp"
+            alt="لوگو هوبرنیکس"
+          />
+        </Link>
         <Button
           className="rounded-none h-full text-black"
           onClick={toggleSidebar}
@@ -181,10 +214,10 @@ function SidebarApp() {
                     }
                   }}
                   key={item.id}
-                  className={`cursor-pointer hover:text-black ${
+                  className={`cursor-pointer hover:text-(--base-green) ${
                     pathname === item.link
-                      ? "text-black font-IRANSansBold"
-                      : "text-zinc-700"
+                      ? "text-(--base-green) font-IRANSansBold"
+                      : "text-(--base-black)"
                   }`}
                 >
                   {item.icon}
@@ -192,10 +225,10 @@ function SidebarApp() {
               ) : (
                 <div
                   key={item.id}
-                  className={`w-full hover:text-black ${
+                  className={`w-full hover:text-(--base-green) ${
                     pathname.startsWith(item.link)
-                      ? "text-black font-IRANSansBold"
-                      : "text-zinc-700"
+                      ? "text-(--base-green) font-IRANSansBold"
+                      : "text-(--base-black)"
                   }`}
                 >
                   <Accordion
@@ -224,10 +257,10 @@ function SidebarApp() {
                             <Link
                               key={item.href}
                               href={item.href}
-                              className={`hover:black h-8 ${
+                              className={`hover:text-(--base-green) h-8 ${
                                 pathname === item.href
-                                  ? "text-black"
-                                  : "text-zinc-700"
+                                  ? "text-(--base-green)"
+                                  : "text-(--base-black)"
                               }`}
                             >
                               {item.text}
@@ -242,14 +275,20 @@ function SidebarApp() {
             ) : (
               <SidebarMenuItem
                 key={item.id}
-                className={`w-full h-13.5 hover:text-yellow-600 flex items-center justify-center rounded-md ${
+                className={`w-full h-13.5 hover:text-(--base-green) flex items-center justify-center rounded-md ${
                   pathname === item.link
-                    ? "text-black font-IRANSansBold bg-blue-100"
-                    : "text-zinc-700"
+                    ? "text-(--base-green) font-IRANSansBold bg-(--light-green)"
+                    : "text-(--base-black)"
                 }`}
               >
-                <SidebarMenuButton className="h-full hover:bg-blue-100" asChild>
-                  <Link href={item.link}>
+                {pathname === item.link && (
+                  <span className="h-full w-1 bg-(--base-green)"></span>
+                )}
+                <SidebarMenuButton
+                  className="h-full hover:bg-(--light-green)"
+                  asChild
+                >
+                  <Link href={item.href}>
                     {item.icon}
                     <span>{item.text}</span>
                   </Link>
@@ -258,18 +297,17 @@ function SidebarApp() {
             ),
           )}
         </SidebarMenu>
-
-        {isMobile ? (
-          <Button
-            className="p-3 items-start justify-start gap-4 h-full text-[var(--main-red)]"
-            variant="ghost"
-            onClick={handleLogoutUser}
-          >
-            <LogOutIcon className="size-5" />
-            <p>خروج از حساب کاربری</p>
-          </Button>
-        ) : null}
       </SidebarContent>
+      <SidebarFooter className="border-t mb-6">
+        <Button
+          className="p-3 items-start justify-start gap-4 h-full text-red-500"
+          variant="ghost"
+          onClick={handleLogoutUser}
+        >
+          <LogOutIcon className="size-5" />
+          <p>خروج از حساب کاربری</p>
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }

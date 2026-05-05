@@ -51,6 +51,28 @@ function FoodReserveInvoice({
     date,
   };
 
+  if (countInput <= 0)
+    return (
+      <Button
+        className="max-w-2xs"
+        onClick={() => {
+          setCountInput((prev) => prev + 1);
+          setTimeout(() => {
+            dispatch(
+              addToReserveBasket({
+                ...itemToBasket,
+                count: countInput,
+              }),
+            );
+          }, 100);
+          setTimeout(() => {
+            dispatch(incrementReserveCount(weekly_menu_id));
+          }, 300);
+        }}
+      >
+        رزرو این غذا
+      </Button>
+    );
   return (
     <div>
       <div className="flex flex-col gap-2">
@@ -66,7 +88,10 @@ function FoodReserveInvoice({
                 setCountInput((prev) => prev + 1);
                 setTimeout(() => {
                   dispatch(
-                    addToReserveBasket({ ...itemToBasket, count: countInput }),
+                    addToReserveBasket({
+                      ...itemToBasket,
+                      count: countInput,
+                    }),
                   );
                 }, 100);
                 setTimeout(() => {

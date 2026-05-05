@@ -23,7 +23,7 @@ const getWalletDetail = async (per_page: string = "10", page: string = "1") => {
     headers: myHeaders,
   };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}wallet?per_page=${per_page}&page=${page}`,
+    `${process.env.NEXT_PUBLIC_API_ADDRESS}wallet?count=${per_page}&page=${page}`,
     requestOptions,
   );
 
@@ -34,7 +34,7 @@ const getWalletDetail = async (per_page: string = "10", page: string = "1") => {
 };
 
 export default async function WalletPage({ searchParams }: Props) {
-  const per_page = "10";
+  const per_page = "6";
   const { page } = await searchParams;
 
   const wallet = await getWalletDetail(per_page, page);
@@ -49,7 +49,7 @@ export default async function WalletPage({ searchParams }: Props) {
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"کیف پول"} />
       <div className="w-full md:mx-6 flex items-center gap-4">
-        <div className="w-full bg-zinc-900 text-white flex flex-col gap-4 border md:basis-1/3 p-4 rounded-lg">
+        <div className="w-full bg-(--light-green) text-(--base-black) flex flex-col gap-4 border md:basis-1/3 p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center justify-center">
               <p>موجودی قابل استفاده</p>
@@ -57,7 +57,7 @@ export default async function WalletPage({ searchParams }: Props) {
             </div>
             <Wallet2Icon />
           </div>
-          <Button className="w-fit text-black bg-white">
+          <Button className="w-full">
             {" "}
             <PlusIcon /> افزایش اعتبار
           </Button>
@@ -71,11 +71,17 @@ export default async function WalletPage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="flex flex-col gap-4 mx-2 md:mx-6">
+            <div className="mb-6 flex flex-col gap-3">
+              <h2 className="text-2xl font-bold">لیست کیف پول</h2>
+              <p className="text-(--secondary-text)">
+                لیست دریافتی‌ها و پرداختی‌های شما
+              </p>
+            </div>
             <WalletTable walletList={wallet?.transactions} />
             <DashboardPagination
               per_page={per_page}
               page={page}
-              posts={per_page}
+              posts={wallet?.pagination.total || per_page}
             />
           </div>
         )}

@@ -104,12 +104,12 @@ const DashboardPagination: FC<PaginateProductsProps> = ({
           // initialPage={Number(page) - 1}
           forcePage={Number(searchParams.get("page")) - 1}
           containerClassName={
-            "text-sm flex gap-4 justify-center items-center text-[var(--base-gray)] rtl"
+            "text-sm flex gap-3 justify-center items-center text-(--base-black) rtl"
           }
           activeClassName={
-            "border border-[var(--base-blue)] text-[var(--base-blue)] rounded-sm iranSansBold"
+            "text-(--base-green) bg-(--light-green) rounded-sm font-bold"
           }
-          disabledClassName={"!text-[var(--light-border)]"}
+          disabledClassName={"!text-gray-300"}
           pageLinkClassName={
             " rounded-[3px] px-3.5 py-1.5 md:px-2 md:py-2 min-w-[30px] md:min-w-[40px] flex items-center justify-center cursor-pointer"
           }

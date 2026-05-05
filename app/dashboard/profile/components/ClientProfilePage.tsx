@@ -53,23 +53,15 @@ function ClientProfilePage({ profile, revalidateData }: any) {
 
   return (
     <div className="flex gap-6 w-full">
-      <div className="w-full md:basis-9/12 mx-4">
+      <div className="w-full mx-4">
+        <div className="mb-6 flex flex-col gap-3">
+          <h2 className="text-2xl font-bold">پروفایل کاربری</h2>
+          <p className="text-(--secondary-text)">
+            اطلاعات حساب کاربری خود را مدیریت کنید.
+          </p>
+        </div>
         <ProfileForm profile={profile} />
       </div>
-      {isMobile ? null : (
-        <div className="basis-3/12 w-full">
-          <div>
-            <Button
-              className="p-3 items-start justify-start gap-4 h-full text-red-500"
-              variant="ghost"
-              onClick={handleLogoutUser}
-            >
-              <LogOutIcon className="size-5" />
-              <p>خروج از حساب کاربری</p>
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

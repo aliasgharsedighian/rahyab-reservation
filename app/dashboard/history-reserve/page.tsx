@@ -24,7 +24,7 @@ const getReserveHistory = async (
     headers: myHeaders,
   };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/history?per_page=${per_page}&page=${page}`,
+    `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/history?count=${per_page}&page=${page}`,
     requestOptions,
   );
 
@@ -35,7 +35,7 @@ const getReserveHistory = async (
 };
 
 export default async function HistoryReservePage({ searchParams }: Props) {
-  const per_page = "10";
+  const per_page = "6";
   const { page } = await searchParams;
 
   const reserveHistory = await getReserveHistory(per_page, page);
@@ -58,6 +58,13 @@ export default async function HistoryReservePage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="flex flex-col gap-4 mx-2 md:mx-6">
+            <div className="mb-6 flex flex-col gap-3">
+              <h2 className="text-2xl font-bold">رزرو‌های گذشته</h2>
+              <p className="text-(--secondary-text)">
+                لیست غذاهای رزرو شده گذشته شما
+              </p>
+            </div>
+
             <ReserveHistoryTable reserveHistory={reserveHistory?.items} />
             <DashboardPagination
               per_page={per_page}

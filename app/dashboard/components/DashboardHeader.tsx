@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { toast } from "sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { userInfoAccess } from "@/redux/features/auth-slice";
 
 function DashboardHeader({ title }: any) {
   //   const userInfo = useSelector(userInfoAccess);
@@ -21,6 +22,9 @@ function DashboardHeader({ title }: any) {
   const { push } = useRouter();
   const dispatch = useDispatch();
   const pathname = usePathname();
+
+  const userInfoRedux: any = useSelector(userInfoAccess);
+
   const [openProfilePop, setOpenProfilePop] = useState(false);
   //   const hiddenSidebar = useSelector(hiddenSidebarReducer);
 
@@ -55,7 +59,7 @@ function DashboardHeader({ title }: any) {
   // }
 
   return (
-    <div className="bg-[#e9e9e9] py-[18px] px-4 md:px-6 flex justify-between items-center shadow-md text-sm md:text-base sticky top-0 z-50">
+    <div className="bg-white py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md text-sm md:text-base sticky top-0 z-50">
       <div className="flex items-start gap-3">
         <SidebarTrigger className="flex md:hidden sticky top-9 " />
 
@@ -64,12 +68,12 @@ function DashboardHeader({ title }: any) {
       <div className="flex items-center gap-6">
         <Popover>
           <PopoverTrigger className="hidden md:flex">
-            <div className="border-l border-gray-600 pl-6 cursor-pointer hover:text-[var(--yellow)]">
+            <div className="border-l border-gray-400 pl-6 cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="size-6"
+                className="size-6 text-(--base-green)"
               >
                 <path
                   fillRule="evenodd"
@@ -95,16 +99,23 @@ function DashboardHeader({ title }: any) {
           href="/dashboard/profile"
           className="flex items-center gap-3 cursor-pointer"
         >
-          <span className="text-sm font-IRANSansBold hidden sm:flex">
-            {/* {!userInfo?.name || !userInfo?.family
-                  ? "پروفایل کاربر"
-                  : ` ${userInfo.name} ${userInfo.family}`} */}
-          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-bold hidden sm:flex">
+              {!userInfoRedux?.name || !userInfoRedux?.family
+                ? "پروفایل کاربر"
+                : ` ${userInfoRedux.name} ${userInfoRedux.family}`}
+            </span>
+            <span className="text-[11px] text-(--secondary-text) hidden sm:flex">
+              {!userInfoRedux?.departeman_name || !userInfoRedux?.company_name
+                ? "پروفایل کاربر"
+                : ` ${userInfoRedux.departeman_name} ${userInfoRedux.company_name}`}
+            </span>
+          </div>
           <Avatar>
             <AvatarImage src="/assets/images/icons/blank-profile.webp" />
 
             <AvatarFallback>
-              {/* {userInfo?.name.charAt(0)} {userInfo?.family.charAt(0)} */}
+              {userInfoRedux?.name.charAt(0)} {userInfoRedux?.family.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </Link>
