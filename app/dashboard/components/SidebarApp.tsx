@@ -31,6 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlarmCheck,
+  BellIcon,
   ClockIcon,
   HomeIcon,
   ListIcon,
@@ -118,6 +120,15 @@ const dashboardList = [
     link: "/dashboard/profile",
     href: "/dashboard/profile",
     icon: <UserIcon className="size-5 text-gray-500" />,
+  },
+  {
+    id: 6,
+    accordion: false,
+    accordionLinks: [],
+    text: "اعلان ها",
+    link: "/dashboard/notifications",
+    href: "/dashboard/notifications?page=1",
+    icon: <BellIcon className="size-5 text-gray-500" />,
   },
 ];
 
@@ -241,6 +252,13 @@ function SidebarApp() {
                       <AccordionTrigger className="font-IRANSansBold">
                         <SidebarMenuItem className="w-full" key={item.id}>
                           <SidebarMenuButton
+                            onClick={() => {
+                              if (isMobile) {
+                                setOpenMobile(false);
+                              } else {
+                                // setOpen(false);
+                              }
+                            }}
                             className="h-full hover:bg-transparent"
                             asChild
                           >
@@ -285,6 +303,13 @@ function SidebarApp() {
                   <span className="h-full w-1 bg-(--base-green)"></span>
                 )}
                 <SidebarMenuButton
+                  onClick={() => {
+                    if (isMobile) {
+                      setOpenMobile(false);
+                    } else {
+                      // setOpen(false);
+                    }
+                  }}
                   className="h-full hover:bg-(--light-green)"
                   asChild
                 >
@@ -299,14 +324,30 @@ function SidebarApp() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="border-t mb-6">
-        <Button
-          className="p-3 items-start justify-start gap-4 h-full text-red-500"
-          variant="ghost"
-          onClick={handleLogoutUser}
+        <SidebarMenuItem
+          className={`w-full h-13.5 hover:text-(--base-green) flex items-center justify-center rounded-md`}
         >
-          <LogOutIcon className="size-5" />
-          <p>خروج از حساب کاربری</p>
-        </Button>
+          <SidebarMenuButton
+            onClick={() => {
+              if (isMobile) {
+                setOpenMobile(false);
+              } else {
+                // setOpen(false);
+              }
+            }}
+            className="h-full hover:bg-(--light-green)"
+            asChild
+          >
+            <Button
+              className="p-3 items-start justify-start gap-4 h-full text-red-500"
+              variant="ghost"
+              onClick={handleLogoutUser}
+            >
+              <LogOutIcon className="size-5" />
+              <p>خروج از حساب کاربری</p>
+            </Button>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarFooter>
     </Sidebar>
   );

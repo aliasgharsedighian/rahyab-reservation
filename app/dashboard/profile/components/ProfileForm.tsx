@@ -31,6 +31,7 @@ import {
   Edit2,
   CameraIcon,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 type Profile = {
   id: number;
@@ -47,6 +48,7 @@ type Profile = {
   current_password: string;
   password: string;
   password_confirmation: string;
+  description: string;
 };
 
 export default function ProfileForm({ profile }: { profile: Profile }) {
@@ -75,7 +77,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       formData.append("avatar", file);
     }
 
-    console.log("Submitting:", data);
+    // console.log("Submitting:", data);
 
     // مثال API
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
@@ -124,6 +126,31 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     }
   };
 
+  const onSubmitInterests = async (values: Profile) => {
+    const description = values.current_password;
+
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    var myHeaders = new Headers();
+    myHeaders.append("Accept", "*/*");
+    myHeaders.append("Accept", "application/json");
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    formData.append("description", description);
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
+      method: "POST",
+      body: formData,
+      headers: myHeaders,
+    });
+
+    const response = await res.json();
+
+    if (res.status === 200) {
+      toast.success(response.message);
+    }
+  };
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
@@ -135,8 +162,8 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
   };
 
   return (
-    <div className="w-full ml-auto flex flex-col max-w-2xl gap-6" dir="rtl">
-      <div className="w-full flex border p-4 rounded-xl">
+    <div className="w-full  flex flex-col max-w-2xl gap-6" dir="rtl">
+      <div className="w-full flex border justify-between gap-4 p-4 rounded-xl">
         {/* Avatar Section */}
 
         <div className="w-full flex flex-col gap-3 items-start justify-center">
@@ -297,73 +324,107 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         </Form>
       </div>
 
-      <div className="w-1/2 space-y-4 flex flex-col border p-4 rounded-xl">
-        <h2 className="text-lg iranSansBold">تغییر رمز عبور</h2>
+      <div className="flex flex-col md:flex-row items-start gap-4">
+        <div className="w-full md:w-1/2 space-y-4 flex flex-col border p-4 rounded-xl">
+          <h2 className="text-lg iranSansBold">تغییر رمز عبور</h2>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmitChangePassword)}
-            className="space-y-5"
-          >
-            <FormField
-              control={form.control}
-              name="current_password"
-              render={({ field }) => (
-                <FormItem>
-                  {/* <FormLabel>Current Password</FormLabel> */}
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="رمز عبور فعلی"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmitChangePassword)}
+              className="space-y-5"
+            >
+              <FormField
+                control={form.control}
+                name="current_password"
+                render={({ field }) => (
+                  <FormItem>
+                    {/* <FormLabel>Current Password</FormLabel> */}
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="رمز عبور فعلی"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  {/* <FormLabel>New Password</FormLabel> */}
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="رمز عبور جدید"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    {/* <FormLabel>New Password</FormLabel> */}
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="رمز عبور جدید"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="password_confirmation"
-              render={({ field }) => (
-                <FormItem>
-                  {/* <FormLabel>Confirm New Password</FormLabel> */}
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="تکرار رمز عبور جدید"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="password_confirmation"
+                render={({ field }) => (
+                  <FormItem>
+                    {/* <FormLabel>Confirm New Password</FormLabel> */}
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="تکرار رمز عبور جدید"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button type="submit" className="w-full">
-              تغییر رمز عبور
-            </Button>
-          </form>
-        </Form>
+              <Button type="submit" className="w-full">
+                تغییر رمز عبور
+              </Button>
+            </form>
+          </Form>
+        </div>
+
+        <div className="w-full md:w-1/2 space-y-4 flex flex-col border p-4 rounded-xl">
+          <h2 className="text-lg iranSansBold">علاقه‌مندی‌ها</h2>
+
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmitInterests)}
+              className="space-y-5"
+            >
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        placeholder="علاقه‌مندی‌های خود را بنویسید..."
+                        className="min-h-[120px] resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full">
+                ثبت علاقه‌مندی‌ها
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
 
       {/* <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">

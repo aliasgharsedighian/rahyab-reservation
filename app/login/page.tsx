@@ -10,6 +10,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { logIn, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,15 +27,10 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
+import { XIcon } from "lucide-react";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -36,14 +39,14 @@ const signinFormSchema = z.object({
     .string("شماره موبایل خود را وارد کنید.")
     .regex(phoneRegex, "شماره وارد شده صحیح نیست.")
     .min(1, { message: "شماره موبایل خود را وارد کنید." }),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "حداقل ۸ کاراکتر وارد کنید"),
 });
 
 function LoginPage() {
   const dispatch = useDispatch();
 
+  const [open, setOpen] = useState(false);
   const [isPendingLogin, startTransitionLogin] = useTransition();
-  const [mobileNumber, setMobileNumber] = useState("");
 
   const loginForm = useForm<z.infer<typeof signinFormSchema>>({
     resolver: zodResolver(signinFormSchema),
@@ -56,20 +59,15 @@ function LoginPage() {
   const handleLoginSubmit = async (
     values: z.infer<typeof signinFormSchema>,
   ) => {
-    const copyData = { ...values };
-    // console.log(copyData);
-
     try {
       startTransitionLogin(async () => {
-        const promise = loginAction(copyData, loginForm);
+        const promise = loginAction(values, loginForm);
         toast.promise(promise, {
-          loading: "لطفا کمی صبر کنید",
+          loading: "در حال ورود...",
           success: (result) => {
-            // console.log(result);
             localStorage.setItem("token", result.data.token);
             dispatch(setToken(result.data.token));
             dispatch(logIn(result.data.user));
-
             return result.message;
           },
           error: (err) => err.message || "خطایی رخ داد",
@@ -81,80 +79,177 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full mx-auto">
-      <div className="flex flex-row w-full">
-        <div className="w-full bg-white h-screen flex items-center justify-center">
-          <div className="w-full mx-4 sm:mx-8 md:mx-12 lg:mx-16">
-            <Card className="w-full py-12">
-              <CardHeader>
-                <CardTitle>
-                  <div className="flex flex-col gap-2 items-center justify-center">
-                    <p className="font-bold">خوش آمدید</p>
-                    <p>جهت رزرو و عده‌های غذایی خود وارد شوید</p>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="">
-                  {/* logo */}
+    <div className="min-h-screen w-full flex bg-gray-50">
+      {/* LEFT */}
+      <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+        <div className="max-w-md text-center px-8">
+          <Image
+            src="/assets/images/login-picture.jpeg"
+            alt="login"
+            width={400}
+            height={300}
+            className="mx-auto mb-6 rounded-xl"
+          />
 
-                  <Form {...loginForm}>
-                    <form
-                      onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
-                      className="flex flex-col gap-6"
-                    >
-                      <FormField
-                        control={loginForm.control}
-                        name="mobile"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>شماره موبایل</FormLabel>
-                            <FormControl>
-                              <Input
-                                id="signin-email"
-                                type="text"
-                                placeholder="Email"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>رمز عبور</FormLabel>
-                            <FormControl>
-                              <Input
-                                id="signin-password"
-                                type="password"
-                                placeholder="Password"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        // disabled={signinPending}
-                        type="submit"
-                        className="w-full"
-                      >
-                        ورود به سیستم
-                      </Button>
-                    </form>
-                  </Form>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            سیستم رزرو غذای سازمانی
+          </h1>
+
+          <p className="text-gray-600 leading-7">
+            ساده، سریع و بدون دردسر غذای خود را رزرو کنید
+          </p>
         </div>
-        <div className="hidden md:flex w-full bg-[#19201e] h-screen">image</div>
       </div>
+
+      {/* RIGHT */}
+      <div className="flex w-full md:w-1/2 items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <Card className="shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-0 rounded-2xl">
+            <CardHeader className="text-center space-y-2 pb-6">
+              <CardTitle className="text-xl font-bold text-gray-800">
+                ورود به حساب کاربری
+              </CardTitle>
+              <p className="text-sm text-gray-500">
+                برای ادامه وارد حساب خود شوید
+              </p>
+            </CardHeader>
+
+            <CardContent>
+              <Form {...loginForm}>
+                <form
+                  onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
+                  className="flex flex-col gap-5"
+                >
+                  {/* Mobile */}
+                  <FormField
+                    control={loginForm.control}
+                    name="mobile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">
+                          شماره موبایل
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="text"
+                            placeholder="مثلاً 09123456789"
+                            {...field}
+                            className="h-12 rounded-lg bg-gray-50 border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 transition"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Password */}
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">
+                          رمز عبور
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="رمز عبور"
+                            {...field}
+                            className="h-12 rounded-lg bg-gray-50 border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 transition"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Options */}
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span className="cursor-pointer hover:text-green-600 transition">
+                      فراموشی رمز؟
+                    </span>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" />
+                      مرا به خاطر بسپار
+                    </label>
+                  </div>
+
+                  {/* Register */}
+                  <div className="text-sm text-gray-600 text-center">
+                    حساب کاربری ندارید؟{" "}
+                    <Link
+                      href="/register"
+                      className="text-green-600 font-medium hover:text-green-700 transition"
+                    >
+                      ثبت نام کنید
+                    </Link>
+                  </div>
+
+                  {/* Terms */}
+                  <div className="text-center text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setOpen(true)}
+                      className="text-gray-500 hover:text-green-600 transition"
+                    >
+                      مشاهده قوانین و مقررات
+                    </button>
+                  </div>
+
+                  {/* Submit */}
+                  <Button
+                    type="submit"
+                    disabled={isPendingLogin}
+                    className="w-full h-12 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition"
+                  >
+                    {isPendingLogin ? "در حال ورود..." : "ورود به سیستم"}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Modal */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg rounded-xl">
+          <DialogHeader>
+            <DialogClose>{/* <XIcon /> */}</DialogClose>
+            <DialogTitle className="text-lg text-center font-bold">
+              قوانین و مقررات
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="text-sm text-gray-600 leading-7 space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            <p>
+              استفاده از سیستم رزرو غذا به منزله پذیرش کامل قوانین و مقررات
+              می‌باشد.
+            </p>
+
+            <p>
+              کاربران موظف هستند سفارش غذای خود را در بازه زمانی مشخص شده ثبت
+              نمایند. در غیر این صورت امکان رزرو برای آن روز وجود نخواهد داشت.
+            </p>
+
+            <p>
+              لغو رزرو تنها تا قبل از زمان تعیین شده امکان‌پذیر است و پس از آن
+              هزینه از حساب کاربر کسر خواهد شد.
+            </p>
+
+            <p>
+              مسئولیت صحت اطلاعات حساب کاربری بر عهده کاربر بوده و در صورت بروز
+              مشکل، پشتیبانی صرفاً بر اساس اطلاعات ثبت‌شده اقدام خواهد کرد.
+            </p>
+
+            <p>
+              این سامانه صرفاً جهت استفاده پرسنل سازمان طراحی شده و هرگونه
+              استفاده غیرمجاز پیگرد قانونی خواهد داشت.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -15,39 +15,8 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import DashboardHeader from "./components/DashboardHeader";
 
-const dashboardList = [
-  // {
-  //   id: 1,
-  //   text: "خانه",
-  //   link: "/dashboard/home",
-  //   icon: <HomeIcon className="size-5 text-gray-500" />,
-  // },
-  {
-    id: 2,
-    text: "رزرو غذا",
-    link: "/dashboard/reserve",
-    icon: <ListIcon className="size-5 text-gray-500" />,
-  },
-  {
-    id: 3,
-    text: "تاریخچه رزروها",
-    link: "/dashboard/history-reserve",
-    icon: <ClockIcon className="size-5 text-gray-500" />,
-  },
-  {
-    id: 4,
-    text: "کیف پول",
-    link: "/dashboard/wallet",
-    icon: <WalletIcon className="size-5 text-gray-500" />,
-  },
-  {
-    id: 5,
-    text: "پروفایل کاربری",
-    link: "/dashboard/profile",
-    icon: <UserIcon className="size-5 text-gray-500" />,
-  },
-];
 function DashboardPage() {
   const dispatch = useDispatch();
   const { push } = useRouter();
@@ -86,27 +55,8 @@ function DashboardPage() {
     });
   };
   return (
-    <div className="w-full block md:hidden">
-      {/* <div className="flex flex-col">
-        {dashboardList.map((item) => (
-          <Link
-            className="flex items-center gap-4 border-b last:border-none p-3 hover:bg-gray-100 transition-all duration ease-out"
-            key={item.id}
-            href={item.link}
-          >
-            {item.icon}
-            <p className="">{item.text}</p>
-          </Link>
-        ))}
-        <Button
-          className="p-3 items-start justify-start gap-4 h-full text-[var(--main-red)]"
-          variant="ghost"
-          onClick={handleLogoutUser}
-        >
-          <LogOutIcon className="size-5" />
-          <p>خروج از حساب کاربری</p>
-        </Button>
-      </div> */}
+    <div className="flex flex-col gap-6 w-full mb-40 md:mb-10">
+      <DashboardHeader title={"پیشخوان"} />
     </div>
   );
 }

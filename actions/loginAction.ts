@@ -23,6 +23,7 @@ export default async function loginAction(formData: any, loginForm: any) {
       loginCookiesAction(result.data.token, true);
       return result;
     }
+    throw new Error(result.message);
   } catch (error) {
     console.log({ error });
     return error;
