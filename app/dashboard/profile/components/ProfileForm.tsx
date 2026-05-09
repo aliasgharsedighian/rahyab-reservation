@@ -74,7 +74,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     formData.append("family", data.family);
 
     if (file) {
-      formData.append("avatar", file);
+      formData.append("avatar_url", file);
     }
 
     // console.log("Submitting:", data);

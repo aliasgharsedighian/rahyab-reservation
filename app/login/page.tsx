@@ -30,7 +30,7 @@ import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { XIcon } from "lucide-react";
+import { ShieldCheckIcon, XIcon } from "lucide-react";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -214,39 +214,44 @@ function LoginPage() {
 
       {/* Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg rounded-xl">
-          <DialogHeader>
-            <DialogClose>{/* <XIcon /> */}</DialogClose>
-            <DialogTitle className="text-lg text-center font-bold">
-              قوانین و مقررات
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-md  max-w-xl rounded-2xl border-0 p-0 overflow-hidden">
+          <div className="bg-gradient-to-br from-emerald-600 to-green-500 p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
+                <ShieldCheckIcon className="size-6" />
+                قوانین و مقررات
+              </DialogTitle>
+            </DialogHeader>
 
-          <div className="text-sm text-gray-600 leading-7 space-y-3 max-h-[400px] overflow-y-auto pr-1">
-            <p>
-              استفاده از سیستم رزرو غذا به منزله پذیرش کامل قوانین و مقررات
-              می‌باشد.
+            <p className="text-center text-sm text-white/90 mt-3">
+              لطفاً پیش از استفاده از سامانه قوانین زیر را مطالعه نمایید.
             </p>
+          </div>
 
-            <p>
-              کاربران موظف هستند سفارش غذای خود را در بازه زمانی مشخص شده ثبت
-              نمایند. در غیر این صورت امکان رزرو برای آن روز وجود نخواهد داشت.
-            </p>
+          <div className="p-6">
+            <div className="text-sm text-gray-600 leading-8 space-y-4 max-h-[400px] overflow-y-auto pr-1">
+              <div className="rounded-xl bg-muted/40 p-4">
+                استفاده از سیستم رزرو غذا به منزله پذیرش کامل قوانین و مقررات
+                می‌باشد.
+              </div>
 
-            <p>
-              لغو رزرو تنها تا قبل از زمان تعیین شده امکان‌پذیر است و پس از آن
-              هزینه از حساب کاربر کسر خواهد شد.
-            </p>
+              <div className="rounded-xl bg-muted/40 p-4">
+                کاربران موظف هستند سفارش غذای خود را در بازه زمانی مشخص شده ثبت
+                نمایند.
+              </div>
 
-            <p>
-              مسئولیت صحت اطلاعات حساب کاربری بر عهده کاربر بوده و در صورت بروز
-              مشکل، پشتیبانی صرفاً بر اساس اطلاعات ثبت‌شده اقدام خواهد کرد.
-            </p>
+              <div className="rounded-xl bg-muted/40 p-4">
+                لغو رزرو تنها تا قبل از زمان تعیین شده امکان‌پذیر است.
+              </div>
 
-            <p>
-              این سامانه صرفاً جهت استفاده پرسنل سازمان طراحی شده و هرگونه
-              استفاده غیرمجاز پیگرد قانونی خواهد داشت.
-            </p>
+              <div className="rounded-xl bg-muted/40 p-4">
+                مسئولیت صحت اطلاعات حساب کاربری بر عهده کاربر می‌باشد.
+              </div>
+
+              <div className="rounded-xl bg-muted/40 p-4">
+                هرگونه استفاده غیرمجاز از سامانه پیگرد قانونی خواهد داشت.
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
