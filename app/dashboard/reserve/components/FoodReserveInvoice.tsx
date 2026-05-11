@@ -6,10 +6,10 @@ import {
   decrementReserveCount,
   incrementReserveCount,
   removeFromReserveBasket,
-  reserveSelectItems,
+  reserveSelectItemCountById,
 } from "@/redux/features/reserveBasketSlice";
-import { RecycleIcon, Trash2Icon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Trash2Icon } from "lucide-react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 function FoodReserveInvoice({
@@ -23,23 +23,8 @@ function FoodReserveInvoice({
 }: any) {
   const dispatch = useDispatch();
 
-  const reserveCart = useSelector(reserveSelectItems);
-
-  const [countInput, setCountInput] = useState(0);
-
-  useEffect(() => {
-    if (reserveCart.length === 0) {
-      return;
-    } else {
-      const item = reserveCart.find((item: any) => item.id === weekly_menu_id);
-
-      if (item) {
-        setCountInput(item?.count);
-      } else {
-        setCountInput(0);
-      }
-    }
-  }, []);
+  // مستقیم از ریداکس
+  const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
 
   const itemToBasket = {
     id: weekly_menu_id,
@@ -56,28 +41,22 @@ function FoodReserveInvoice({
       <Button
         className="max-w-2xs"
         onClick={() => {
-          setCountInput((prev) => prev + 1);
-          setTimeout(() => {
-            dispatch(
-              addToReserveBasket({
-                ...itemToBasket,
-                count: countInput,
-              }),
-            );
-          }, 100);
-          setTimeout(() => {
-            dispatch(incrementReserveCount(weekly_menu_id));
-          }, 300);
+          dispatch(
+            addToReserveBasket({
+              ...itemToBasket,
+              count: 1,
+            }),
+          );
         }}
       >
         رزرو این غذا
       </Button>
     );
+
   return (
     <div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-[14px] text-[var(--base-gray)]">
-          {/* <label htmlFor="count-input">تعداد</label> */}
           <div
             className={`border rounded-md shadow-md flex items-center justify-between gap-3`}
           >
@@ -85,18 +64,7 @@ function FoodReserveInvoice({
               variant={"ghost"}
               className="border-none!"
               onClick={() => {
-                setCountInput((prev) => prev + 1);
-                setTimeout(() => {
-                  dispatch(
-                    addToReserveBasket({
-                      ...itemToBasket,
-                      count: countInput,
-                    }),
-                  );
-                }, 100);
-                setTimeout(() => {
-                  dispatch(incrementReserveCount(weekly_menu_id));
-                }, 300);
+                dispatch(incrementReserveCount(weekly_menu_id));
               }}
             >
               <svg
@@ -114,19 +82,20 @@ function FoodReserveInvoice({
                 />
               </svg>
             </Button>
+
             <div className="flex flex-col gap-1 items-center justify-center">
               <p className="iranSansBold">{countInput}</p>
             </div>
+
             <Button
               variant={"ghost"}
               className="border-none!"
               disabled={countInput <= 0}
               onClick={() => {
-                setCountInput((prev) => prev - 1);
-                dispatch(decrementReserveCount(weekly_menu_id));
-
                 if (countInput - 1 === 0) {
                   dispatch(removeFromReserveBasket({ id: weekly_menu_id }));
+                } else {
+                  dispatch(decrementReserveCount(weekly_menu_id));
                 }
               }}
             >
@@ -139,7 +108,7 @@ function FoodReserveInvoice({
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
                   stroke="currentColor"
-                  className={`w-5 h-5 ${countInput !== 1 && ""}`}
+                  className={`w-5 h-5`}
                 >
                   <path
                     strokeLinecap="round"

@@ -31,12 +31,12 @@ function FoodReserveTabs({ reserveList }: any) {
         onValueChange={(value) => {
           setTab(value);
         }}
-        defaultValue={reserveList.weeks[0].range}
+        defaultValue={reserveList?.weeks[0].range}
         className="w-full rtl"
       >
         <div className="flex flex-col gap-4">
           <TabsList className="rtl w-full bg-(--light-green)">
-            {reserveList.weeks.map((item: any, index: number) => (
+            {reserveList?.weeks.map((item: any, index: number) => (
               <TabsTrigger key={index} value={item.range} className="">
                 {item.is_current_week
                   ? "هفته جاری"
@@ -45,7 +45,7 @@ function FoodReserveTabs({ reserveList }: any) {
             ))}
           </TabsList>
 
-          {reserveList.weeks.map((item: any, index: number) => (
+          {reserveList?.weeks.map((item: any, index: number) => (
             <TabsContent key={index} value={item.range}>
               <div className="flex flex-col gap-4 md:gap-6">
                 {item.days.map((day: any) => (

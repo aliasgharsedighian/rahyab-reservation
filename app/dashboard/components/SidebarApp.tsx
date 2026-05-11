@@ -55,6 +55,8 @@ import { useDispatch } from "react-redux";
 import { logOut } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { toast } from "sonner";
+import { RulesModal } from "@/app/components/RulesModal";
+import { ContactModal } from "@/app/components/ContactModal";
 
 const dashboardList = [
   // {
@@ -197,101 +199,11 @@ function SidebarApp() {
 
   return (
     <>
-      <Dialog open={openContactModal} onOpenChange={setOpenContactModal}>
-        <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-500 p-6 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-center text-2xl font-bold flex items-center justify-center gap-2">
-                <PhoneCallIcon className="size-6" />
-                تماس با ما
-              </DialogTitle>
-            </DialogHeader>
-
-            <p className="text-center text-sm text-white/90 mt-3 leading-7">
-              در صورت وجود هرگونه مشکل یا سوال می‌توانید با ما در ارتباط باشید.
-            </p>
-          </div>
-
-          <div className="p-6 space-y-4">
-            <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted transition">
-              <div className="bg-green-100 text-green-600 p-3 rounded-full">
-                <PhoneCallIcon className="size-5" />
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">
-                  شماره تماس
-                </span>
-                <span className="font-bold tracking-wide">021-12345678</span>
-              </div>
-            </div>
-
-            <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted transition">
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-full">
-                <MailIcon className="size-5" />
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">
-                  ایمیل پشتیبانی
-                </span>
-                <span className="font-bold">support@example.com</span>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button
-                className="w-full rounded-xl h-11"
-                onClick={() => setOpenContactModal(false)}
-              >
-                متوجه شدم
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={openRulesModal} onOpenChange={setOpenRulesModal}>
-        <DialogContent className="sm:max-w-md  max-w-xl rounded-2xl border-0 p-0 overflow-hidden">
-          <div className="bg-gradient-to-br from-emerald-600 to-green-500 p-6 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
-                <ShieldCheckIcon className="size-6" />
-                قوانین و مقررات
-              </DialogTitle>
-            </DialogHeader>
-
-            <p className="text-center text-sm text-white/90 mt-3">
-              لطفاً پیش از استفاده از سامانه قوانین زیر را مطالعه نمایید.
-            </p>
-          </div>
-
-          <div className="p-6">
-            <div className="text-sm text-gray-600 leading-8 space-y-4 max-h-[400px] overflow-y-auto pr-1">
-              <div className="rounded-xl bg-muted/40 p-4">
-                استفاده از سیستم رزرو غذا به منزله پذیرش کامل قوانین و مقررات
-                می‌باشد.
-              </div>
-
-              <div className="rounded-xl bg-muted/40 p-4">
-                کاربران موظف هستند سفارش غذای خود را در بازه زمانی مشخص شده ثبت
-                نمایند.
-              </div>
-
-              <div className="rounded-xl bg-muted/40 p-4">
-                لغو رزرو تنها تا قبل از زمان تعیین شده امکان‌پذیر است.
-              </div>
-
-              <div className="rounded-xl bg-muted/40 p-4">
-                مسئولیت صحت اطلاعات حساب کاربری بر عهده کاربر می‌باشد.
-              </div>
-
-              <div className="rounded-xl bg-muted/40 p-4">
-                هرگونه استفاده غیرمجاز از سامانه پیگرد قانونی خواهد داشت.
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ContactModal
+        open={openContactModal}
+        onOpenChange={setOpenContactModal}
+      />
+      <RulesModal open={openRulesModal} onOpenChange={setOpenRulesModal} />
       <Sidebar
         className="shadow-xl"
         side="right"

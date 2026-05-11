@@ -255,8 +255,8 @@ function DashboardHeader({ title }: any) {
               <AvatarImage src="/assets/images/icons/blank-profile.webp" />
 
               <AvatarFallback>
-                {userInfoRedux?.name.charAt(0)}{" "}
-                {userInfoRedux?.family.charAt(0)}
+                {userInfoRedux?.name?.charAt(0)}{" "}
+                {userInfoRedux?.family?.charAt(0)}
               </AvatarFallback>
             </Avatar>
           </Link>

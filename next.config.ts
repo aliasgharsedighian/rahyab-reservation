@@ -3,7 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["192.168.63.44"],
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "192.168.63.44",
+        port: "8000",
+      },
+    ],
   },
 };
 

@@ -117,6 +117,13 @@ export const reserveSelectTotalWeight = (state: any) =>
     (total: any, item: any) => total + item.firstweight * item.count,
     0,
   );
+
+export const reserveSelectItemCountById =
+  (id: number | string) => (state: any) => {
+    const item = state.reserveBasket.cart.find((item: any) => item.id === id);
+
+    return item ? item.count : 0;
+  };
 // export const cartOpen = (state) => state.basket.cartOpen;
 
 export default reserveBasketSlice.reducer;

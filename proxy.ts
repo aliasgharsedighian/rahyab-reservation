@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { NextURL } from "next/dist/server/web/next-url";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const token = req.cookies.get("user_token")?.value || "";
   const { pathname, origin } = req.nextUrl;
 
