@@ -212,7 +212,7 @@ function SidebarApp() {
       >
         <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21">
           <Link
-            href="/dashboard"
+            href="/dashboard/reserve"
             className={` bg-white w-full py-3 items-center ${
               open ? "flex" : "hidden"
             }`}
@@ -222,6 +222,7 @@ function SidebarApp() {
               height={113}
               src="/assets/images/logo-green.webp"
               alt="لوگو هوبرنیکس"
+              loading="eager"
             />
           </Link>
           <Button

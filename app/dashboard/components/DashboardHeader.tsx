@@ -23,6 +23,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { userInfoAccess } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { Button } from "@/components/ui/button";
+import { BellIcon } from "lucide-react";
 
 function DashboardHeader({ title }: any) {
   //   const userInfo = useSelector(userInfoAccess);
@@ -171,19 +172,20 @@ function DashboardHeader({ title }: any) {
         <div className="flex items-center gap-6">
           <Popover>
             <PopoverTrigger className="flex">
-              <div className="border-l border-gray-400 pl-6 cursor-pointer">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="size-6 text-(--base-green)"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+              <div className="relative border-l border-gray-400 pl-6 cursor-pointer">
+                <BellIcon
+                  className="size-5 text-(--base-green)"
+                  fill={
+                    notificationsData.length === 0
+                      ? "none"
+                      : "var(--base-green)"
+                  }
+                />
+                {notificationsData.length === 0 ? null : (
+                  <span className="absolute -right-1 -top-2 bg-(--base-green) h-4 w-4 flex items-center justify-center rounded-full text-white">
+                    {notificationsData.length}
+                  </span>
+                )}
               </div>
             </PopoverTrigger>
             <PopoverContent className="p-0 m-0 rounded-md">
@@ -252,7 +254,13 @@ function DashboardHeader({ title }: any) {
               </span>
             </div>
             <Avatar>
-              <AvatarImage src="/assets/images/icons/blank-profile.webp" />
+              <AvatarImage
+                src={
+                  userInfoRedux.avatar_url
+                    ? userInfoRedux.avatar_url
+                    : "/assets/images/blank-profile.webp"
+                }
+              />
 
               <AvatarFallback>
                 {userInfoRedux?.name?.charAt(0)}{" "}

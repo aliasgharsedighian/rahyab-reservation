@@ -61,10 +61,10 @@ function ClientProfilePage({ profile, revalidateData }: any) {
         </p>
       </div>
       <div className="flex gap-6 w-full">
-        <div className="md:basis-8/12  w-full mr-4">
+        <div className="md:basis-9/12 3xl:basis-10/12 w-full mr-4">
           <ProfileForm profile={profile} />
         </div>
-        <div className="hidden md:flex md:basis-4/12 md:ml-6">
+        <div className="hidden lg:flex md:basis-3/12 3xl:basis-2/12 md:ml-6">
           <div className="flex flex-col gap-4 w-full">
             {/* کارت یک ماه اخیر */}
             <Card className="rounded-2xl shadow-md h-fit">

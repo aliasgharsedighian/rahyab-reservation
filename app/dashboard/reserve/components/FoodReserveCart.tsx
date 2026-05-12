@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { DirectionProvider } from "@/components/ui/direction";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   removeAllItemsFromReserve,
   removeFromReserveBasket,
@@ -28,46 +30,53 @@ function FoodReserveCart({
         <ShoppingBasketIcon className="size-6 text-(--base-green)" />
         <p className="font-bold">سبد رزرو شما</p>
       </div>
-      <div
-        className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
-      >
-        {reserveCart.length !== 0 ? (
-          sortedReserveCart.map((item: any) => (
-            <div
-              key={item.id}
-              className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"
-            >
-              <div className="flex items-center gap-2">
-                <div className="bg-(--light-green) p-2 rounded-full">
-                  <ForkKnife className="text-(--base-green)" />
+      <DirectionProvider dir="rtl">
+        <ScrollArea
+          style={{ maxHeight: "calc(100vh - 240px)" }}
+          className="h-auto  overflow-auto"
+        >
+          <div
+            className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
+          >
+            {reserveCart.length !== 0 ? (
+              sortedReserveCart.map((item: any) => (
+                <div
+                  key={item.id}
+                  className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="bg-(--light-green) p-2 rounded-full">
+                      <ForkKnife className="text-(--base-green)" />
+                    </div>
+                    <div className="flex flex-col gap-1 items-start text-sm">
+                      <p>{item.name}</p>
+                      <span>
+                        {item.day} {item.jalali_date}
+                      </span>
+                      <span>{item.count} عدد</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-1 text-sm text-red-400"
+                    onClick={() =>
+                      dispatch(removeFromReserveBasket({ id: item.id }))
+                    }
+                  >
+                    <Trash2Icon className="text-red-400 size-4" />
+                    <span>حذف</span>
+                  </Button>
                 </div>
-                <div className="flex flex-col gap-1 items-start text-sm">
-                  <p>{item.name}</p>
-                  <span>
-                    {item.day} {item.jalali_date}
-                  </span>
-                  <span>{item.count} عدد</span>
-                </div>
+              ))
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <ShoppingBasketIcon className="size-12 text-(--base-green)" />
+                <p className="text-(--secondary-text)">سبد شما خالی است</p>
               </div>
-              <Button
-                variant="ghost"
-                className="flex items-center gap-1 text-sm text-red-400"
-                onClick={() =>
-                  dispatch(removeFromReserveBasket({ id: item.id }))
-                }
-              >
-                <Trash2Icon className="text-red-400 size-4" />
-                <span>حذف</span>
-              </Button>
-            </div>
-          ))
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <ShoppingBasketIcon className="size-12 text-(--base-green)" />
-            <p className="text-(--secondary-text)">سبد شما خالی است</p>
+            )}
           </div>
-        )}
-      </div>
+        </ScrollArea>
+      </DirectionProvider>
       {reserveCart.length !== 0 ? (
         <div className="w-full flex flex-col gap-4 px-3">
           <div className="border-t">

@@ -37,7 +37,11 @@ function FoodReserveTabs({ reserveList }: any) {
         <div className="flex flex-col gap-4">
           <TabsList className="rtl w-full bg-(--light-green)">
             {reserveList?.weeks.map((item: any, index: number) => (
-              <TabsTrigger key={index} value={item.range} className="">
+              <TabsTrigger
+                key={index}
+                value={item.range}
+                className="text-[12px] md:text-base"
+              >
                 {item.is_current_week
                   ? "هفته جاری"
                   : `${item.week_number} هفته بعد `}

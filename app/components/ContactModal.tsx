@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -19,7 +20,7 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden">
-        <div className="bg-gradient-to-br from-green-600 to-emerald-500 p-6 text-white">
+        <div className="bg-gradient-to-br from-green-600 to-emerald-500 p-3 md:p-6 text-white">
           <DialogHeader>
             <DialogTitle className="text-center text-2xl font-bold flex items-center justify-center gap-2">
               <PhoneCallIcon className="size-6" />
@@ -32,7 +33,7 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
           </p>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-3 md:p-6 space-y-4">
           <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted transition">
             <div className="bg-green-100 text-green-600 p-3 rounded-full">
               <PhoneCallIcon className="size-5" />
@@ -67,6 +68,7 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
           </div>
         </div>
       </DialogContent>
+      <DialogDescription></DialogDescription>
     </Dialog>
   );
 }

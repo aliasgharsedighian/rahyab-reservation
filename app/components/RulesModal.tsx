@@ -3,6 +3,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -19,7 +20,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-w-xl rounded-2xl border-0 p-0 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-br from-emerald-600 to-green-500 p-6 text-white">
+        <div className="bg-gradient-to-br from-emerald-600 to-green-500 p-3 md:p-6 text-white">
           <DialogHeader>
             <DialogTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
               <ShieldCheckIcon className="size-6" />
@@ -33,8 +34,8 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
         </div>
 
         {/* Body */}
-        <div className="p-6">
-          <div className="text-sm text-gray-600 leading-8 space-y-4 max-h-[400px] overflow-y-auto pr-1">
+        <div className="p-3 md:p-6">
+          <div className="text-sm text-gray-600 leading-8 space-y-4 max-h-100 overflow-y-auto pr-1">
             <div className="rounded-xl bg-muted/40 p-4">
               استفاده از سیستم رزرو غذا به منزله پذیرش کامل قوانین و مقررات
               می‌باشد.
@@ -59,6 +60,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
           </div>
         </div>
       </DialogContent>
+      <DialogDescription></DialogDescription>
     </Dialog>
   );
 }

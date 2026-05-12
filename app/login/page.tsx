@@ -104,7 +104,7 @@ function LoginPage() {
       </div>
 
       {/* RIGHT */}
-      <div className="flex w-full md:w-1/2 items-center justify-center px-6">
+      <div className="flex w-full md:w-1/2 items-center justify-center px-3 md:px-6">
         <div className="w-full max-w-md">
           <Card className="shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-0 rounded-2xl">
             <CardHeader className="text-center space-y-2 pb-6">
@@ -193,7 +193,7 @@ function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setOpen(true)}
-                      className="text-gray-500 hover:text-green-600 transition"
+                      className="text-gray-500 text-green-600 transition"
                     >
                       مشاهده قوانین و مقررات
                     </button>

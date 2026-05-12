@@ -43,6 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="fa"
+      data-scroll-behavior="smooth"
       dir="rtl"
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >

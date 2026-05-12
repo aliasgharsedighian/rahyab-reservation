@@ -40,12 +40,12 @@ function FoodReserveCardMobile({
 
   if (reserveCart.length === 0) return;
   return (
-    <div className="flex flex-col bg-white fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t">
+    <div className="flex flex-col bg-white fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t pt-6">
       <Drawer>
         <DrawerTrigger>
           {" "}
-          <div className="flex items-center gap-2 w-full justify-center">
-            <p className="text-[12px]">مشاهده بیشتر</p>
+          <div className="flex items-center gap-2 w-full justify-center absolute h-16.5 -top-3.5">
+            <p className="text-[12px] text-(--base-green)">مشاهده سبد</p>
             <ChevronUp className="size-5" />
           </div>
         </DrawerTrigger>
@@ -130,7 +130,7 @@ function FoodReserveCardMobile({
       </Drawer>
 
       <div className="w-full flex flex-col gap-1 px-3">
-        <div className="border-t">
+        <div className="">
           {/* <div className="flex items-center justify-between pt-3">
               <p className="">جمع تعداد</p>
               <span className="flex items-center gap-7 text-sm md:text-base">
