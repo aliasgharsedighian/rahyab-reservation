@@ -76,7 +76,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
             استفاده از سامانه رزرو غذا به منزله پذیرش کامل قوانین و مقررات است.
           </div>
 
-          <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+          <div className="max-h-75 lg:max-h-95 space-y-3 overflow-y-auto pr-1">
             {rules.map((rule, index) => {
               const Icon = rule.icon;
 
