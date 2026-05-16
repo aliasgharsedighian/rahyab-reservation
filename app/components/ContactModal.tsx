@@ -41,11 +41,11 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
 
             <div className="flex flex-col">
               <span className="text-sm text-muted-foreground">شماره تماس</span>
-              <span className="font-bold tracking-wide">021-12345678</span>
+              <span className="font-bold tracking-wide">09122159062</span>
             </div>
           </div>
 
-          <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted transition">
+          {/* <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4 hover:bg-muted transition">
             <div className="bg-blue-100 text-blue-600 p-3 rounded-full">
               <MailIcon className="size-5" />
             </div>
@@ -56,7 +56,7 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
               </span>
               <span className="font-bold">support@example.com</span>
             </div>
-          </div>
+          </div> */}
 
           <div className="pt-2">
             <Button
