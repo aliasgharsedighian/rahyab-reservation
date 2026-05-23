@@ -20,6 +20,7 @@ function FoodReserveInvoice({
   day,
   jalali_date,
   date,
+  isReserve,
 }: any) {
   const dispatch = useDispatch();
 
@@ -40,6 +41,7 @@ function FoodReserveInvoice({
     return (
       <Button
         className="max-w-2xs"
+        disabled={isReserve ? false : true}
         onClick={() => {
           dispatch(
             addToReserveBasket({

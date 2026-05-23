@@ -51,7 +51,7 @@ function ReserveHistoryTable({ reserveHistory }: any) {
         {reserveHistory.map((item: any, index: number) => (
           <div
             key={item.id}
-            className="border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12  min-w-max  hover:bg-(--light-green) transition"
+            className={`border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12  min-w-max  hover:bg-(--light-green) transition ${item.status === "cancelled" ? "bg-red-50 text-red-600" : ""}`}
           >
             <div className="lg:col-span-1 p-2 md:p-4 border-r flex items-center">
               {index + 1}
@@ -79,13 +79,17 @@ function ReserveHistoryTable({ reserveHistory }: any) {
               </span>
             </div>
             <div className="lg:col-span-1 p-2 md:p-4 flex items-center">
-              <Button
-                onClick={() => handleOpenModal(item.food_id, item.id)}
-                variant={"ghost"}
-                className="p-0"
-              >
-                <ListCheck />
-              </Button>
+              {item.status === "cancelled" ? (
+                <p>{item.status_fa}</p>
+              ) : (
+                <Button
+                  onClick={() => handleOpenModal(item.food_id, item.id)}
+                  variant={"ghost"}
+                  className="p-0"
+                >
+                  <ListCheck />
+                </Button>
+              )}
             </div>
           </div>
         ))}

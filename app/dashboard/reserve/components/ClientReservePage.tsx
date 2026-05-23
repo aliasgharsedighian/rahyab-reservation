@@ -66,13 +66,18 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
 
       const responseData = await response.json();
       // console.log("Success:", responseData);
-      if (responseData.data.payment_url) {
-        const urlObject = new URL(responseData.data.payment_url);
-        const params = new URLSearchParams(urlObject.search);
-        const transactionId = params.get("payment_transaction_id");
-        toast.success("پرداخت با موفقیت انجام شد");
-        callbackApi("success", transactionId);
+      if (responseData.status === 201) {
+        if (responseData.data.payment_url) {
+          const urlObject = new URL(responseData.data.payment_url);
+          const params = new URLSearchParams(urlObject.search);
+          const transactionId = params.get("payment_transaction_id");
+          toast.success("پرداخت با موفقیت انجام شد");
+          callbackApi("success", transactionId);
+        }
+      } else {
+        toast.error(responseData.message);
       }
+
       // You can do something with the response data here, like updating state
     } catch (error) {
       console.error("Error sending data:", error);

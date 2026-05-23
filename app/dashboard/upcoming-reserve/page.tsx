@@ -43,7 +43,7 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
   async function revalidateData() {
     "use server";
 
-    revalidatePath(`/dashboard/history-reserve`);
+    revalidatePath(`/dashboard/upcoming-reserve`);
   }
 
   if (!reserveUpcoming.items) return;
@@ -64,7 +64,10 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
                 لیست غذاهای رزرو شده پیش روی شما
               </p>
             </div>
-            <ReserveUpcomingTable reserveUpcoming={reserveUpcoming?.items} />
+            <ReserveUpcomingTable
+              reserveUpcoming={reserveUpcoming?.items}
+              revalidateData={revalidateData}
+            />
             <DashboardPagination
               per_page={per_page}
               page={page}

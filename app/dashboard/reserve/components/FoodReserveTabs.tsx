@@ -11,7 +11,7 @@ import FoodReserveInvoice from "./FoodReserveInvoice";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import FeedbackModal from "./FeedbackModal";
-import { StarIcon } from "lucide-react";
+import { InfoIcon, StarIcon } from "lucide-react";
 
 function FoodReserveTabs({ reserveList }: any) {
   const [tab, setTab] = useState("");
@@ -51,6 +51,12 @@ function FoodReserveTabs({ reserveList }: any) {
 
           {reserveList?.weeks.map((item: any, index: number) => (
             <TabsContent key={index} value={item.range}>
+              {item.reservation_message ? (
+                <div className="flex items-center gap-2 p-4 mb-2 bg-(--light-green) rounded-xl">
+                  <InfoIcon className="size-5 text-red-600" />
+                  <p className="text-red-600"> {item.reservation_message}</p>
+                </div>
+              ) : null}
               <div className="flex flex-col gap-4 md:gap-6">
                 {item.days.map((day: any) => (
                   <div
@@ -98,6 +104,7 @@ function FoodReserveTabs({ reserveList }: any) {
                                 day={day.day_name}
                                 jalali_date={day.jalali_date}
                                 date={day.date}
+                                isReserve={food.is_reserved}
                               />
                               <Button
                                 variant="link"

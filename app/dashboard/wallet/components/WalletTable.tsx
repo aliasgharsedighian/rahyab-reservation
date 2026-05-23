@@ -28,11 +28,11 @@ function WalletTable({ walletList }: any) {
 
           <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
             <span className="bg-(--light-green) text-(--base-green) py-1 px-2 rounded-lg">
-              {item.amount.toLocaleString()}
+              {item.amount?.toLocaleString()}
             </span>
           </div>
           <div className="lg:col-span-5 p-2 md:p-4 flex items-center">
-            {item.description.toLocaleString()}
+            {item.description}
           </div>
         </div>
       ))}
