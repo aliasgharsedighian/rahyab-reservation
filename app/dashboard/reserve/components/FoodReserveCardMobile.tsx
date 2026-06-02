@@ -34,6 +34,7 @@ function FoodReserveCardMobile({
   reserveCart,
   sortedReserveCart,
   totalPrice,
+  totalCount,
   sendDataToApi,
 }: any) {
   const dispatch = useDispatch();
@@ -119,6 +120,12 @@ function FoodReserveCardMobile({
                       {"تومان"}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between pt-3">
+                    <p className="text-[12px]">تعداد کل</p>
+                    <span className="flex items-center gap-7 text-sm">
+                      {totalCount} عدد
+                    </span>
+                  </div>
                 </div>
                 <Button className="w-full" size="lg" onClick={sendDataToApi}>
                   ثبت و نهایی کردن رزرو
@@ -145,6 +152,12 @@ function FoodReserveCardMobile({
               {"تومان"}
             </span>
           </div>
+          {/* <div className="flex items-center justify-between pt-3">
+            <p className="text-[12px]">تعداد کل</p>
+            <span className="flex items-center gap-7 text-sm">
+              {totalCount} عدد
+            </span>
+          </div> */}
         </div>
         <Button className="w-full" size="lg" onClick={sendDataToApi}>
           ثبت و نهایی کردن رزرو

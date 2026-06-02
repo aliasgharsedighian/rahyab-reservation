@@ -23,7 +23,7 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
         revalidateData={revalidateData}
       />
       <div className="w-full overflow-x-auto rounded-md">
-        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 bg-transparent text-gray-700 min-w-max rounded-t-md">
+        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 bg-transparent text-gray-700 rounded-t-md">
           <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
             ردیف
           </div>
@@ -49,7 +49,7 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
         {reserveUpcoming.map((item: any, index: number) => (
           <div
             key={item.id}
-            className={`border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12  min-w-max  hover:bg-(--light-green) transition ${item.status === "cancelled" ? "bg-red-50 text-red-600" : ""}`}
+            className={`border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 hover:bg-(--light-green) transition ${item.status === "cancelled" ? "bg-red-50 text-red-600" : ""}`}
           >
             <div className="lg:col-span-1 p-2 md:p-4 border-r flex items-center">
               {index + 1}
@@ -82,8 +82,8 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
               ) : (
                 <Button
                   onClick={() => handleOpenModal(item.food_id, item.id)}
-                  variant={"ghost"}
-                  className="p-0"
+                  variant={"destructive"}
+                  className="p-2"
                 >
                   <span className="text-red-600 iranSansBold">لغو</span>
                 </Button>

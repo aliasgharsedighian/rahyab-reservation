@@ -25,7 +25,7 @@ function ReserveHistoryTable({ reserveHistory }: any) {
         reservationId={selectedId}
       />
       <div className="w-full overflow-x-auto rounded-md">
-        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 bg-transparent text-gray-700 min-w-max rounded-t-md">
+        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_100px] lg:grid-cols-12 bg-transparent text-gray-700 rounded-t-md">
           <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
             ردیف
           </div>
@@ -42,18 +42,20 @@ function ReserveHistoryTable({ reserveHistory }: any) {
           <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
             قیمت واحد (تومان)
           </div>
-          <div className="lg:col-span-2 p-4  flex items-center">
+          <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
             جمع کل (تومان)
           </div>
-          <div className="lg:col-span-1 p-2 md:p-4  flex items-center">نظر</div>
+          <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
+            جزییات
+          </div>
         </div>
 
         {reserveHistory.map((item: any, index: number) => (
           <div
             key={item.id}
-            className={`border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12  min-w-max  hover:bg-(--light-green) transition ${item.status === "cancelled" ? "bg-red-50 text-red-600" : ""}`}
+            className={`border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_100px] lg:grid-cols-12  hover:bg-(--light-green) transition ${item.status === "cancelled" ? "bg-red-50 text-red-600" : ""}`}
           >
-            <div className="lg:col-span-1 p-2 md:p-4 border-r flex items-center">
+            <div className="lg:col-span-1 p-2 md:p-4  flex items-center border-r">
               {index + 1}
             </div>
             <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
@@ -84,9 +86,10 @@ function ReserveHistoryTable({ reserveHistory }: any) {
               ) : (
                 <Button
                   onClick={() => handleOpenModal(item.food_id, item.id)}
-                  variant={"ghost"}
-                  className="p-0"
+                  variant={"default"}
+                  className="p-2 text-[12px]"
                 >
+                  {/* نظر دهید */}
                   <ListCheck />
                 </Button>
               )}

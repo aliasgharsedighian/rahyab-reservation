@@ -10,6 +10,7 @@ import {
   removeAllItemsFromReserve,
   reserveSelectItems,
   reserveSelectTotalPrice,
+  reserveTotalFoodCount,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
 
   const reserveCart = useSelector(reserveSelectItems);
   const totalPrice = useSelector(reserveSelectTotalPrice);
+  const totalCount = useSelector(reserveTotalFoodCount);
 
   const isMobile = useDetectMobile();
   const [sortedReserveCart, setSortedReserveCart] = useState<any>([]);
@@ -130,6 +132,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           reserveCart={reserveCart}
           sortedReserveCart={sortedReserveCart}
           totalPrice={totalPrice}
+          totalCount={totalCount}
           sendDataToApi={sendDataToApi}
         />
       ) : (
@@ -140,6 +143,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
             reserveCart={reserveCart}
             sortedReserveCart={sortedReserveCart}
             totalPrice={totalPrice}
+            totalCount={totalCount}
             sendDataToApi={sendDataToApi}
           />
         </div>

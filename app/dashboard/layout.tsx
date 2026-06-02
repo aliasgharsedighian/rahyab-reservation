@@ -3,6 +3,7 @@ import DashboardSidebar from "./components/DashboardSidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { cookies } from "next/headers";
 import DashboardHeader from "./components/DashboardHeader";
+import DashboardContent from "./components/DashboardContent";
 
 export const metadata = {
   title: " رزرو غذا - پیشخوان",
@@ -18,12 +19,12 @@ export default async function RootLayout({
   return (
     <SidebarProvider defaultOpen={defaultOpen} className="w-full flex flex-col">
       <div className="flex min-h-screen">
-        <div className="bg-[var(--dashboard-background)] shadow-lg">
+        <div className="bg-(--dashboard-background) shadow-lg">
           <DashboardSidebar />
         </div>
-        <div className="bg-white flex flex-col w-full">
-          <main className="min-h-[86dvh]">{children}</main>
-        </div>
+        <DashboardContent>
+          <main className="min-h-[86dvh] ">{children}</main>
+        </DashboardContent>
       </div>
     </SidebarProvider>
   );

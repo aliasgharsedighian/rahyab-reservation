@@ -180,12 +180,12 @@ function LoginPage() {
                   {/* Register */}
                   <div className="text-sm text-gray-600 text-center">
                     حساب کاربری ندارید؟{" "}
-                    <Link
-                      href="/register"
+                    <div
+                      // href="/register"
                       className="text-green-600 font-medium hover:text-green-700 transition"
                     >
-                      ثبت نام کنید
-                    </Link>
+                      ثبت نام از طریق سازمان امکان پذیر است.
+                    </div>
                   </div>
 
                   {/* Terms */}

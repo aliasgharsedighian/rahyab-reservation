@@ -54,68 +54,6 @@ const dashboardList = [
 ];
 
 function DashboardSidebar() {
-  const dispatch = useDispatch();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const [openSidebar, setOpenSidebar] = useState(true);
-  const [isPending, startTransition] = useTransition();
-
-  function changeWidth() {
-    if (window.innerWidth < 640) {
-      setOpenSidebar(false);
-    }
-  }
-
-  useEffect(() => {
-    if (window.innerWidth < 640) {
-      setOpenSidebar(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("resize", changeWidth);
-    return () => {
-      window.removeEventListener("resize", changeWidth);
-    };
-  }, [openSidebar]);
-
-  const handleLogoutUser = () => {
-    const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-
-    startTransition(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ADDRESS}auth/logout`,
-          {
-            method: "POST",
-            headers: myHeaders,
-            credentials: "include",
-          },
-        );
-        const result = await res.json();
-        if (result.status === 200) {
-          localStorage.removeItem("token");
-          dispatch(logOut());
-          logoutCookiesAction();
-          router.push("/");
-          toast.success(result.message);
-        } else {
-          localStorage.removeItem("token");
-          dispatch(logOut());
-          logoutCookiesAction();
-
-          router.push("/");
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    });
-  };
-
   return <SidebarApp />;
 }
 

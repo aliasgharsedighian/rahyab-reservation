@@ -102,6 +102,11 @@ export const reserveSelectTotalPrice = (state: any) =>
     (total: any, item: any) => total + item.price * item.count,
     0,
   );
+export const reserveTotalFoodCount = (state: any) =>
+  state.reserveBasket.cart.reduce(
+    (total: any, item: any) => total + item.count,
+    0,
+  );
 export const reserveSelectTotalIetmPrice = (state: any) =>
   state.reserveBasket.cart.reduce(
     (total: any, item: any) => total + item.item_price * item.count,

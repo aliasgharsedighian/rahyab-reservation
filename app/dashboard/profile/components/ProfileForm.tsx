@@ -237,7 +237,8 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="flex flex-row items-center justify-between w-full">
                 <h2 className="text-lg iranSansBold">اطلاعات شخصی</h2>
-                <Button
+                {/* <Button
+                  disabled
                   variant="outline"
                   type="submit"
                   size={"lg"}
@@ -245,13 +246,13 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
                 >
                   <Edit2 />
                   ویرایش اطلاعات
-                </Button>
+                </Button> */}
               </div>
 
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col md:flex-row gap-4 justify-between w-full">
                   {/* Name (editable) */}
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
@@ -262,10 +263,10 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
                         </FormControl>
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   {/* Family (editable) */}
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="family"
                     render={({ field }) => (
@@ -276,7 +277,16 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
                         </FormControl>
                       </FormItem>
                     )}
-                  />
+                  /> */}
+                  <FormItem className="w-full">
+                    <FormLabel>نام</FormLabel>
+                    <Input value={profile.name} disabled />
+                  </FormItem>
+
+                  <FormItem className="w-full">
+                    <FormLabel>نام خانوادگی</FormLabel>
+                    <Input value={profile.family} disabled />
+                  </FormItem>
                 </div>
 
                 {/* Disabled fields */}

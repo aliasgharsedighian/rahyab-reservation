@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import { refresh } from "next/cache";
 import { revalidatePath } from "next/cache";
-import FoodReserveCart from "./components/FoodReserveCart";
-import FoodReserveTabs from "./components/FoodReserveTabs";
 import ClientReservePage from "./components/ClientReservePage";
 import DashboardHeader from "../components/DashboardHeader";
 
