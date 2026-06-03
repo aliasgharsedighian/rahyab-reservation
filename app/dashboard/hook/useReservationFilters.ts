@@ -12,7 +12,7 @@ export function useReservationFilters() {
   };
 
   const updateFilter = (key: string, value: string | null) => {
-    console.log(key);
+    // console.log(key);
     const params = new URLSearchParams(searchParams.toString());
 
     if (!value || value === "") {

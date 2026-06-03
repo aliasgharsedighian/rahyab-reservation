@@ -20,7 +20,7 @@ const DAYS = [
   "جمعه",
 ];
 
-export default function ReservationFilters() {
+export default function WalletFilters() {
   const { searchParams, updateFilter, clearFilters } = useReservationFilters();
 
   const selectedDays =
@@ -47,29 +47,20 @@ export default function ReservationFilters() {
       </CardHeader>
       <CardContent className="p-4 space-y-6">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm">نام غذا</label>
-
-            <Input
-              placeholder="جستجو نام غذا..."
-              defaultValue={searchParams.get("food_name") || ""}
-              onChange={(e) => updateFilter("food_name", e.target.value)}
-            />
-          </div>
           <div className="flex flex-wrap gap-4 items-center">
             <DateFilter
               label="از تاریخ"
-              value={searchParams.get("reserve_date_from_jalali")}
+              value={searchParams.get("created_at_from_jalali")}
               onChange={(value: any) =>
-                updateFilter("reserve_date_from_jalali", value)
+                updateFilter("created_at_from_jalali", value)
               }
             />
 
             <DateFilter
               label="تا تاریخ"
-              value={searchParams.get("reserve_date_to_jalali")}
+              value={searchParams.get("created_at_to_jalali")}
               onChange={(value: any) =>
-                updateFilter("reserve_date_to_jalali", value)
+                updateFilter("created_at_to_jalali", value)
               }
             />
           </div>
@@ -91,7 +82,7 @@ export default function ReservationFilters() {
             </div>
           </div> */}
 
-          <div>
+          {/* <div>
             <label className="text-sm mb-2 block">لغو شده ها</label>
 
             <Switch
@@ -100,7 +91,7 @@ export default function ReservationFilters() {
                 updateFilter("status", checked ? "cancelled" : null)
               }
             />
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

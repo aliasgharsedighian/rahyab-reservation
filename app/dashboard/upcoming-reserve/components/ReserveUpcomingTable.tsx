@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import CancelReservationModal from "./CancelReservationModal";
 import ReservationFilters from "../../components/ReservationFilters";
 
 function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
-  const searchParams = useSearchParams();
-
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
