@@ -5,6 +5,7 @@ import DashboardPagination from "../components/DashboardPagination";
 import WalletTable from "./components/WalletTable";
 import { MinusIcon, PlusIcon, Wallet2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AddCreditModal from "./components/AddCreditModal";
 
 interface Props {
   searchParams: Promise<{
@@ -96,10 +97,7 @@ export default async function WalletPage({ searchParams }: Props) {
             </div>
           </div>
 
-          <Button className="w-full mt-4">
-            <PlusIcon />
-            افزایش اعتبار
-          </Button>
+          <AddCreditModal />
         </div>
 
         {/* Total Credit */}

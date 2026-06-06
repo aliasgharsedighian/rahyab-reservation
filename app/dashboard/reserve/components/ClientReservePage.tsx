@@ -75,6 +75,8 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           const transactionId = params.get("payment_transaction_id");
           toast.success("پرداخت با موفقیت انجام شد");
           callbackApi("success", transactionId);
+        } else {
+          toast.success("پرداخت با موفقیت انجام شد");
         }
       } else {
         toast.error(responseData.message);

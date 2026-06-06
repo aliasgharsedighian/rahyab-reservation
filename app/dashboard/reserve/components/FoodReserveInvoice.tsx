@@ -21,6 +21,7 @@ function FoodReserveInvoice({
   jalali_date,
   date,
   isReserve,
+  MaxQuantity,
 }: any) {
   const dispatch = useDispatch();
 
@@ -36,6 +37,25 @@ function FoodReserveInvoice({
     jalali_date,
     date,
   };
+
+  if (MaxQuantity === 0) {
+    return (
+      <Button
+        className="max-w-2xs"
+        disabled={isReserve ? false : true}
+        onClick={() => {
+          dispatch(
+            addToReserveBasket({
+              ...itemToBasket,
+              count: 1,
+            }),
+          );
+        }}
+      >
+        شما حداکثر تعداد را رزرو کردید.
+      </Button>
+    );
+  }
 
   if (countInput <= 0)
     return (
@@ -65,6 +85,7 @@ function FoodReserveInvoice({
             <Button
               variant={"ghost"}
               className="border-none!"
+              disabled={countInput >= MaxQuantity ? true : false}
               onClick={() => {
                 dispatch(incrementReserveCount(weekly_menu_id));
               }}

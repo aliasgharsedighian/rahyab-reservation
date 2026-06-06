@@ -105,6 +105,7 @@ function FoodReserveTabs({ reserveList }: any) {
                                 jalali_date={day.jalali_date}
                                 date={day.date}
                                 isReserve={food.is_reserved}
+                                MaxQuantity={food.max_reservation_quantity}
                               />
                               <Button
                                 variant="link"

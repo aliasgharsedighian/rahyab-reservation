@@ -30,6 +30,7 @@ import {
   User2Icon,
   Edit2,
   CameraIcon,
+  Loader2,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -54,6 +55,7 @@ type Profile = {
 export default function ProfileForm({ profile }: { profile: Profile }) {
   const fileInputRef = useRef<any>(null);
   const [activeEdit, setActiveEdit] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(profile.avatar_url);
   const [file, setFile] = useState<File | null>(null);
 
@@ -90,6 +92,41 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
     if (res.status === 200) {
       toast.success(response.message);
+    }
+  };
+
+  const uploadAvatar = async (selectedFile: File) => {
+    try {
+      setIsUploading(true);
+
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      const myHeaders = new Headers();
+
+      myHeaders.append("Accept", "*/*");
+      myHeaders.append("Authorization", `Bearer ${token}`);
+
+      formData.append("avatar_url", selectedFile);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
+        method: "POST",
+        body: formData,
+        headers: myHeaders,
+      });
+
+      const response = await res.json();
+
+      if (res.ok) {
+        toast.success(response.message);
+      } else {
+        toast.error(response.message || "خطا در آپلود تصویر");
+      }
+    } catch (error) {
+      toast.error("خطا در ارتباط با سرور");
+      console.error(error);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -151,14 +188,17 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
+
     if (!selected) return;
 
-    setFile(selected);
-
     const previewUrl = URL.createObjectURL(selected);
+
+    setFile(selected);
     setPreview(previewUrl);
+
+    await uploadAvatar(selected);
   };
 
   return (
@@ -205,15 +245,30 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           </div>
           <div className="w-full flex items-start justify-between">
             <div className="flex flex-col items-start gap-3">
-              <div className="flex flex-col items-center justify-center relative w-30 h-30">
+              <div className="relative w-30 h-30">
                 <img
-                  src={preview || profile.avatar_url || ""}
+                  src={
+                    preview ||
+                    profile.avatar_url ||
+                    "/assets/images/blank-profile.webp"
+                  }
                   alt="avatar"
-                  // fill
-                  className="rounded-full object-cover border h-36 w-36"
-                  onClick={() => fileInputRef.current.click()}
+                  className={`rounded-full object-cover border h-30 w-30 cursor-pointer ${
+                    isUploading ? "opacity-50" : ""
+                  }`}
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
                 />
-                <div className="bg-white absolute -bottom-1 -right-1 p-2 border border-(--base-green) rounded-full">
+
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+                    <Loader2 className="size-8 animate-spin text-white" />
+                  </div>
+                )}
+
+                <div
+                  className="bg-white absolute -bottom-1 -right-1 p-2 border border-(--base-green) rounded-full"
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
+                >
                   <CameraIcon className="text-(--base-green)" />
                 </div>
               </div>
