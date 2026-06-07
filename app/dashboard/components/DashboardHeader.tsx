@@ -24,8 +24,10 @@ import { userInfoAccess } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { Button } from "@/components/ui/button";
 import { BellIcon } from "lucide-react";
+import { useNotifications } from "../context/NotificationContext";
 
 function DashboardHeader({ title }: any) {
+  const { notificationsData, markSeenNotification } = useNotifications();
   //   const userInfo = useSelector(userInfoAccess);
   const token = localStorage.getItem("token");
 
@@ -36,7 +38,6 @@ function DashboardHeader({ title }: any) {
   const userInfoRedux: any = useSelector(userInfoAccess);
 
   const [openProfilePop, setOpenProfilePop] = useState(false);
-  const [notificationsData, setNotificationsData] = useState([]);
   const [openNotif, setOpenNotif] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
   //   const hiddenSidebar = useSelector(hiddenSidebarReducer);
@@ -48,7 +49,7 @@ function DashboardHeader({ title }: any) {
 
   useEffect(() => {
     if (openNotif && selectedNotif) {
-      markSeenNotification();
+      markSeenNotification(selectedNotif.id);
     }
   }, [openNotif, selectedNotif]);
 
@@ -78,64 +79,8 @@ function DashboardHeader({ title }: any) {
     } catch (error) {}
   };
 
-  const getNotifications = async () => {
-    try {
-      var myHeaders = new Headers();
-      myHeaders.append("Accept", "application/json");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications?count=5&page=1&seen=false`,
-        {
-          method: "GET",
-          headers: myHeaders,
-        },
-      );
-      const result = await response.json();
-      // console.log(result);
-      if (result.status === 200) {
-        setNotificationsData(result.data.notifications);
-        // dispatch(changeUserInfo(result.data));
-      } else {
-        // dispatch(logOut());
-        localStorage.removeItem("token");
-        // logoutAction(token);
-      }
-    } catch (error) {}
-  };
-
-  const markSeenNotification = async () => {
-    try {
-      var myHeaders = new Headers();
-      myHeaders.append("accept", "*/*");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-      myHeaders.append("Content-Type", "application/json");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications/mark-seen`,
-        {
-          method: "POST",
-          headers: myHeaders,
-          body: JSON.stringify({
-            notification_id: selectedNotif.id,
-          }),
-        },
-      );
-      const result = await response.json();
-      // console.log(result);
-      if (result.status === 200) {
-        getNotifications();
-      } else {
-        // dispatch(logOut());
-        localStorage.removeItem("token");
-        // logoutAction(token);
-      }
-    } catch (error) {}
-  };
-
   useEffect(() => {
     getProfileDetail();
-    getNotifications();
   }, []);
 
   // if (!isAuth) {

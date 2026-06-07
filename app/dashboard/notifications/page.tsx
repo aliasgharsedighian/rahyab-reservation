@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import DashboardHeader from "../components/DashboardHeader";
 import ClientNotificationsPage from "./components/ClientNotificationsPage";
+import DashboardPagination from "../components/DashboardPagination";
 
 interface Props {
   searchParams: Promise<{
@@ -34,7 +35,7 @@ const getNotifications = async (
 };
 
 export default async function NotificationsPage({ searchParams }: Props) {
-  const per_page = "40";
+  const per_page = "6";
   const { page } = await searchParams;
 
   const notifications = await getNotifications(per_page, page);
@@ -52,6 +53,15 @@ export default async function NotificationsPage({ searchParams }: Props) {
         notificationsData={notifications.notifications}
         revalidateData={revalidateData}
       />
+      <div className="ml-auto">
+        <div className="mr-4">
+          <DashboardPagination
+            per_page={per_page}
+            page={page}
+            posts={notifications?.pagination.total || per_page}
+          />
+        </div>
+      </div>
     </div>
   );
 }

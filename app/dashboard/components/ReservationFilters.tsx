@@ -95,6 +95,7 @@ export default function ReservationFilters() {
             <label className="text-sm mb-2 block">لغو شده ها</label>
 
             <Switch
+              className="ltr"
               checked={searchParams.get("status") === "cancelled"}
               onCheckedChange={(checked) =>
                 updateFilter("status", checked ? "cancelled" : null)

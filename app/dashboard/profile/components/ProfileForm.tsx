@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   PhoneCallIcon,
@@ -33,8 +23,15 @@ import {
   Loader2,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import IntrestProfile from "./IntrestProfile";
 
-type Profile = {
+export type FoodPreferences = {
+  id: number;
+  name: string;
+  description: string;
+};
+
+export type Profile = {
   id: number;
   name: string;
   family: string;
@@ -50,9 +47,16 @@ type Profile = {
   password: string;
   password_confirmation: string;
   description: string;
+  food_preferences: FoodPreferences[];
 };
 
-export default function ProfileForm({ profile }: { profile: Profile }) {
+export default function ProfileForm({
+  profile,
+  foodPreferences,
+}: {
+  profile: Profile;
+  foodPreferences: FoodPreferences[];
+}) {
   const fileInputRef = useRef<any>(null);
   const [activeEdit, setActiveEdit] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -230,14 +234,14 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <LetterTextIcon className="size-4" />
-                  <p>ایمیل</p>
+                  <p>ایمیل :</p>
                 </div>
-                <p>{profile.mobile}</p>
+                <p>{profile.email}</p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <User2Icon className="size-4" />
-                  <p>کد پرسنلی</p>
+                  <p>کد پرسنلی :</p>
                 </div>
                 <p>{profile.employee_code}</p>
               </div>
@@ -463,33 +467,11 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       <div className="h-fit w-full max-w-xs space-y-4 flex flex-col border p-4 rounded-xl">
         <h2 className="text-lg iranSansBold">علاقه‌مندی‌ها</h2>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmitInterests)}
-            className="space-y-5"
-          >
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea
-                      placeholder="علاقه‌مندی‌های خود را بنویسید..."
-                      className="min-h-30 resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" className="w-full">
-              ثبت علاقه‌مندی‌ها
-            </Button>
-          </form>
-        </Form>
+        <IntrestProfile
+          form={form}
+          foodPreferences={foodPreferences}
+          userFoodPreferences={profile.food_preferences}
+        />
       </div>
 
       {/* <div className="flex flex-col justify-center items-center gap-4 border rounded-xl p-4">

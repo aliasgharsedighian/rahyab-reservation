@@ -77,6 +77,10 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           callbackApi("success", transactionId);
         } else {
           toast.success("پرداخت با موفقیت انجام شد");
+          dispatch(removeAllItemsFromReserve([]));
+          // refresh();
+          // revalidateData();
+          window.location.reload();
         }
       } else {
         toast.error(responseData.message);
@@ -111,7 +115,7 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
       );
 
       const responseData = await response.json();
-      console.log("Success:", responseData);
+      // console.log("Success:", responseData);
       dispatch(removeAllItemsFromReserve([]));
       // refresh();
       // revalidateData();

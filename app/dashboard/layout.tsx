@@ -4,6 +4,7 @@ import { AppSidebar } from "./components/app-sidebar";
 import { cookies } from "next/headers";
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardContent from "./components/DashboardContent";
+import { NotificationProvider } from "./context/NotificationContext";
 
 export const metadata = {
   title: " رزرو غذا - پیشخوان",
@@ -17,15 +18,20 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
   return (
-    <SidebarProvider defaultOpen={defaultOpen} className="w-full flex flex-col">
-      <div className="flex min-h-screen">
-        <div className="bg-(--dashboard-background) shadow-lg">
-          <DashboardSidebar />
+    <NotificationProvider>
+      <SidebarProvider
+        defaultOpen={defaultOpen}
+        className="w-full flex flex-col"
+      >
+        <div className="flex min-h-screen">
+          <div className="bg-(--dashboard-background) shadow-lg">
+            <DashboardSidebar />
+          </div>
+          <DashboardContent>
+            <main className="min-h-[86dvh] ">{children}</main>
+          </DashboardContent>
         </div>
-        <DashboardContent>
-          <main className="min-h-[86dvh] ">{children}</main>
-        </DashboardContent>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </NotificationProvider>
   );
 }

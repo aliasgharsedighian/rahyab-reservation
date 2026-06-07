@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,45 +8,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BellIcon } from "lucide-react";
+import { useNotifications } from "../../context/NotificationContext";
 
 function ClientNotificationsPage({ notificationsData, revalidateData }: any) {
-  const [open, setOpen] = useState(false);
+  const { markSeenNotification } = useNotifications();
+  const [openNotif, setOpenNotif] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
 
   const handleOpen = (item: any) => {
     setSelectedNotif(item);
-    setOpen(true);
+    setOpenNotif(true);
   };
 
-  const markSeenNotification = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      var myHeaders = new Headers();
-      myHeaders.append("accept", "*/*");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-      myHeaders.append("Content-Type", "application/json");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications/mark-seen`,
-        {
-          method: "POST",
-          headers: myHeaders,
-          body: JSON.stringify({
-            notification_id: selectedNotif.id,
-          }),
-        },
-      );
-      const result = await response.json();
-      // console.log(result);
-      if (result.status === 200) {
-        revalidateData();
-      } else {
-        // dispatch(logOut());
-        localStorage.removeItem("token");
-        // logoutAction(token);
+  useEffect(() => {
+    const updateNotification = async () => {
+      if (openNotif && selectedNotif) {
+        await markSeenNotification(selectedNotif.id);
+        await revalidateData();
       }
-    } catch (error) {}
-  };
+    };
+
+    updateNotification();
+  }, [openNotif, selectedNotif]);
 
   return (
     <div className="flex flex-col gap-4 mx-2 md:mx-6">
@@ -94,7 +77,7 @@ function ClientNotificationsPage({ notificationsData, revalidateData }: any) {
       )}
 
       {/* Modal */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={openNotif} onOpenChange={setOpenNotif}>
         <DialogContent className="rtl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center iranSansBold text-xl">

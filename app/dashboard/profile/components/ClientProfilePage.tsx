@@ -12,7 +12,7 @@ import { logOut } from "@/redux/features/auth-slice";
 import { toast } from "sonner";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 
-function ClientProfilePage({ profile, revalidateData }: any) {
+function ClientProfilePage({ profile, revalidateData, foodPreferences }: any) {
   const isMobile = useDetectMobile();
   const dispatch = useDispatch();
   const { push } = useRouter();
@@ -60,11 +60,11 @@ function ClientProfilePage({ profile, revalidateData }: any) {
           اطلاعات حساب کاربری خود را مدیریت کنید.
         </p>
       </div>
-      <div className="flex gap-6 w-full">
+      <div className="flex flex-col md:flex-row gap-6 w-[92vw] md:w-full">
         <div className="md:basis-9/12 3xl:basis-10/12 w-full mr-4">
-          <ProfileForm profile={profile} />
+          <ProfileForm profile={profile} foodPreferences={foodPreferences} />
         </div>
-        <div className="hidden lg:flex md:basis-3/12 3xl:basis-2/12 md:ml-6">
+        <div className="flex md:basis-3/12 3xl:basis-2/12 md:ml-6">
           <div className="flex flex-col gap-4 w-full">
             {/* کارت یک ماه اخیر */}
             <Card className="rounded-2xl shadow-md h-fit">
