@@ -42,7 +42,7 @@ function FoodReserveInvoice({
     return (
       <Button
         className="max-w-2xs"
-        disabled={isReserve ? false : true}
+        disabled={true}
         onClick={() => {
           dispatch(
             addToReserveBasket({
@@ -60,7 +60,7 @@ function FoodReserveInvoice({
   if (countInput <= 0)
     return (
       <Button
-        className="max-w-2xs"
+        className="max-w-2xs dark:bg-(--base-green) dark:text-white"
         disabled={isReserve ? false : true}
         onClick={() => {
           dispatch(

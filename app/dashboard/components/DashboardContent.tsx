@@ -11,7 +11,7 @@ export default function DashboardContent({
 
   return (
     <div
-      className="bg-white flex flex-col transition-all"
+      className="bg-background text-foreground flex flex-col transition-all"
       style={{
         width: open && !isMobile ? "calc(100% - var(--sidebar-width))" : "100%",
       }}

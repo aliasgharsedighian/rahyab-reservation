@@ -96,7 +96,7 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
           <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
             <div className="flex flex-col">
               <span className="font-bold text-lg">{data.food_name}</span>
-              <span className="text-sm text-gray-500 flex items-center gap-2">
+              <span className="text-sm text-(--secondary-text) flex items-center gap-2">
                 <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
                 {data.feedback_rate} ({data.feedback_count} نظر)
               </span>
@@ -130,7 +130,7 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
                         />{" "}
                         {item.rate}
                       </span>
-                      <span className="text-gray-500">
+                      <span className="text-(--secondary-text)">
                         {item.created_day_name} - {item.created_at_jalali}
                       </span>
                     </div>
@@ -151,7 +151,7 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
 
         {/* ✅ فرم ثبت نظر */}
         <div className="text-sm">
-          <p>ثبت نظر فقط برای غذاهای رزرو شده امکان‌پذیر است.</p>
+          <p>ثبت نظر فقط برای غذاهای رزرو شده توسط شما امکان‌پذیر است.</p>
           <p>
             برای ثبت نظر میتوانید به صفحه{" "}
             <Link
@@ -170,7 +170,7 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
                 key={num}
                 onClick={() => setRate(num)}
                 className={`text-xl ${
-                  num <= rate ? "text-yellow-400" : "text-gray-300"
+                  num <= rate ? "text-yellow-400" : "text-muted-foreground"
                 }`}
               >
                 ★

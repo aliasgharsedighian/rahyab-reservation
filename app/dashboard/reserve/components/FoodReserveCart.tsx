@@ -102,7 +102,11 @@ function FoodReserveCart({
               </span>
             </div>
           </div>
-          <Button className="w-full" size="lg" onClick={sendDataToApi}>
+          <Button
+            className="w-full dark:bg-(--base-green) dark:text-white"
+            size="lg"
+            onClick={sendDataToApi}
+          >
             ثبت و نهایی کردن رزرو
           </Button>
         </div>

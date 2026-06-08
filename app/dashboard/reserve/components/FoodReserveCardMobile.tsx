@@ -41,7 +41,7 @@ function FoodReserveCardMobile({
 
   if (reserveCart.length === 0) return;
   return (
-    <div className="flex flex-col bg-white fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t pt-6">
+    <div className="flex flex-col bg-background text-foreground fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t border-border pt-6">
       <Drawer>
         <DrawerTrigger>
           {" "}
@@ -127,7 +127,11 @@ function FoodReserveCardMobile({
                     </span>
                   </div>
                 </div>
-                <Button className="w-full" size="lg" onClick={sendDataToApi}>
+                <Button
+                  className="w-full dark:bg-(--base-green) dark:text-white"
+                  size="lg"
+                  onClick={sendDataToApi}
+                >
                   ثبت و نهایی کردن رزرو
                 </Button>
               </div>
@@ -159,7 +163,11 @@ function FoodReserveCardMobile({
             </span>
           </div> */}
         </div>
-        <Button className="w-full" size="lg" onClick={sendDataToApi}>
+        <Button
+          className="w-full dark:bg-(--base-green) dark:text-white"
+          size="lg"
+          onClick={sendDataToApi}
+        >
           ثبت و نهایی کردن رزرو
         </Button>
       </div>

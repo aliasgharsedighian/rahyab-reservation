@@ -63,7 +63,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-br from-emerald-600 to-green-500 px-5 py-6 text-white">
+        <div className="bg-linear-to-br from-emerald-600 to-green-500 px-5 py-6 text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-center gap-2 text-xl font-bold md:text-2xl">
               <ShieldCheckIcon className="size-6" />
@@ -78,7 +78,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
 
         {/* Body */}
         <div className="p-4 md:p-6">
-          <div className="mb-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-7 text-emerald-800">
+          <div className="mb-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-7 text-emerald-800 dark:bg-(--light-green) dark:text-emerald-300">
             استفاده از سامانه رزرو غذا به منزله پذیرش کامل قوانین و مقررات است.
           </div>
 
@@ -96,11 +96,11 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
                   </div>
 
                   <div className="space-y-1">
-                    <h4 className="text-sm font-semibold text-gray-900">
+                    <h4 className="text-sm font-semibold text-foreground">
                       {rule.title}
                     </h4>
 
-                    <p className="text-sm leading-6 text-gray-600">
+                    <p className="text-sm leading-6 text-(--secondary-text)">
                       {rule.description}
                     </p>
                   </div>
@@ -112,7 +112,7 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
           {/* Footer */}
           <div className="mt-6">
             <Button
-              className="w-full rounded-xl"
+              className="w-full rounded-xl dark:bg-(--base-green) dark:text-white"
               onClick={() => onOpenChange(false)}
             >
               متوجه شدم

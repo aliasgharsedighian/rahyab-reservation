@@ -270,7 +270,7 @@ export default function ProfileForm({
                 )}
 
                 <div
-                  className="bg-white absolute -bottom-1 -right-1 p-2 border border-(--base-green) rounded-full"
+                  className="bg-background absolute -bottom-1 -right-1 p-2 border border-(--base-green) rounded-full"
                   onClick={() => !isUploading && fileInputRef.current?.click()}
                 >
                   <CameraIcon className="text-(--base-green)" />

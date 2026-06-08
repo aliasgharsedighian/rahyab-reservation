@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReduxProvider } from "@/redux/provider";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const mainFont = localFont({
   src: "./components/iransanswebfanum.ttf",
@@ -45,24 +46,34 @@ export default function RootLayout({
       lang="fa"
       data-scroll-behavior="smooth"
       dir="rtl"
+      suppressHydrationWarning
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
-      <body>
-        <ReduxProvider>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              className: "text-black",
-              // unstyled: true,
-              classNames: {
-                loading: "bg-[#F8F8F8] border-[#F8F8F8] [&_svg]:text-[#F8F8F8]",
-                error: "bg-red-400 border-red-400 [&_svg]:text-red-200",
-                success: "bg-green-200 border-green-400 [&_svg]:text-green-400",
-              },
-            }}
-          />
-          {children}
-        </ReduxProvider>
+      <body className="transition-all duration-700">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ReduxProvider>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                className: "text-foreground",
+                // unstyled: true,
+                classNames: {
+                  loading:
+                    "bg-[#F8F8F8] border-[#F8F8F8] [&_svg]:text-[#F8F8F8] dark:bg-zinc-800 dark:border-zinc-800",
+                  error: "bg-red-400 border-red-400 [&_svg]:text-red-200",
+                  success:
+                    "bg-green-200 border-green-400 [&_svg]:text-green-400",
+                },
+              }}
+            />
+            {children}
+          </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

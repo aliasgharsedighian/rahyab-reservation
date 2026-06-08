@@ -15,9 +15,9 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex h-screen items-center justify-center flex-col text-center">
+    <div className="flex h-screen items-center justify-center flex-col text-center text-foreground">
       <h2 className="text-2xl iranSansBold text-red-600">خطای سرور</h2>
-      <p className="text-gray-600 mt-2">{error.message}</p>
+      <p className="text-(--secondary-text) mt-2">{error.message}</p>
       <Button
         onClick={() => reset()}
         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"

@@ -14,9 +14,6 @@
   .dashboard-max-width {
     @apply max-w-[97vw] md:max-w-[95vw] xl:max-w-[93vw];
   }
-  .text-dark {
-    @apply text-[var(--main-dark-background)];
-  }
 }
 
 .footer-links-section {
@@ -188,6 +185,13 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --light-green: #143021;
+  --base-green: #4ade80;
+  --base-black: #f3f4f6;
+  --base-white: #0f1115;
+  --base-gray: #b0b7c3;
+  --secondary-text: #a8b0bd;
 }
 
 @layer base {
@@ -253,4 +257,7 @@ body {
 
 button {
   cursor: pointer !important;
+}
+.rmdp-wrapper {
+  background-color: #fff !important;
 }

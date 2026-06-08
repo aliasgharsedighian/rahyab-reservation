@@ -105,7 +105,7 @@ function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
           <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
             <div className="flex flex-col">
               <span className="font-bold text-lg">{data.food_name}</span>
-              <span className="text-sm text-gray-500 flex items-center gap-2">
+              <span className="text-sm text-(--secondary-text) flex items-center gap-2">
                 <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
                 {data.feedback_rate} ({data.feedback_count} نظر)
               </span>
@@ -126,7 +126,7 @@ function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
                 key={num}
                 onClick={() => setRate(num)}
                 className={`text-xl ${
-                  num <= rate ? "text-yellow-400" : "text-gray-300"
+                  num <= rate ? "text-yellow-400" : "text-muted-foreground"
                 }`}
               >
                 ★

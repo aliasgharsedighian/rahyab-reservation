@@ -109,7 +109,7 @@ const DashboardPagination: FC<PaginateProductsProps> = ({
           activeClassName={
             "text-(--base-green) bg-(--light-green) rounded-sm font-bold"
           }
-          disabledClassName={"!text-gray-300"}
+          disabledClassName={"!text-muted-foreground"}
           pageLinkClassName={
             " rounded-[3px] px-3.5 py-1.5 md:px-2 md:py-2 min-w-[30px] md:min-w-[40px] flex items-center justify-center cursor-pointer"
           }

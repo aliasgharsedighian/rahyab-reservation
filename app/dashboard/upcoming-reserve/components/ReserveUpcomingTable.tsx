@@ -27,7 +27,7 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
       <ReservationFilters />
 
       <div className="w-full overflow-x-auto rounded-md">
-        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 bg-transparent text-gray-700 rounded-t-md min-w-max lg:min-w-full">
+        <div className="border border-border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 bg-transparent text-(--secondary-text) rounded-t-md min-w-max lg:min-w-full">
           <div className="lg:col-span-1 p-2 md:p-4 flex items-center">ردیف</div>
 
           <div className="lg:col-span-2 p-2 md:p-4 flex items-center">
@@ -56,7 +56,7 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
         </div>
 
         {reserveUpcoming.length === 0 && (
-          <div className="border border-t-0 p-8 text-center text-gray-500">
+          <div className="border border-border border-t-0 p-8 text-center text-(--secondary-text)">
             موردی یافت نشد
           </div>
         )}

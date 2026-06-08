@@ -80,7 +80,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-gray-50">
+    <div className="min-h-screen w-full flex bg-background text-foreground">
       {/* LEFT */}
       <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
         <div className="max-w-md text-center px-8">
@@ -93,11 +93,11 @@ function LoginPage() {
             loading="eager"
           />
 
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+          <h1 className="text-2xl font-bold text-foreground mb-3">
             سیستم رزرو غذای سازمانی
           </h1>
 
-          <p className="text-gray-600 leading-7">
+          <p className="text-(--secondary-text) leading-7">
             ساده، سریع و بدون دردسر غذای خود را رزرو کنید
           </p>
         </div>
@@ -108,10 +108,10 @@ function LoginPage() {
         <div className="w-full max-w-md">
           <Card className="shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-0 rounded-2xl">
             <CardHeader className="text-center space-y-2 pb-6">
-              <CardTitle className="text-xl font-bold text-gray-800">
+              <CardTitle className="text-xl font-bold text-foreground">
                 ورود به حساب کاربری
               </CardTitle>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-(--secondary-text)">
                 برای ادامه وارد حساب خود شوید
               </p>
             </CardHeader>
@@ -128,7 +128,7 @@ function LoginPage() {
                     name="mobile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">
+                        <FormLabel className="text-foreground">
                           شماره موبایل
                         </FormLabel>
                         <FormControl>
@@ -136,7 +136,7 @@ function LoginPage() {
                             type="text"
                             placeholder="مثلاً 09123456789"
                             {...field}
-                            className="h-12 rounded-lg bg-gray-50 border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 transition"
+                            className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                           />
                         </FormControl>
                         <FormMessage />
@@ -150,7 +150,7 @@ function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700">
+                        <FormLabel className="text-foreground">
                           رمز عبور
                         </FormLabel>
                         <FormControl>
@@ -158,7 +158,7 @@ function LoginPage() {
                             type="password"
                             placeholder="رمز عبور"
                             {...field}
-                            className="h-12 rounded-lg bg-gray-50 border border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 transition"
+                            className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                           />
                         </FormControl>
                         <FormMessage />
@@ -167,7 +167,7 @@ function LoginPage() {
                   />
 
                   {/* Options */}
-                  <div className="flex justify-between text-sm text-gray-500">
+                  <div className="flex justify-between text-sm text-(--secondary-text)">
                     <span className="cursor-pointer hover:text-green-600 transition">
                       فراموشی رمز؟
                     </span>
@@ -178,7 +178,7 @@ function LoginPage() {
                   </div>
 
                   {/* Register */}
-                  <div className="text-sm text-gray-600 text-center">
+                  <div className="text-sm text-(--secondary-text) text-center">
                     حساب کاربری ندارید؟{" "}
                     <div
                       // href="/register"
@@ -193,7 +193,7 @@ function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setOpen(true)}
-                      className="text-gray-500 text-green-600 transition"
+                      className="text-(--base-green) transition"
                     >
                       مشاهده قوانین و مقررات
                     </button>

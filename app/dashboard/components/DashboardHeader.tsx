@@ -23,11 +23,13 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { userInfoAccess } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { Button } from "@/components/ui/button";
-import { BellIcon } from "lucide-react";
+import { BellIcon, MoonStar, Sun } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
+import { useTheme } from "next-themes";
 
 function DashboardHeader({ title }: any) {
   const { notificationsData, markSeenNotification } = useNotifications();
+  const { resolvedTheme, setTheme } = useTheme();
   //   const userInfo = useSelector(userInfoAccess);
   const token = localStorage.getItem("token");
 
@@ -40,6 +42,7 @@ function DashboardHeader({ title }: any) {
   const [openProfilePop, setOpenProfilePop] = useState(false);
   const [openNotif, setOpenNotif] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   //   const hiddenSidebar = useSelector(hiddenSidebarReducer);
 
   const handleOpenNotif = (item: any) => {
@@ -52,6 +55,18 @@ function DashboardHeader({ title }: any) {
       markSeenNotification(selectedNotif.id);
     }
   }, [openNotif, selectedNotif]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    if (!mounted) {
+      return;
+    }
+
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
+  };
 
   const getProfileDetail = async () => {
     try {
@@ -101,23 +116,41 @@ function DashboardHeader({ title }: any) {
                 {selectedNotif.body}
               </p>
 
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-(--secondary-text)">
                 {selectedNotif.created_at}
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-      <div className="bg-white py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md text-sm md:text-base sticky top-0 z-50">
+      <div className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
         <div className="flex items-start gap-3">
           <SidebarTrigger className="flex md:hidden sticky top-9 " />
 
           <h2 className="text-xl">{title}</h2>
         </div>
         <div className="flex items-center gap-6">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label={
+              mounted && resolvedTheme === "dark"
+                ? "فعال کردن حالت روشن"
+                : "فعال کردن حالت تیره"
+            }
+          >
+            {mounted && resolvedTheme === "dark" ? (
+              <Sun className="size-4" />
+            ) : (
+              <MoonStar className="size-4" />
+            )}
+          </Button>
+
           <Popover>
             <PopoverTrigger className="flex">
-              <div className="relative border-l border-gray-400 pl-6 cursor-pointer">
+              <div className="relative border-l border-border pl-6 cursor-pointer">
                 <BellIcon
                   className="size-5 text-(--base-green)"
                   fill={
@@ -150,13 +183,13 @@ function DashboardHeader({ title }: any) {
                       <div
                         key={item.id}
                         onClick={() => handleOpenNotif(item)}
-                        className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50 transition"
+                        className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer hover:bg-muted transition"
                       >
                         <div className="flex flex-col flex-1">
                           <p className="text-sm text-(--base-black) line-clamp-1">
                             {item.body}
                           </p>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-(--secondary-text)">
                             {item.created_at}
                           </span>
                         </div>

@@ -74,7 +74,7 @@ const dashboardList = [
     text: "رزرو غذا",
     link: "/dashboard/reserve",
     href: "/dashboard/reserve",
-    icon: <ClipboardListIcon className="size-5 text-gray-500" />,
+    icon: <ClipboardListIcon className="size-5 text-(--secondary-text)" />,
   },
   {
     id: 10,
@@ -83,7 +83,7 @@ const dashboardList = [
     accordionLinks: [],
     link: "/dashboard/history-reserve",
     href: "/dashboard/history-reserve?page=1",
-    icon: <HistoryIcon className="size-5 text-gray-500" />,
+    icon: <HistoryIcon className="size-5 text-(--secondary-text)" />,
   },
   {
     id: 11,
@@ -92,7 +92,7 @@ const dashboardList = [
     accordionLinks: [],
     link: "/dashboard/upcoming-reserve",
     href: "/dashboard/upcoming-reserve?page=1",
-    icon: <Clock3Icon className="size-5 text-gray-500" />,
+    icon: <Clock3Icon className="size-5 text-(--secondary-text)" />,
   },
   // {
   //   id: 3,
@@ -120,7 +120,7 @@ const dashboardList = [
     text: "کیف پول",
     link: "/dashboard/wallet",
     href: "/dashboard/wallet?page=1",
-    icon: <WalletCardsIcon className="size-5 text-gray-500" />,
+    icon: <WalletCardsIcon className="size-5 text-(--secondary-text)" />,
   },
   {
     id: 5,
@@ -129,7 +129,7 @@ const dashboardList = [
     text: "پروفایل کاربری",
     link: "/dashboard/profile",
     href: "/dashboard/profile",
-    icon: <UserCircle2Icon className="size-5 text-gray-500" />,
+    icon: <UserCircle2Icon className="size-5 text-(--secondary-text)" />,
   },
   {
     id: 6,
@@ -138,7 +138,7 @@ const dashboardList = [
     text: "اعلان ها",
     link: "/dashboard/notifications",
     href: "/dashboard/notifications?page=1",
-    icon: <BellIcon className="size-5 text-gray-500" />,
+    icon: <BellIcon className="size-5 text-(--secondary-text)" />,
   },
 ];
 
@@ -210,10 +210,10 @@ function SidebarApp() {
         variant="sidebar"
         collapsible="icon"
       >
-        <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21">
+        <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21 bg-background">
           <Link
             href="/dashboard/reserve"
-            className={` bg-white w-full py-3 items-center ${
+            className={` bg-background w-full py-3 items-center ${
               open ? "flex" : "hidden"
             } ${isMobile ? "flex!" : ""}`}
           >
@@ -226,14 +226,14 @@ function SidebarApp() {
             />
           </Link>
           <Button
-            className="rounded-none h-full text-black"
+            className="rounded-none h-full text-foreground"
             onClick={toggleSidebar}
             variant={"ghost"}
           >
             <PanelRight width={20} height={20} className="w-5 h-5" />
           </Button>
         </SidebarHeader>
-        <SidebarContent className="py-3">
+        <SidebarContent className="py-3 bg-background">
           <SidebarMenu className="w-full flex items-center justify-center">
             {dashboardList.map((item) =>
               item.accordion ? (
@@ -343,7 +343,7 @@ function SidebarApp() {
             )}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="border-t mb-6">
+        <SidebarFooter className="border-t mb-6 bg-background">
           {/* Rules */}
           <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
             <SidebarMenuButton

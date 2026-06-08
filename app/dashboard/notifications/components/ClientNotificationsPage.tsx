@@ -41,16 +41,16 @@ function ClientNotificationsPage({ notificationsData, revalidateData }: any) {
 
       {/* List */}
       {notificationsData.length === 0 ? (
-        <div className="flex items-center justify-center py-10 text-gray-500 border rounded-xl">
+        <div className="flex items-center justify-center py-10 text-(--secondary-text) border border-border rounded-xl">
           پیامی ندارید
         </div>
       ) : (
-        <div className="max-w-lg bg-white shadow-sm flex flex-col border rounded-xl overflow-hidden divide-y">
+        <div className="max-w-lg bg-card text-card-foreground shadow-sm flex flex-col border border-border rounded-xl overflow-hidden divide-y">
           {notificationsData.map((item: any) => (
             <div
               key={item.id}
               onClick={() => handleOpen(item)}
-              className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50 transition"
+              className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer hover:bg-muted transition"
             >
               {/* Content */}
               <div className="flex flex-col flex-1">
@@ -58,7 +58,7 @@ function ClientNotificationsPage({ notificationsData, revalidateData }: any) {
                   {item.body}
                 </p>
 
-                <span className="text-xs text-gray-400 mt-1">
+                <span className="text-xs text-(--secondary-text) mt-1">
                   {item.created_at}
                 </span>
               </div>
@@ -91,7 +91,7 @@ function ClientNotificationsPage({ notificationsData, revalidateData }: any) {
                 {selectedNotif.body}
               </p>
 
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-(--secondary-text)">
                 <span>{selectedNotif.created_at}</span>
 
                 {/* {!selectedNotif.seen && (

@@ -60,7 +60,7 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
 
           <div className="pt-2">
             <Button
-              className="w-full rounded-xl h-11"
+              className="w-full rounded-xl h-11 dark:bg-(--base-green) dark:text-white"
               onClick={() => onOpenChange(false)}
             >
               متوجه شدم

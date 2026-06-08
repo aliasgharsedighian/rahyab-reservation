@@ -52,7 +52,7 @@ function FoodReserveTabs({ reserveList }: any) {
           {reserveList?.weeks.map((item: any, index: number) => (
             <TabsContent key={index} value={item.range}>
               {item.reservation_message ? (
-                <div className="flex items-center gap-2 p-4 mb-2 bg-(--light-green) rounded-xl">
+                <div className="flex items-center gap-2 p-4 mb-2 bg-(--light-green) rounded-xl dark:bg--(--dark-green)">
                   <InfoIcon className="size-5 text-red-600" />
                   <p className="text-red-600"> {item.reservation_message}</p>
                 </div>
@@ -61,7 +61,7 @@ function FoodReserveTabs({ reserveList }: any) {
                 {item.days.map((day: any) => (
                   <div
                     key={day.date}
-                    className="relative flex flex-col gap-2 border p-2 rounded-lg shadow-md"
+                    className="relative flex flex-col gap-2 border p-2 rounded-lg shadow-md dark:bg-zinc-800"
                   >
                     <div className="w-full flex items-center justify-between gap-4">
                       <div className="text-lg relative flex items-center gap-3">
@@ -79,7 +79,7 @@ function FoodReserveTabs({ reserveList }: any) {
                             key={food.food_id}
                             className="w-full flex flex-row gap-3 justify-between h-full items-start pb-4 border-b last:border-none pl-2"
                           >
-                            <span className="absolute left-4 top-3 text-sm text-gray-500 flex items-center gap-2">
+                            <span className="absolute left-4 top-3 text-sm text-(--secondary-text) flex items-center gap-2">
                               <StarIcon
                                 fill="#fbcb10"
                                 className="text-[#fbcb10] size-5"

@@ -2,7 +2,7 @@ import { ForkKnife } from "lucide-react";
 
 export default function Loading() {
   return (
-    <div className="flex flex-col justify-center w-full min-h-screen items-center animate-pulse font-serif text-lg text-gray-400 text-center p-10">
+    <div className="flex flex-col justify-center w-full min-h-screen items-center animate-pulse font-serif text-lg text-(--secondary-text) text-center p-10">
       <div className="flex flex-col items-center space-y-4">
         {/* Spinner */}
         <div className="relative">

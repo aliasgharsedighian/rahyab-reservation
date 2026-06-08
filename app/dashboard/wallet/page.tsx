@@ -92,7 +92,7 @@ export default async function WalletPage({ searchParams }: Props) {
               </h3>
             </div>
 
-            <div className="rounded-full bg-white/60 p-3">
+            <div className="rounded-full bg-background/70 p-3">
               <Wallet2Icon className="size-5" />
             </div>
           </div>
@@ -101,7 +101,7 @@ export default async function WalletPage({ searchParams }: Props) {
         </div>
 
         {/* Total Credit */}
-        <div className="rounded-xl border bg-green-50 p-5">
+        <div className="rounded-xl border bg-green-50 p-5 dark:bg-(--light-green)">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-700">مجموع واریزی‌ها</p>
