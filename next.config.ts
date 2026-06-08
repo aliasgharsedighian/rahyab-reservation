@@ -6,11 +6,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "192.168.63.44",
-        port: "8000",
+        hostname: "panel.bitnasb.ir",
       },
     ],
   },
+  allowedDevOrigins: ["http://localhost:3003", "192.168.63.30"],
 };
 
 export default nextConfig;

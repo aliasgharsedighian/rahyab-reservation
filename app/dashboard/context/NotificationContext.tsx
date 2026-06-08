@@ -31,7 +31,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       myHeaders.append("Authorization", `Bearer ${token}`);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications?count=5&page=1&seen=false`,
+        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications?count=10&page=1&seen=false`,
         {
           method: "GET",
           headers: myHeaders,

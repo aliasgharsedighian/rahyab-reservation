@@ -8,7 +8,7 @@ function WalletTable({ walletList }: any) {
     <>
       <WalletFilters />
       <div className="w-full overflow-x-auto rounded-md">
-        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 bg-transparent text-gray-700 rounded-t-md">
+        <div className="border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 bg-transparent text-gray-700 rounded-t-md min-w-max lg:min-w-full">
           <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
             ردیف
           </div>
@@ -31,7 +31,7 @@ function WalletTable({ walletList }: any) {
         {walletList.map((item: any, index: number) => (
           <div
             key={item.id}
-            className="border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 hover:bg-(--light-green) transition"
+            className="border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 hover:bg-(--light-green) transition min-w-max lg:min-w-full"
           >
             <div className="lg:col-span-1 p-2 md:p-4 border-r flex items-center">
               {index + 1}

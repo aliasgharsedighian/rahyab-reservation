@@ -215,7 +215,7 @@ function SidebarApp() {
             href="/dashboard/reserve"
             className={` bg-white w-full py-3 items-center ${
               open ? "flex" : "hidden"
-            }`}
+            } ${isMobile ? "flex!" : ""}`}
           >
             <Image
               width={300}

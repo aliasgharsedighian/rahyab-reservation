@@ -128,7 +128,9 @@ function DashboardHeader({ title }: any) {
                 />
                 {notificationsData.length === 0 ? null : (
                   <span className="absolute -right-1 -top-2 bg-(--base-green) h-4 w-4 flex items-center justify-center rounded-full text-white">
-                    {notificationsData.length}
+                    {notificationsData.length > 9
+                      ? "9+"
+                      : notificationsData.length}
                   </span>
                 )}
               </div>

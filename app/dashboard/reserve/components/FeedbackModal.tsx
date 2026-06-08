@@ -150,12 +150,19 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
         </DirectionProvider>
 
         {/* ✅ فرم ثبت نظر */}
-        <Link
-          href="/dashboard/history-reserve?page=1"
-          className="text-blue-600 iranSansBold"
-        >
-          نظر خود را ثبت کنید
-        </Link>
+        <div className="text-sm">
+          <p>ثبت نظر فقط برای غذاهای رزرو شده امکان‌پذیر است.</p>
+          <p>
+            برای ثبت نظر میتوانید به صفحه{" "}
+            <Link
+              href="/dashboard/history-reserve?page=1"
+              className="text-blue-600 iranSansBold text-sm"
+            >
+              تاریخچه رزرو
+            </Link>{" "}
+            مراجعه کنید.
+          </p>
+        </div>
         {/* <div className="border-t pt-4 space-y-3">
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((num) => (
