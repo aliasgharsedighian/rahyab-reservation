@@ -1,6 +1,5 @@
 "use client";
 
-import ReservationFilters from "../../components/ReservationFilters";
 import WalletFilters from "../../components/WalletFilters";
 
 function WalletTable({ walletList }: any) {
