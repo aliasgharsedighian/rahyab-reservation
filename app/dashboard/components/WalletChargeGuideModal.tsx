@@ -30,6 +30,10 @@ export interface WalletChargeGuideCartDetail {
   walletBalance: number;
 }
 
+export interface WalletChargeGuideWalletDetail {
+  source: "wallet";
+}
+
 type CopyTarget = "card" | "phone";
 
 function isCartDetail(value: unknown): value is WalletChargeGuideCartDetail {
@@ -44,6 +48,14 @@ function isCartDetail(value: unknown): value is WalletChargeGuideCartDetail {
     Number.isFinite(detail.totalPrice) &&
     typeof detail.walletBalance === "number" &&
     Number.isFinite(detail.walletBalance)
+  );
+}
+
+function isWalletDetail(value: unknown): value is WalletChargeGuideWalletDetail {
+  return (
+    Boolean(value) &&
+    typeof value === "object" &&
+    (value as Partial<WalletChargeGuideWalletDetail>).source === "wallet"
   );
 }
 
@@ -69,6 +81,7 @@ export default function WalletChargeGuideModal() {
   const [manuallyOpened, setManuallyOpened] = useState(false);
   const [cartDetail, setCartDetail] =
     useState<WalletChargeGuideCartDetail | null>(null);
+  const [walletOnly, setWalletOnly] = useState(false);
   const [copiedTarget, setCopiedTarget] = useState<CopyTarget | null>(null);
   const copyResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const open =
@@ -81,6 +94,7 @@ export default function WalletChargeGuideModal() {
     const handleManualOpen = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail : null;
       setCartDetail(isCartDetail(detail) ? detail : null);
+      setWalletOnly(isWalletDetail(detail));
       setManuallyOpened(true);
     };
     window.addEventListener(OPEN_WALLET_CHARGE_GUIDE_EVENT, handleManualOpen);
@@ -101,6 +115,7 @@ export default function WalletChargeGuideModal() {
       setDismissed(true);
       setManuallyOpened(false);
       setCartDetail(null);
+      setWalletOnly(false);
       const url = new URL(window.location.href);
       url.searchParams.delete(GUIDE_QUERY_KEY);
       window.history.replaceState(
@@ -141,16 +156,19 @@ export default function WalletChargeGuideModal() {
               راهنمای شارژ کیف پول
             </DialogTitle>
             <DialogDescription className="text-center leading-6 text-white/90">
-              موجودی کیف پول باید حداقل برابر با مبلغ نهایی سفارش شما باشد.
+              {walletOnly
+                ? "برای شارژ کیف پول، مراحل زیر را دنبال کنید."
+                : "موجودی کیف پول باید حداقل برابر با مبلغ نهایی سفارش شما باشد."}
             </DialogDescription>
           </DialogHeader>
         </div>
 
         <div className="space-y-5 p-4 sm:p-6">
-          <section
-            aria-labelledby="wallet-example-title"
-            className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10"
-          >
+          {!walletOnly && (
+            <section
+              aria-labelledby="wallet-example-title"
+              className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10"
+            >
             <h3
               id="wallet-example-title"
               className="mb-3 text-sm font-bold text-amber-900 dark:text-amber-200"
@@ -201,7 +219,8 @@ export default function WalletChargeGuideModal() {
                 </>
               )}
             </p>
-          </section>
+            </section>
+          )}
 
           <section
             aria-labelledby="payment-details-title"
