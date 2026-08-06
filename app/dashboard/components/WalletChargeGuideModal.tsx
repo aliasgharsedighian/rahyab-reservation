@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { userInfoAccess } from "@/redux/features/auth-slice";
 
-const CARD_NUMBER = "5022291324080330";
-const DISPLAY_CARD_NUMBER = "5022 2913 2408 0330";
 const BALE_PHONE_NUMBER = "09122159062";
 const GUIDE_QUERY_KEY = "walletGuide";
 export const OPEN_WALLET_CHARGE_GUIDE_EVENT = "open-wallet-charge-guide";
@@ -35,6 +35,26 @@ export interface WalletChargeGuideWalletDetail {
 }
 
 type CopyTarget = "card" | "phone";
+
+interface ProfileCardInfo {
+  card_name?: string | null;
+  card_number?: string | number | null;
+}
+
+function formatCardNumber(value: string) {
+  return value.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+function normalizeCardNumber(value: string | number | null | undefined) {
+  return String(value ?? "")
+    .replace(/[۰-۹]/g, (digit) =>
+      "۰۱۲۳۴۵۶۷۸۹".indexOf(digit).toString(),
+    )
+    .replace(/[٠-٩]/g, (digit) =>
+      "٠١٢٣٤٥٦٧٨٩".indexOf(digit).toString(),
+    )
+    .replace(/\D/g, "");
+}
 
 function isCartDetail(value: unknown): value is WalletChargeGuideCartDetail {
   if (!value || typeof value !== "object") {
@@ -77,6 +97,7 @@ function fallbackCopyText(value: string) {
 
 export default function WalletChargeGuideModal() {
   const searchParams = useSearchParams();
+  const profile = (useSelector(userInfoAccess) ?? {}) as ProfileCardInfo;
   const [dismissed, setDismissed] = useState(false);
   const [manuallyOpened, setManuallyOpened] = useState(false);
   const [cartDetail, setCartDetail] =
@@ -89,6 +110,9 @@ export default function WalletChargeGuideModal() {
   const totalPrice = cartDetail?.totalPrice ?? 400_000;
   const walletBalance = cartDetail?.walletBalance ?? 200_000;
   const requiredCharge = Math.max(totalPrice - walletBalance, 0);
+  const cardNumber = normalizeCardNumber(profile.card_number);
+  const displayCardNumber = formatCardNumber(cardNumber);
+  const cardName = profile.card_name?.trim() || "";
 
   useEffect(() => {
     const handleManualOpen = (event: Event) => {
@@ -235,9 +259,10 @@ export default function WalletChargeGuideModal() {
 
             <button
               type="button"
-              onClick={() => handleCopy(CARD_NUMBER, "card")}
+              onClick={() => handleCopy(cardNumber, "card")}
+              disabled={!cardNumber}
               aria-label="کپی شماره کارت شرکت"
-              className="group flex w-full items-center gap-3 rounded-2xl border bg-muted/40 p-4 text-right transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-(--base-green)"
+              className="group flex w-full items-center gap-3 rounded-2xl border bg-muted/40 p-4 text-right transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-(--base-green) disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                 <CreditCardIcon aria-hidden="true" className="size-5" />
@@ -250,10 +275,16 @@ export default function WalletChargeGuideModal() {
                   dir="ltr"
                   className="mt-1 block text-left text-base tracking-wider sm:text-lg"
                 >
-                  {DISPLAY_CARD_NUMBER}
+                  {displayCardNumber || "شماره کارت در دسترس نیست"}
                 </strong>
                 <span className="mt-1 block text-xs text-muted-foreground">
-                  به نام: رادمان پرداز ره‌بی
+                  {cardName ? (
+                    <>
+                      به نام: {cardName}
+                    </>
+                  ) : (
+                    "نام صاحب حساب در دسترس نیست"
+                  )}
                 </span>
               </span>
               <span className="flex w-14 shrink-0 flex-col items-center gap-1 text-xs text-(--base-green)">

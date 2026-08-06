@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
@@ -20,7 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { toast } from "sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { userInfoAccess } from "@/redux/features/auth-slice";
+import { logIn, userInfoAccess } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { Button } from "@/components/ui/button";
 import { BellIcon, MoonStar, Sun } from "lucide-react";
@@ -31,8 +31,6 @@ function DashboardHeader({ title }: any) {
   const { notificationsData, markSeenNotification } = useNotifications();
   const { resolvedTheme, setTheme } = useTheme();
   //   const userInfo = useSelector(userInfoAccess);
-  const token = localStorage.getItem("token");
-
   const { push } = useRouter();
   const dispatch = useDispatch();
   const pathname = usePathname();
@@ -68,9 +66,10 @@ function DashboardHeader({ title }: any) {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
-  const getProfileDetail = async () => {
+  const getProfileDetail = useCallback(async () => {
     try {
-      var myHeaders = new Headers();
+      const token = localStorage.getItem("token");
+      const myHeaders = new Headers();
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${token}`);
 
@@ -84,19 +83,19 @@ function DashboardHeader({ title }: any) {
       const result = await response.json();
       // console.log(result);
       if (result.status === 200) {
-        // dispatch(changeUserInfo(result.data));
+        dispatch(logIn(result.data));
       } else {
         // dispatch(logOut());
         localStorage.removeItem("token");
         logoutCookiesAction();
         // logoutAction(token);
       }
-    } catch (error) {}
-  };
+    } catch {}
+  }, [dispatch]);
 
   useEffect(() => {
     getProfileDetail();
-  }, []);
+  }, [getProfileDetail]);
 
   // if (!isAuth) {
   //   redirect("/login");
