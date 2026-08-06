@@ -1,10 +1,10 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import DashboardSidebar from "./components/DashboardSidebar";
-import { AppSidebar } from "./components/app-sidebar";
 import { cookies } from "next/headers";
-import DashboardHeader from "./components/DashboardHeader";
 import DashboardContent from "./components/DashboardContent";
 import { NotificationProvider } from "./context/NotificationContext";
+import WalletChargeGuideModal from "./components/WalletChargeGuideModal";
+import { Suspense } from "react";
 
 export const metadata = {
   title: " رزرو غذا - پیشخوان",
@@ -19,6 +19,9 @@ export default async function RootLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
   return (
     <NotificationProvider>
+      <Suspense fallback={null}>
+        <WalletChargeGuideModal />
+      </Suspense>
       <SidebarProvider
         defaultOpen={defaultOpen}
         className="w-full flex flex-col"

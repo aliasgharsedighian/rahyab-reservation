@@ -1,19 +1,14 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar";
 import Link from "next/link";
@@ -26,24 +21,11 @@ import {
 } from "@/components/ui/accordion";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   BellIcon,
   Clock3Icon,
   ClipboardListIcon,
   HistoryIcon,
   LogOutIcon,
-  MailIcon,
   PhoneCallIcon,
   ShieldCheckIcon,
   UserCircle2Icon,
@@ -57,6 +39,7 @@ import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { toast } from "sonner";
 import { RulesModal } from "@/app/components/RulesModal";
 import { ContactModal } from "@/app/components/ContactModal";
+import { OPEN_WALLET_CHARGE_GUIDE_EVENT } from "./WalletChargeGuideModal";
 
 const dashboardList = [
   // {
@@ -145,27 +128,20 @@ const dashboardList = [
 function SidebarApp() {
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const { push } = useRouter();
 
   const [openRulesModal, setOpenRulesModal] = useState(false);
   const [openContactModal, setOpenContactModal] = useState(false);
 
-  const {
-    state,
-    open,
-    setOpen,
-    openMobile,
-    setOpenMobile,
-    isMobile,
-    toggleSidebar,
-  } = useSidebar();
+  const { open, setOpen, setOpenMobile, isMobile, toggleSidebar } =
+    useSidebar();
 
   // const [openDropDown, setOpenDropDown] = useState(false);
 
   const handleLogoutUser = () => {
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
+    const myHeaders = new Headers();
     myHeaders.append("Accept", "application/json");
     myHeaders.append("Authorization", `Bearer ${token}`);
 
@@ -195,6 +171,13 @@ function SidebarApp() {
         console.log(error);
       }
     });
+  };
+
+  const handleOpenWalletChargeGuide = () => {
+    window.dispatchEvent(new Event(OPEN_WALLET_CHARGE_GUIDE_EVENT));
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (
@@ -373,6 +356,22 @@ function SidebarApp() {
               >
                 <PhoneCallIcon className="size-5 text-sky-600" />
                 <p>تماس با ما</p>
+              </Button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {/* Wallet charge guide */}
+          <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
+            <SidebarMenuButton
+              className="h-full hover:bg-(--light-green)"
+              asChild
+            >
+              <Button
+                className="p-3 items-start justify-start gap-4 h-full"
+                variant="ghost"
+                onClick={handleOpenWalletChargeGuide}
+              >
+                <WalletCardsIcon className="size-5 text-emerald-600" />
+                <p>راهنمای شارژ کیف پول</p>
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>

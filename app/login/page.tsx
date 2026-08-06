@@ -10,14 +10,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
 import { Input } from "@/components/ui/input";
 import { logIn, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,8 +21,7 @@ import { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import Link from "next/link";
-import { ShieldCheckIcon, XIcon } from "lucide-react";
+import { ShieldCheckIcon } from "lucide-react";
 import { RulesModal } from "../components/RulesModal";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
@@ -116,7 +107,42 @@ function LoginPage() {
               </p>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="space-y-5">
+              <aside
+                aria-labelledby="initial-login-notice-title"
+                className="relative overflow-hidden rounded-xl border border-(--base-green)/25 bg-(--light-green) p-4"
+              >
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 right-0 w-1 bg-(--base-green)"
+                />
+
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-(--base-green)/15 text-(--base-green)">
+                    <ShieldCheckIcon aria-hidden="true" className="size-5" />
+                  </div>
+
+                  <div className="space-y-2 text-sm leading-6">
+                    <p
+                      id="initial-login-notice-title"
+                      className="font-bold text-foreground"
+                    >
+                      راهنمای ورود اولیه
+                    </p>
+                    <p className="text-(--secondary-text)">
+                      <strong className="font-bold text-foreground">
+                        نام کاربری و رمز عبور اولیه شما، همان شماره تلفن
+                        همراهتان است.
+                      </strong>
+                    </p>
+                    <p className="text-(--secondary-text)">
+                      پس از ورود به حساب کاربری، لطفاً برای افزایش امنیت، رمز
+                      عبور خود را تغییر دهید.
+                    </p>
+                  </div>
+                </div>
+              </aside>
+
               <Form {...loginForm}>
                 <form
                   onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
