@@ -4,25 +4,34 @@ import { Button } from "@/components/ui/button";
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  removeAllItemsFromReserve,
   removeFromReserveBasket,
-  reserveSelectItems,
-  reserveSelectTotalPrice,
 } from "@/redux/features/reserveBasketSlice";
-import { ForkKnife, ShoppingBasketIcon, Trash2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
+import {
+  ForkKnife,
+  ShoppingBasketIcon,
+  Trash2Icon,
+  WalletCardsIcon,
+} from "lucide-react";
+import { useDispatch } from "react-redux";
+import type { ReserveCartItem } from "../types";
+
+interface FoodReserveCartProps {
+  reserveCart: ReserveCartItem[];
+  sortedReserveCart: ReserveCartItem[];
+  totalPrice: number;
+  totalCount: number;
+  sendDataToApi: () => Promise<void>;
+  walletBalance: number | null;
+}
 
 function FoodReserveCart({
-  revalidateData,
-  refresh,
   reserveCart,
   sortedReserveCart,
   totalPrice,
   totalCount,
   sendDataToApi,
-}: any) {
+  walletBalance,
+}: FoodReserveCartProps) {
   const dispatch = useDispatch();
 
   return (
@@ -30,6 +39,21 @@ function FoodReserveCart({
       <div className="p-2 rounded-t-md flex items-center gap-2">
         <ShoppingBasketIcon className="size-6 text-(--base-green)" />
         <p className="font-bold">سبد رزرو شما</p>
+      </div>
+      <div className="mx-3 mb-2 flex items-center justify-between rounded-xl border border-(--base-green)/20 bg-(--light-green) p-3">
+        <div className="flex items-center gap-2">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-(--base-green)/15 text-(--base-green)">
+            <WalletCardsIcon aria-hidden="true" className="size-5" />
+          </span>
+          <span className="text-sm text-(--secondary-text)">
+            موجودی کیف پول
+          </span>
+        </div>
+        <strong className="text-sm text-foreground">
+          {walletBalance === null
+            ? "نامشخص"
+            : `${walletBalance.toLocaleString()} تومان`}
+        </strong>
       </div>
       <DirectionProvider dir="rtl">
         <ScrollArea
@@ -40,7 +64,7 @@ function FoodReserveCart({
             className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
           >
             {reserveCart.length !== 0 ? (
-              sortedReserveCart.map((item: any) => (
+              sortedReserveCart.map((item) => (
                 <div
                   key={item.id}
                   className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"

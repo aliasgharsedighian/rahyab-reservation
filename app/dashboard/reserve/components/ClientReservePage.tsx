@@ -4,7 +4,7 @@ import FoodReserveTabs from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   removeAllItemsFromReserve,
@@ -13,60 +13,63 @@ import {
   reserveTotalFoodCount,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
+import type { ReserveCartItem } from "../types";
 
-function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
+interface ClientReservePageProps {
+  reserveList: unknown;
+  walletBalance: number | null;
+}
+
+interface ReservationResponse {
+  status: number;
+  message: string;
+  data: {
+    payment_url?: string;
+  };
+}
+
+function ClientReservePage({
+  reserveList,
+  walletBalance,
+}: ClientReservePageProps) {
   const dispatch = useDispatch();
 
-  const reserveCart = useSelector(reserveSelectItems);
+  const reserveCart = useSelector(reserveSelectItems) as ReserveCartItem[];
   const totalPrice = useSelector(reserveSelectTotalPrice);
   const totalCount = useSelector(reserveTotalFoodCount);
 
   const isMobile = useDetectMobile();
-  const [sortedReserveCart, setSortedReserveCart] = useState<any>([]);
-
-  useEffect(() => {
-    const sortedReserveCart = [...reserveCart].sort((a, b) => {
-      // Assuming item.jalali_date is in 'YYYY-MM-DD' format or similar
-      // If it's a different format, you might need to parse it into Date objects
-      // or a comparable numerical representation.
-      return a.jalali_date.localeCompare(b.jalali_date);
-    });
-
-    setSortedReserveCart(sortedReserveCart);
+  const sortedReserveCart = useMemo(() => {
+    return [...reserveCart].sort((a, b) =>
+      a.jalali_date.localeCompare(b.jalali_date),
+    );
   }, [reserveCart]);
 
   const sendDataToApi = async () => {
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
+    const headers = new Headers();
+    headers.append("Accept", "*/*");
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", `Bearer ${token}`);
 
-    let items: any = [];
-
-    for (let i = 0; i < reserveCart.length; i++) {
-      items = [
-        ...items,
-        {
-          weekly_menu_id: reserveCart[i].id,
-          quantity: reserveCart[i].count,
-        },
-      ];
-    }
+    const items = reserveCart.map((item) => ({
+      weekly_menu_id: item.id,
+      quantity: item.count,
+    }));
 
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations`,
         {
           method: "POST",
-          headers: myHeaders,
+          headers,
           body: JSON.stringify({
             items,
           }),
         },
       );
 
-      const responseData = await response.json();
+      const responseData: ReservationResponse = await response.json();
       // console.log("Success:", responseData);
       if (responseData.status === 201) {
         if (responseData.data.payment_url) {
@@ -93,19 +96,22 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
     }
   };
 
-  const callbackApi = async (status: string, transactionId: any) => {
+  const callbackApi = async (
+    status: string,
+    transactionId: string | null,
+  ) => {
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
+    const headers = new Headers();
+    headers.append("Accept", "*/*");
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", `Bearer ${token}`);
 
     try {
-      const response = await fetch(
+      await fetch(
         `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/payment/callback`,
         {
           method: "POST",
-          headers: myHeaders,
+          headers,
           body: JSON.stringify({
             payment_transaction_id: transactionId,
             status: status,
@@ -114,8 +120,6 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
         },
       );
 
-      const responseData = await response.json();
-      // console.log("Success:", responseData);
       dispatch(removeAllItemsFromReserve([]));
       // refresh();
       // revalidateData();
@@ -140,17 +144,17 @@ function ClientReservePage({ reserveList, revalidateData, refreshPage }: any) {
           totalPrice={totalPrice}
           totalCount={totalCount}
           sendDataToApi={sendDataToApi}
+          walletBalance={walletBalance}
         />
       ) : (
         <div className="basis-4/12 w-full ml-6 border-r">
           <FoodReserveCart
-            revalidateData={revalidateData}
-            refresh={refreshPage}
             reserveCart={reserveCart}
             sortedReserveCart={sortedReserveCart}
             totalPrice={totalPrice}
             totalCount={totalCount}
             sendDataToApi={sendDataToApi}
+            walletBalance={walletBalance}
           />
         </div>
       )}

@@ -2,20 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  removeAllItemsFromReserve,
   removeFromReserveBasket,
-  reserveSelectItems,
-  reserveSelectTotalPrice,
 } from "@/redux/features/reserveBasketSlice";
 import {
   ChevronUp,
   ForkKnife,
   ShoppingBasketIcon,
   Trash2Icon,
+  WalletCardsIcon,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
+import { useDispatch } from "react-redux";
 import {
   Drawer,
   DrawerClose,
@@ -26,9 +22,18 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { DialogTitle } from "@/components/ui/dialog";
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { ReserveCartItem } from "../types";
+
+interface FoodReserveCardMobileProps {
+  reserveCart: ReserveCartItem[];
+  sortedReserveCart: ReserveCartItem[];
+  totalPrice: number;
+  totalCount: number;
+  sendDataToApi: () => Promise<void>;
+  walletBalance: number | null;
+}
 
 function FoodReserveCardMobile({
   reserveCart,
@@ -36,7 +41,8 @@ function FoodReserveCardMobile({
   totalPrice,
   totalCount,
   sendDataToApi,
-}: any) {
+  walletBalance,
+}: FoodReserveCardMobileProps) {
   const dispatch = useDispatch();
 
   if (reserveCart.length === 0) return;
@@ -51,9 +57,11 @@ function FoodReserveCardMobile({
           </div>
         </DrawerTrigger>
         <DrawerContent>
-          <DrawerDescription></DrawerDescription>
-          <DialogTitle></DialogTitle>
+          <DrawerDescription className="sr-only">
+            جزئیات غذاهای انتخاب‌شده، موجودی کیف پول و مبلغ کل رزرو
+          </DrawerDescription>
           <DrawerHeader>
+            <DrawerTitle className="sr-only">سبد رزرو شما</DrawerTitle>
             <DrawerClose>بستن</DrawerClose>
           </DrawerHeader>
 
@@ -63,7 +71,7 @@ function FoodReserveCardMobile({
                 className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
               >
                 {reserveCart.length !== 0 ? (
-                  sortedReserveCart.map((item: any) => (
+                  sortedReserveCart.map((item) => (
                     <div
                       key={item.id}
                       className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"
@@ -106,6 +114,20 @@ function FoodReserveCardMobile({
             {reserveCart.length !== 0 ? (
               <div className="w-full flex flex-col gap-4 px-3">
                 <div className="">
+                  <div className="flex items-center justify-between rounded-xl bg-(--light-green) p-3">
+                    <span className="flex items-center gap-2 text-sm text-(--secondary-text)">
+                      <WalletCardsIcon
+                        aria-hidden="true"
+                        className="size-5 text-(--base-green)"
+                      />
+                      موجودی کیف پول
+                    </span>
+                    <strong className="text-sm text-foreground">
+                      {walletBalance === null
+                        ? "نامشخص"
+                        : `${walletBalance.toLocaleString()} تومان`}
+                    </strong>
+                  </div>
                   {/* <div className="flex items-center justify-between pt-3">
               <p className="">جمع تعداد</p>
               <span className="flex items-center gap-7 text-sm md:text-base">
@@ -142,6 +164,20 @@ function FoodReserveCardMobile({
 
       <div className="w-full flex flex-col gap-1 px-3">
         <div className="">
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-1.5 text-(--secondary-text)">
+              <WalletCardsIcon
+                aria-hidden="true"
+                className="size-4 text-(--base-green)"
+              />
+              موجودی کیف پول
+            </span>
+            <strong>
+              {walletBalance === null
+                ? "نامشخص"
+                : `${walletBalance.toLocaleString()} تومان`}
+            </strong>
+          </div>
           {/* <div className="flex items-center justify-between pt-3">
               <p className="">جمع تعداد</p>
               <span className="flex items-center gap-7 text-sm md:text-base">
