@@ -24,7 +24,28 @@ const BALE_PHONE_NUMBER = "09122159062";
 const GUIDE_QUERY_KEY = "walletGuide";
 export const OPEN_WALLET_CHARGE_GUIDE_EVENT = "open-wallet-charge-guide";
 
+export interface WalletChargeGuideCartDetail {
+  source: "cart";
+  totalPrice: number;
+  walletBalance: number;
+}
+
 type CopyTarget = "card" | "phone";
+
+function isCartDetail(value: unknown): value is WalletChargeGuideCartDetail {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const detail = value as Partial<WalletChargeGuideCartDetail>;
+  return (
+    detail.source === "cart" &&
+    typeof detail.totalPrice === "number" &&
+    Number.isFinite(detail.totalPrice) &&
+    typeof detail.walletBalance === "number" &&
+    Number.isFinite(detail.walletBalance)
+  );
+}
 
 function fallbackCopyText(value: string) {
   const textarea = document.createElement("textarea");
@@ -46,13 +67,22 @@ export default function WalletChargeGuideModal() {
   const searchParams = useSearchParams();
   const [dismissed, setDismissed] = useState(false);
   const [manuallyOpened, setManuallyOpened] = useState(false);
+  const [cartDetail, setCartDetail] =
+    useState<WalletChargeGuideCartDetail | null>(null);
   const [copiedTarget, setCopiedTarget] = useState<CopyTarget | null>(null);
   const copyResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const open =
     manuallyOpened || (searchParams.get(GUIDE_QUERY_KEY) === "1" && !dismissed);
+  const totalPrice = cartDetail?.totalPrice ?? 400_000;
+  const walletBalance = cartDetail?.walletBalance ?? 200_000;
+  const requiredCharge = Math.max(totalPrice - walletBalance, 0);
 
   useEffect(() => {
-    const handleManualOpen = () => setManuallyOpened(true);
+    const handleManualOpen = (event: Event) => {
+      const detail = event instanceof CustomEvent ? event.detail : null;
+      setCartDetail(isCartDetail(detail) ? detail : null);
+      setManuallyOpened(true);
+    };
     window.addEventListener(OPEN_WALLET_CHARGE_GUIDE_EVENT, handleManualOpen);
 
     return () => {
@@ -70,6 +100,7 @@ export default function WalletChargeGuideModal() {
     if (!nextOpen) {
       setDismissed(true);
       setManuallyOpened(false);
+      setCartDetail(null);
       const url = new URL(window.location.href);
       url.searchParams.delete(GUIDE_QUERY_KEY);
       window.history.replaceState(
@@ -124,33 +155,51 @@ export default function WalletChargeGuideModal() {
               id="wallet-example-title"
               className="mb-3 text-sm font-bold text-amber-900 dark:text-amber-200"
             >
-              مثال محاسبه مبلغ موردنیاز
+              {cartDetail
+                ? "مبلغ موردنیاز برای تکمیل این سبد"
+                : "مثال محاسبه مبلغ موردنیاز"}
             </h3>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
                 <span className="block text-xs text-muted-foreground">
                   مبلغ سبد
                 </span>
-                <strong className="mt-1 block text-sm">۴۰۰ هزار</strong>
+                <strong className="mt-1 block text-sm">
+                  {totalPrice.toLocaleString("fa-IR")} تومان
+                </strong>
               </div>
               <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
                 <span className="block text-xs text-muted-foreground">
                   موجودی کیف پول
                 </span>
-                <strong className="mt-1 block text-sm">۲۰۰ هزار</strong>
+                <strong className="mt-1 block text-sm">
+                  {walletBalance.toLocaleString("fa-IR")} تومان
+                </strong>
               </div>
               <div className="rounded-xl bg-amber-200/70 p-2 dark:bg-amber-400/15">
                 <span className="block text-xs text-amber-900 dark:text-amber-200">
                   مبلغ کسری
                 </span>
                 <strong className="mt-1 block text-sm text-amber-950 dark:text-amber-100">
-                  ۲۰۰ هزار
+                  {requiredCharge.toLocaleString("fa-IR")} تومان
                 </strong>
               </div>
             </div>
             <p className="mt-3 text-xs leading-6 text-amber-900 dark:text-amber-200">
-              در این مثال، برای نهایی‌کردن سفارش فقط باید مبلغ کسری، یعنی ۲۰۰
-              هزار تومان، به کیف پول اضافه شود.
+              {cartDetail ? (
+                <>
+                  برای نهایی‌کردن این سبد باید{" "}
+                  <strong>
+                    {requiredCharge.toLocaleString("fa-IR")} تومان
+                  </strong>{" "}
+                  به کیف پول خود واریز کنید.
+                </>
+              ) : (
+                <>
+                  در این مثال، برای نهایی‌کردن سفارش فقط باید مبلغ کسری، یعنی
+                  ۲۰۰ هزار تومان، به کیف پول اضافه شود.
+                </>
+              )}
             </p>
           </section>
 

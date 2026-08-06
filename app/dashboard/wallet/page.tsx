@@ -97,7 +97,12 @@ export default async function WalletPage({ searchParams }: Props) {
             </div>
           </div>
 
-          <AddCreditModal />
+          <Button className="w-full mt-4">
+            <PlusIcon />
+            افزایش اعتبار
+          </Button>
+
+          {/* <AddCreditModal /> */}
         </div>
 
         {/* Total Credit */}

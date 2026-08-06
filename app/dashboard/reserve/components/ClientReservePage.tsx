@@ -14,6 +14,11 @@ import {
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
 import type { ReserveCartItem } from "../types";
+import { useRouter } from "next/navigation";
+import {
+  OPEN_WALLET_CHARGE_GUIDE_EVENT,
+  type WalletChargeGuideCartDetail,
+} from "../../components/WalletChargeGuideModal";
 
 interface ClientReservePageProps {
   reserveList: unknown;
@@ -33,6 +38,7 @@ function ClientReservePage({
   walletBalance,
 }: ClientReservePageProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const reserveCart = useSelector(reserveSelectItems) as ReserveCartItem[];
   const totalPrice = useSelector(reserveSelectTotalPrice);
@@ -70,65 +76,35 @@ function ClientReservePage({
       );
 
       const responseData: ReservationResponse = await response.json();
-      // console.log("Success:", responseData);
-      if (responseData.status === 201) {
-        if (responseData.data.payment_url) {
-          const urlObject = new URL(responseData.data.payment_url);
-          const params = new URLSearchParams(urlObject.search);
-          const transactionId = params.get("payment_transaction_id");
-          toast.success("پرداخت با موفقیت انجام شد");
-          callbackApi("success", transactionId);
-        } else {
-          toast.success("پرداخت با موفقیت انجام شد");
-          dispatch(removeAllItemsFromReserve([]));
-          // refresh();
-          // revalidateData();
-          window.location.reload();
-        }
-      } else {
-        toast.error(responseData.message);
+      if (responseData.status !== 201) {
+        toast.error("موجودی کیف پول کافی نیست.");
+        const detail: WalletChargeGuideCartDetail | null =
+          walletBalance === null
+            ? null
+            : {
+                source: "cart",
+                totalPrice: Number(totalPrice),
+                walletBalance,
+              };
+        window.dispatchEvent(
+          detail
+            ? new CustomEvent(OPEN_WALLET_CHARGE_GUIDE_EVENT, { detail })
+            : new Event(OPEN_WALLET_CHARGE_GUIDE_EVENT),
+        );
+        return;
       }
 
-      // You can do something with the response data here, like updating state
+      // if (responseData.data.payment_url) {
+      //   return;
+      // }
+
+      if (responseData.status === 201) {
+        toast.success("پرداخت با موفقیت از کیف پول شما انجام شد");
+        dispatch(removeAllItemsFromReserve([]));
+        router.refresh();
+      }
     } catch (error) {
       console.error("Error sending data:", error);
-      // Handle errors, like showing a message to the user
-    }
-  };
-
-  const callbackApi = async (
-    status: string,
-    transactionId: string | null,
-  ) => {
-    const token = localStorage.getItem("token");
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
-
-    try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/payment/callback`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            payment_transaction_id: transactionId,
-            status: status,
-            gateway_tracking_code: "GW-ABC123",
-          }),
-        },
-      );
-
-      dispatch(removeAllItemsFromReserve([]));
-      // refresh();
-      // revalidateData();
-      window.location.reload();
-
-      // You can do something with the response data here, like updating state
-    } catch (error) {
-      console.error("Error sending data:", error);
-      // Handle errors, like showing a message to the user
     }
   };
 
