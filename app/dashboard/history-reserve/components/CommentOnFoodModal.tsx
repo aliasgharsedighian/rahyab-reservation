@@ -22,6 +22,8 @@ function CommentOnFoodModal({
   reservationId,
   has_feedback,
   revalidateData,
+  onSubmitted,
+  promptMessage,
 }: any) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -95,7 +97,11 @@ function CommentOnFoodModal({
       if (response.status === 200) {
         setComment("");
         setRate(5);
-        setOpen(false);
+        if (onSubmitted) {
+          onSubmitted();
+        } else {
+          setOpen(false);
+        }
         revalidateData();
         toast.success(response.message);
       }
@@ -112,6 +118,12 @@ function CommentOnFoodModal({
             نظرات غذا
           </DialogTitle>
         </DialogHeader>
+
+        {promptMessage && (
+          <p className="text-center text-sm text-(--secondary-text)">
+            {promptMessage}
+          </p>
+        )}
 
         {/* ✅ هدر غذا */}
         {data && (

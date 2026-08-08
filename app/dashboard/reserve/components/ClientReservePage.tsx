@@ -13,16 +13,18 @@ import {
   reserveTotalFoodCount,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
-import type { ReserveCartItem } from "../types";
+import type { ReserveCartItem, UnreviewedReservation } from "../types";
 import { useRouter } from "next/navigation";
 import {
   OPEN_WALLET_CHARGE_GUIDE_EVENT,
   type WalletChargeGuideCartDetail,
 } from "../../components/WalletChargeGuideModal";
+import ReservationFeedbackPrompt from "./ReservationFeedbackPrompt";
 
 interface ClientReservePageProps {
   reserveList: unknown;
   walletBalance: number | null;
+  unreviewedReservations: UnreviewedReservation[];
 }
 
 interface ReservationResponse {
@@ -36,6 +38,7 @@ interface ReservationResponse {
 function ClientReservePage({
   reserveList,
   walletBalance,
+  unreviewedReservations,
 }: ClientReservePageProps) {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -110,6 +113,7 @@ function ClientReservePage({
 
   return (
     <div className="flex gap-6 w-full">
+      <ReservationFeedbackPrompt reservations={unreviewedReservations} />
       <div className="w-full md:basis-8/12 mx-2 md:mr-6">
         <FoodReserveTabs reserveList={reserveList} />
       </div>
