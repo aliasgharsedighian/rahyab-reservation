@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,33 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { DirectionProvider } from "@/components/ui/direction";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
+
+interface FeedbackState {
+  has_feedback: boolean;
+  rate: number | null;
+  comment: string | null;
+  status: string | null;
+}
+
+interface FoodFeedbackData {
+  food_name: string;
+  feedback_rate: number;
+  feedback_count: number;
+  image_url: string;
+}
+
+interface CommentOnFoodModalProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  foodId: number | null;
+  reservationId: number | null;
+  has_feedback?: FeedbackState;
+  revalidateData: () => void | Promise<void>;
+  onSubmitted?: () => void;
+  promptMessage?: string;
+}
 
 function CommentOnFoodModal({
   open,
@@ -24,66 +46,65 @@ function CommentOnFoodModal({
   revalidateData,
   onSubmitted,
   promptMessage,
-}: any) {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
+}: CommentOnFoodModalProps) {
+  const [data, setData] = useState<FoodFeedbackData | null>(null);
   const [comment, setComment] = useState("");
-  const [rate, setRate] = useState(5);
+  const [rate, setRate] = useState(0);
+  const [hoveredRate, setHoveredRate] = useState<number | null>(null);
+  const [rateError, setRateError] = useState(false);
 
-  // ✅ fetch data وقتی مودال باز میشه
-  useEffect(() => {
-    if (open && foodId) {
-      fetchFeedbacks();
-    }
-    if (!open) {
-      setData([]);
-    }
-  }, [open, foodId]);
-
-  useEffect(() => {
-    setRate(has_feedback?.rate || 5);
-  }, [has_feedback]);
-
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-    // console.log(foodId);
-    try {
-      setLoading(true);
+    const headers = new Headers();
+    headers.append("Accept", "*/*");
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", `Bearer ${token}`);
 
+    try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks/by-food?food_id=${foodId}`,
-        {
-          headers: myHeaders,
-        },
+        { headers },
       );
-      const json = await res.json();
-
+      const json = (await res.json()) as { data: FoodFeedbackData };
       setData(json.data);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [foodId]);
+
+  // ✅ fetch data وقتی مودال باز میشه
+  useEffect(() => {
+    if (!open || !foodId) return;
+
+    const timeout = window.setTimeout(() => {
+      void fetchFeedbacks();
+      setRate(has_feedback?.rate ?? 0);
+      setRateError(false);
+      setHoveredRate(null);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [fetchFeedbacks, foodId, has_feedback?.rate, open]);
 
   // ✅ ثبت نظر
   const handleSubmit = async () => {
+    if (rate === 0) {
+      setRateError(true);
+      toast.error("امتیاز خود را ثبت کنید");
+      return;
+    }
+
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
+    const headers = new Headers();
+    headers.append("Accept", "*/*");
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", `Bearer ${token}`);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks`,
         {
           method: "POST",
-          headers: myHeaders,
+          headers,
           body: JSON.stringify({
             reservation_id: reservationId,
             rate,
@@ -96,7 +117,7 @@ function CommentOnFoodModal({
 
       if (response.status === 200) {
         setComment("");
-        setRate(5);
+        setRate(0);
         if (onSubmitted) {
           onSubmitted();
         } else {
@@ -137,6 +158,7 @@ function CommentOnFoodModal({
             </div>
             <img
               src={data.image_url}
+              alt={data.food_name}
               className="w-20 h-20 rounded-lg object-cover"
             />
           </div>
@@ -145,35 +167,96 @@ function CommentOnFoodModal({
         {/* ✅ فرم ثبت نظر */}
 
         <div className="pt-4 space-y-3">
-          {has_feedback?.has_feedback ? (
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <button
-                  key={num}
-                  // onClick={() => setRate(num)}
-                  className={`text-xl ${
-                    num <= rate ? "text-yellow-400" : "text-muted-foreground"
-                  }`}
-                >
-                  ★
-                </button>
-              ))}
+          <div
+            className={`rounded-xl border p-4 ${
+              rateError
+                ? "border-red-500 bg-red-50/70 dark:bg-red-950/20"
+                : "bg-muted/30"
+            }`}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold">
+                  {has_feedback?.has_feedback
+                    ? "امتیاز ثبت‌شده شما"
+                    : "به این غذا چند امتیاز می‌دهید؟"}
+                </p>
+                <p className="mt-1 text-xs text-(--secondary-text)">
+                  {has_feedback?.has_feedback
+                    ? "این امتیاز قبلاً برای این رزرو ثبت شده است."
+                    : "برای انتخاب امتیاز، روی یکی از ستاره‌ها بزنید."}
+                </p>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${
+                  rate > 0
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {rate > 0 ? `${rate} از ۵` : "انتخاب نشده"}
+              </span>
             </div>
-          ) : (
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => setRate(num)}
-                  className={`text-xl ${
-                    num <= rate ? "text-yellow-400" : "text-muted-foreground"
-                  }`}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
-          )}
+
+            {has_feedback?.has_feedback ? (
+              <div
+                className="flex gap-1"
+                role="img"
+                aria-label={`امتیاز ثبت‌شده ${rate} از ۵`}
+              >
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <StarIcon
+                    key={num}
+                    className={`size-8 ${
+                      num <= rate
+                        ? "fill-amber-400 text-amber-400"
+                        : "fill-transparent text-muted-foreground/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div
+                className="flex w-fit gap-1 rounded-lg p-1"
+                onMouseLeave={() => setHoveredRate(null)}
+              >
+                {[1, 2, 3, 4, 5].map((num) => {
+                  const visibleRate = hoveredRate ?? rate;
+
+                  return (
+                    <button
+                      type="button"
+                      key={num}
+                      aria-label={`${num} امتیاز از ۵`}
+                      aria-pressed={rate === num}
+                      onMouseEnter={() => setHoveredRate(num)}
+                      onFocus={() => setHoveredRate(num)}
+                      onBlur={() => setHoveredRate(null)}
+                      onClick={() => {
+                        setRate(num);
+                        setRateError(false);
+                      }}
+                      className="group rounded-md p-1 transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    >
+                      <StarIcon
+                        className={`size-9 transition-colors ${
+                          num <= visibleRate
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-transparent text-muted-foreground/40 group-hover:text-amber-300"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {rateError && (
+              <p className="mt-2 text-sm font-medium text-red-600" role="alert">
+                امتیاز خود را ثبت کنید.
+              </p>
+            )}
+          </div>
 
           {/* ✅ textarea ثبت نظر */}
           {has_feedback?.has_feedback ? (
