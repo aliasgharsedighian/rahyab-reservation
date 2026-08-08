@@ -15,7 +15,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
 
-function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
+function CommentOnFoodModal({
+  open,
+  setOpen,
+  foodId,
+  reservationId,
+  has_feedback,
+  revalidateData,
+}: any) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +38,10 @@ function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
       setData([]);
     }
   }, [open, foodId]);
+
+  useEffect(() => {
+    setRate(has_feedback?.rate || 5);
+  }, [has_feedback]);
 
   const fetchFeedbacks = async () => {
     const token = localStorage.getItem("token");
@@ -84,6 +95,8 @@ function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
       if (response.status === 200) {
         setComment("");
         setRate(5);
+        setOpen(false);
+        revalidateData();
         toast.success(response.message);
       }
     } catch (err) {
@@ -120,29 +133,62 @@ function CommentOnFoodModal({ open, setOpen, foodId, reservationId }: any) {
         {/* ✅ فرم ثبت نظر */}
 
         <div className="pt-4 space-y-3">
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map((num) => (
-              <button
-                key={num}
-                onClick={() => setRate(num)}
-                className={`text-xl ${
-                  num <= rate ? "text-yellow-400" : "text-muted-foreground"
-                }`}
-              >
-                ★
-              </button>
-            ))}
-          </div>
+          {has_feedback?.has_feedback ? (
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <button
+                  key={num}
+                  // onClick={() => setRate(num)}
+                  className={`text-xl ${
+                    num <= rate ? "text-yellow-400" : "text-muted-foreground"
+                  }`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setRate(num)}
+                  className={`text-xl ${
+                    num <= rate ? "text-yellow-400" : "text-muted-foreground"
+                  }`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+          )}
 
-          <Textarea
-            placeholder="نظر خود را بنویسید..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
+          {/* ✅ textarea ثبت نظر */}
+          {has_feedback?.has_feedback ? (
+            <div className="flex flex-col gap-2">
+              <p>شما قبلا به این غذا نظر داده اید:</p>
+              <div className="border p-3 rounded-lg bg-(--light-green)">
+                <p className="font-bold">نظر شما:</p>
+                <p>{has_feedback.comment}</p>
+              </div>
+              <span className="text-sm">وضعیت: {has_feedback.status}</span>
+            </div>
+          ) : (
+            <Textarea
+              placeholder="نظر خود را بنویسید..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          )}
 
-          <Button onClick={handleSubmit} className="w-full">
-            ثبت نظر
-          </Button>
+          {/* ✅ دکمه ثبت نظر */}
+          {has_feedback?.has_feedback ? (
+            <Button disabled>شما قبلا به این غذا نظر داده اید</Button>
+          ) : (
+            <Button onClick={handleSubmit} className="w-full">
+              ثبت نظر
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

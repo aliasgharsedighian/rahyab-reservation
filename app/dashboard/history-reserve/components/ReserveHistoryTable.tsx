@@ -24,6 +24,11 @@ function ReserveHistoryTable({ reserveHistory, revalidateData }: any) {
         setOpen={setOpen}
         foodId={selectedFoodId}
         reservationId={selectedId}
+        has_feedback={
+          reserveHistory.find((item: any) => item.id === selectedId)
+            ?.has_feedback
+        }
+        revalidateData={revalidateData}
       />
       <ReservationFilters />
       <div className="w-full overflow-x-auto rounded-md">
@@ -48,7 +53,7 @@ function ReserveHistoryTable({ reserveHistory, revalidateData }: any) {
             جمع کل (تومان)
           </div>
           <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
-            جزییات
+            جزییات/نظر
           </div>
         </div>
 
