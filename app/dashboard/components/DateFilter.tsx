@@ -16,15 +16,19 @@ export default function DateFilter({ value, label, onChange }: Props) {
     value.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d).toString());
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-full min-w-0 flex-col gap-2">
       <label className="text-sm font-medium">{label}</label>
 
       <DatePicker
         style={{
           height: 40,
+          width: "100%",
           borderRadius: 12,
           border: "1px solid var(--border)",
+          paddingInline: 12,
+          background: "var(--background)",
         }}
+        containerClassName="w-full"
         value={value || ""}
         calendar={persian}
         locale={persian_fa}

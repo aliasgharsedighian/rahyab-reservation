@@ -1,15 +1,12 @@
 "use client";
 
-import { X } from "lucide-react";
-
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useReservationFilters } from "../hook/useReservationFilters";
 import DateFilter from "./DateFilter";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import ResponsiveFilters from "./ResponsiveFilters";
 
 type DateFilterKey = "reserve_date_from_jalali" | "reserve_date_to_jalali";
 
@@ -17,6 +14,12 @@ export default function ReservationFilters() {
   const { searchParams, updateFilter, clearFilters } = useReservationFilters();
   const [foodName, setFoodName] = useState(searchParams.get("food_name") || "");
   const [dateError, setDateError] = useState<string | null>(null);
+  const activeCount = [
+    "food_name",
+    "reserve_date_from_jalali",
+    "reserve_date_to_jalali",
+    "status",
+  ].filter((key) => searchParams.has(key)).length;
 
   const debouncedFoodSearch = useDebouncedCallback((value: string) => {
     updateFilter("food_name", value.trim() || null);
@@ -56,78 +59,44 @@ export default function ReservationFilters() {
   };
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="text-lg iranSansBold flex justify-between w-full items-center">
-        <p>فیلترها</p>
-        <div className="flex items-end">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleClearFilters}
-          >
-            <X className="w-4 h-4 ml-2" />
-            حذف فیلترها
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 space-y-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm">نام غذا</label>
+    <ResponsiveFilters
+      activeCount={activeCount}
+      onClear={handleClearFilters}
+      description="جستجو را بر اساس نام غذا، بازه تاریخ یا وضعیت محدود کنید."
+    >
+        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="flex min-w-0 flex-col gap-2">
+            <label className="text-sm font-medium">نام غذا</label>
 
             <Input
-              placeholder="جستجو نام غذا..."
+              className="h-10 rounded-xl bg-background"
+              placeholder="نام غذا را جستجو کنید..."
               value={foodName}
               onChange={(event) => handleFoodNameChange(event.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-4 items-center">
-              <DateFilter
-                label="از تاریخ"
-                value={searchParams.get("reserve_date_from_jalali")}
-                onChange={(value) =>
-                  handleDateChange("reserve_date_from_jalali", value)
-                }
-              />
+          <DateFilter
+            label="از تاریخ"
+            value={searchParams.get("reserve_date_from_jalali")}
+            onChange={(value) =>
+              handleDateChange("reserve_date_from_jalali", value)
+            }
+          />
+          <DateFilter
+            label="تا تاریخ"
+            value={searchParams.get("reserve_date_to_jalali")}
+            onChange={(value) =>
+              handleDateChange("reserve_date_to_jalali", value)
+            }
+          />
 
-              <DateFilter
-                label="تا تاریخ"
-                value={searchParams.get("reserve_date_to_jalali")}
-                onChange={(value) =>
-                  handleDateChange("reserve_date_to_jalali", value)
-                }
-              />
+          <div className="flex min-h-10 items-center justify-between rounded-xl border bg-background px-3 py-2">
+            <div>
+              <p className="text-sm font-medium">فقط لغوشده‌ها</p>
+              <p className="text-[11px] text-muted-foreground">نمایش رزروهای لغوشده</p>
             </div>
-            {dateError && (
-              <p role="alert" className="text-sm leading-6 text-destructive">
-                {dateError}
-              </p>
-            )}
-          </div>
-
-          {/* <div>
-            <label className="text-sm mb-2 block">روزهای هفته</label>
-
-            <div className="flex flex-wrap gap-2">
-              {DAYS.map((day) => (
-                <Badge
-                  key={day}
-                  variant={selectedDays.includes(day) ? "default" : "outline"}
-                  className="cursor-pointer py-2 px-3"
-                  onClick={() => toggleDay(day)}
-                >
-                  {day}
-                </Badge>
-              ))}
-            </div>
-          </div> */}
-
-          <div>
-            <label className="text-sm mb-2 block">لغو شده ها</label>
-
             <Switch
-              className="ltr"
+              dir="ltr"
               checked={searchParams.get("status") === "cancelled"}
               onCheckedChange={(checked) =>
                 updateFilter("status", checked ? "cancelled" : null)
@@ -135,7 +104,11 @@ export default function ReservationFilters() {
             />
           </div>
         </div>
-      </CardContent>
-    </Card>
+        {dateError && (
+          <p role="alert" className="mt-3 text-sm leading-6 text-destructive">
+            {dateError}
+          </p>
+        )}
+    </ResponsiveFilters>
   );
 }
