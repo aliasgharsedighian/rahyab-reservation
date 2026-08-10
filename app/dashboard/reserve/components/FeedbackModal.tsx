@@ -13,6 +13,7 @@ import Link from "next/link";
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StarIcon } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 function FeedbackModal({ open, setOpen, foodId }: any) {
   const [data, setData] = useState<any>(null);
@@ -25,9 +26,6 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
   useEffect(() => {
     if (open && foodId) {
       fetchFeedbacks();
-    }
-    if (!open) {
-      setData([]);
     }
   }, [open, foodId]);
 
@@ -82,8 +80,17 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
     }
   };
 
+  console.log("data", data);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setData(null);
+    }
+    setOpen(nextOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="rtl max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-center iranSansBold text-xl">
@@ -91,14 +98,25 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
           </DialogTitle>
         </DialogHeader>
 
+        {loading || !data ? (
+          <div
+            className="flex min-h-64 flex-col items-center justify-center gap-3 text-(--secondary-text)"
+            role="status"
+            aria-live="polite"
+          >
+            <Spinner className="size-8 text-(--base-green)" />
+            <p className="text-sm">در حال بارگذاری نظرات...</p>
+          </div>
+        ) : (
+          <>
         {/* ✅ هدر غذا */}
-        {data && (
           <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
             <div className="flex flex-col">
               <span className="font-bold text-lg">{data.food_name}</span>
               <span className="text-sm text-(--secondary-text) flex items-center gap-2">
                 <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
-                {data.feedback_rate} ({data.feedback_count} نظر)
+                {data.feedback_rate} ({data.feedback_count} رای) - (
+                {data.comment_count} نظر)
               </span>
             </div>
             <img
@@ -106,7 +124,6 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
               className="w-20 h-20 rounded-lg object-cover"
             />
           </div>
-        )}
 
         {/* ✅ لیست نظرات */}
         <DirectionProvider dir="rtl">
@@ -114,9 +131,7 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
             <div
               className={`space-y-2 ${data?.feedbacks?.length ? "border rounded-lg" : ""} `}
             >
-              {loading ? (
-                <p>در حال بارگذاری...</p>
-              ) : data?.feedbacks?.length ? (
+              {data?.feedbacks?.length ? (
                 data.feedbacks.map((item: any, index: number) => (
                   <div
                     key={index}
@@ -137,9 +152,9 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
 
                     <p className="text-sm">{item.comment}</p>
 
-                    <span className="text-xs text-green-600">
+                    {/* <span className="text-xs text-green-600">
                       {item.status}
-                    </span>
+                    </span> */}
                   </div>
                 ))
               ) : (
@@ -163,6 +178,8 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
             مراجعه کنید.
           </p>
         </div>
+          </>
+        )}
         {/* <div className="border-t pt-4 space-y-3">
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((num) => (

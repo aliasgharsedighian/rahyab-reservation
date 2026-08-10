@@ -1,20 +1,50 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import FoodReserveInvoice from "./FoodReserveInvoice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import FeedbackModal from "./FeedbackModal";
-import { InfoIcon, StarIcon } from "lucide-react";
+import { InfoIcon, MessageCircleIcon, StarIcon } from "lucide-react";
 
-function FoodReserveTabs({ reserveList }: any) {
-  const [tab, setTab] = useState("");
+interface ReserveFood {
+  food_id: number;
+  weekly_menu_id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  image_url: string;
+  feedback_rate: number | string | null;
+  feedback_count: number;
+  comment_count: number;
+  is_reserved: boolean;
+  max_reservation_quantity: number;
+}
+
+interface ReserveDay {
+  date: string;
+  day_name: string;
+  jalali_date: string;
+  foods: ReserveFood[];
+}
+
+interface ReserveWeek {
+  range: string;
+  is_current_week: boolean;
+  week_number: number;
+  reservation_message?: string | null;
+  days: ReserveDay[];
+}
+
+export interface FoodReserveList {
+  weeks: ReserveWeek[];
+}
+
+interface FoodReserveTabsProps {
+  reserveList: FoodReserveList | null;
+}
+
+function FoodReserveTabs({ reserveList }: FoodReserveTabsProps) {
   const [open, setOpen] = useState(false);
   const [selectedFoodId, setSelectedFoodId] = useState<number | null>(null);
 
@@ -27,18 +57,12 @@ function FoodReserveTabs({ reserveList }: any) {
     <>
       <FeedbackModal open={open} setOpen={setOpen} foodId={selectedFoodId} />
 
-      <Tabs
-        onValueChange={(value) => {
-          setTab(value);
-        }}
-        defaultValue={reserveList?.weeks[0].range}
-        className="w-full rtl"
-      >
+      <Tabs defaultValue={reserveList?.weeks[0]?.range} className="w-full rtl">
         <div className="flex flex-col gap-4">
           <TabsList className="rtl w-full bg-(--light-green)">
-            {reserveList?.weeks.map((item: any, index: number) => (
+            {reserveList?.weeks.map((item) => (
               <TabsTrigger
-                key={index}
+                key={item.range}
                 value={item.range}
                 className="text-[12px] md:text-base"
               >
@@ -49,8 +73,8 @@ function FoodReserveTabs({ reserveList }: any) {
             ))}
           </TabsList>
 
-          {reserveList?.weeks.map((item: any, index: number) => (
-            <TabsContent key={index} value={item.range}>
+          {reserveList?.weeks.map((item) => (
+            <TabsContent key={item.range} value={item.range}>
               {item.reservation_message ? (
                 <div className="flex items-center gap-2 p-4 mb-2 bg-(--light-green) rounded-xl dark:bg--(--dark-green)">
                   <InfoIcon className="size-5 text-red-600" />
@@ -58,10 +82,10 @@ function FoodReserveTabs({ reserveList }: any) {
                 </div>
               ) : null}
               <div className="flex flex-col gap-4 md:gap-6">
-                {item.days.map((day: any) => (
+                {item.days.map((day) => (
                   <div
                     key={day.date}
-                    className="relative flex flex-col gap-2 border p-2 rounded-lg shadow-md dark:bg-zinc-800"
+                    className="flex flex-col gap-4 rounded-2xl border bg-white p-3 shadow-sm md:p-5 dark:bg-zinc-800"
                   >
                     <div className="w-full flex items-center justify-between gap-4">
                       <div className="text-lg relative flex items-center gap-3">
@@ -72,29 +96,49 @@ function FoodReserveTabs({ reserveList }: any) {
                         <span>{day.jalali_date}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-start gap-2">
+                    <div className="grid gap-3">
                       {day.foods.length !== 0 ? (
-                        day.foods.map((food: any) => (
-                          <div
+                        day.foods.map((food) => (
+                          <article
                             key={food.food_id}
-                            className="w-full flex flex-row gap-3 justify-between h-full items-start pb-4 border-b last:border-none pl-2"
+                            className="grid overflow-hidden rounded-2xl border bg-zinc-50/70 transition-shadow hover:shadow-md sm:grid-cols-[minmax(0,1fr)_11rem] dark:bg-zinc-900/50"
                           >
-                            <span className="absolute left-4 top-3 text-sm text-(--secondary-text) flex items-center gap-2">
-                              <StarIcon
-                                fill="#fbcb10"
-                                className="text-[#fbcb10] size-5"
-                              />{" "}
-                              {food.feedback_rate} ({food.feedback_count} نظر)
-                            </span>
-                            <div className="basis-1/2 h-full flex flex-col gap-2 justify-between">
-                              <h3 className="text-lg font-bold text-(--base-black)">
-                                {food.name}
-                              </h3>
-                              <p className="text-(--secondary-text)">
-                                {food.description}
-                              </p>
-                              <span className="text-(--base-black) text-lg">
-                                {food.price.toLocaleString()} تومان
+                            <div className="order-2 flex min-w-0 flex-col gap-3 p-4 sm:order-1">
+                              <div className="flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:justify-between">
+                                <h3 className="w-full min-w-0 text-lg font-bold leading-7 text-(--base-black) sm:w-auto">
+                                  {food.name}
+                                </h3>
+                                <Button
+                                  onClick={() => handleOpenModal(food.food_id)}
+                                  variant="outline"
+                                  className="h-auto max-w-full shrink-0 self-start rounded-full p-0"
+                                >
+                                  <div
+                                    className="flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] text-zinc-700 sm:text-xs"
+                                    aria-label={`${food.feedback_rate ?? 0} امتیاز از ${food.feedback_count} نظر`}
+                                  >
+                                    <StarIcon
+                                      fill="currentColor"
+                                      className="size-4 text-amber-400"
+                                      aria-hidden="true"
+                                    />
+                                    <span className="font-semibold tabular-nums">
+                                      {food.feedback_rate ?? "—"}
+                                    </span>
+                                    <span className="text-zinc-500">
+                                      ({food.feedback_count ?? 0} رای) - (
+                                      {food.comment_count ?? 0} نظر)
+                                    </span>
+                                  </div>
+                                </Button>
+                              </div>
+                              {food.description ? (
+                                <p className="text-sm leading-6 text-(--secondary-text)">
+                                  {food.description}
+                                </p>
+                              ) : null}
+                              <span className="text-base font-semibold text-(--base-black)">
+                                {food.price.toLocaleString("fa-IR")} تومان
                               </span>
                               <FoodReserveInvoice
                                 food_id={food.food_id}
@@ -109,23 +153,28 @@ function FoodReserveTabs({ reserveList }: any) {
                               />
                               <Button
                                 variant="link"
-                                className="text-(--base-green) w-fit"
+                                className="h-auto w-fit gap-1.5 p-0 text-(--base-green)"
                                 onClick={() => handleOpenModal(food.food_id)}
                               >
+                                <MessageCircleIcon className="size-4" />
                                 مشاهده نظرات
                               </Button>
                             </div>
-                            <div className="basis-1/2 relative h-full">
+                            <div className="order-1 flex items-center justify-center bg-zinc-100 sm:order-2 sm:m-3 sm:aspect-square sm:self-center sm:rounded-xl dark:bg-zinc-800">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                className="w-full h-full max-w-3xs rounded-2xl"
+                                className="aspect-[16/10] h-full w-full rounded-xl object-contain sm:aspect-square"
                                 src={food.image_url}
                                 alt={food.name}
+                                loading="lazy"
                               />
                             </div>
-                          </div>
+                          </article>
                         ))
                       ) : (
-                        <div>غذایی برای این روز وجود ندارد</div>
+                        <div className="rounded-xl bg-zinc-50 p-6 text-center text-sm text-(--secondary-text) dark:bg-zinc-900/50">
+                          غذایی برای این روز وجود ندارد
+                        </div>
                       )}
                     </div>
                   </div>

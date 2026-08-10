@@ -1,6 +1,6 @@
 "use client";
 
-import FoodReserveTabs from "./FoodReserveTabs";
+import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
@@ -22,7 +22,7 @@ import {
 import ReservationFeedbackPrompt from "./ReservationFeedbackPrompt";
 
 interface ClientReservePageProps {
-  reserveList: unknown;
+  reserveList: FoodReserveList | null;
   walletBalance: number | null;
   unreviewedReservations: UnreviewedReservation[];
 }
