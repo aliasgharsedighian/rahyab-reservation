@@ -1,11 +1,20 @@
 export interface ReserveCartItem {
   id: number | string;
+  food_id?: number;
   name: string;
   day: string;
   jalali_date: string;
+  date: string;
+  type?: ReserveFoodType;
+  type_fa?: string;
   count: number;
   price: number;
 }
+
+export type ReserveFoodType = "lunch" | "dinner" | "drink" | "appetizer";
+
+export const isMainFoodType = (type?: string) =>
+  type === "lunch" || type === "dinner";
 
 export interface UnreviewedReservation {
   id: number;

@@ -45,8 +45,23 @@ export const reserveBasketSlice = createSlice({
       let newBasket = [...state.cart];
 
       if (index >= 0) {
+        const removedItem = state.cart[index];
         //the item exist in the basket ... remove it
         newBasket.splice(index, 1);
+        if (removedItem.type === "lunch" || removedItem.type === "dinner") {
+          const hasAnotherMainFood = newBasket.some(
+            (item: any) =>
+              item.date === removedItem.date &&
+              (!item.type || item.type === "lunch" || item.type === "dinner"),
+          );
+          if (!hasAnotherMainFood) {
+            newBasket = newBasket.filter(
+              (item: any) =>
+                item.date !== removedItem.date ||
+                (item.type !== "drink" && item.type !== "appetizer"),
+            );
+          }
+        }
         toast.success("آیتم با موفقیت از سبد شما حذف شد.");
       } else {
         console.warn(
@@ -55,11 +70,17 @@ export const reserveBasketSlice = createSlice({
       }
       state.cart = newBasket;
     },
-    incrementReserveCount: (state, action: PayloadAction<cartType>) => {
+    incrementReserveCount: (
+      state,
+      action: PayloadAction<number | string>,
+    ) => {
       const item = state.cart.find((item: any) => item.id === action.payload);
       item.count++;
     },
-    decrementReserveCount: (state, action: PayloadAction<cartType>) => {
+    decrementReserveCount: (
+      state,
+      action: PayloadAction<number | string>,
+    ) => {
       const item = state.cart.find((item: any) => item.id === action.payload);
       if (item.count === 0) {
         item.count = 0;

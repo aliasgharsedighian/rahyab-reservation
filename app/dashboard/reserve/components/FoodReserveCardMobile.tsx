@@ -2,16 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  removeFromReserveBasket,
-} from "@/redux/features/reserveBasketSlice";
-import {
   ChevronUp,
-  ForkKnife,
   ShoppingBasketIcon,
-  Trash2Icon,
   WalletCardsIcon,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
 import {
   Drawer,
   DrawerClose,
@@ -25,6 +19,7 @@ import {
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ReserveCartItem } from "../types";
+import ReserveCartItems from "./ReserveCartItems";
 
 interface FoodReserveCardMobileProps {
   reserveCart: ReserveCartItem[];
@@ -43,8 +38,6 @@ function FoodReserveCardMobile({
   sendDataToApi,
   walletBalance,
 }: FoodReserveCardMobileProps) {
-  const dispatch = useDispatch();
-
   if (reserveCart.length === 0) return;
   return (
     <div className="flex flex-col bg-background text-foreground fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t border-border pt-6">
@@ -71,6 +64,7 @@ function FoodReserveCardMobile({
                 className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
               >
                 {reserveCart.length !== 0 ? (
+                  <ReserveCartItems items={sortedReserveCart} /> /*
                   sortedReserveCart.map((item) => (
                     <div
                       key={item.id}
@@ -99,7 +93,7 @@ function FoodReserveCardMobile({
                         <span>حذف</span>
                       </Button>
                     </div>
-                  ))
+                  )) */
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center">
                     <ShoppingBasketIcon className="size-12 text-(--base-green)" />

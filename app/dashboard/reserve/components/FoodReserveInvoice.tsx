@@ -7,10 +7,26 @@ import {
   incrementReserveCount,
   removeFromReserveBasket,
   reserveSelectItemCountById,
+  reserveSelectItems,
 } from "@/redux/features/reserveBasketSlice";
 import { Trash2Icon } from "lucide-react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import type { ReserveCartItem, ReserveFoodType } from "../types";
+
+interface FoodReserveInvoiceProps {
+  food_id: number;
+  weekly_menu_id: number;
+  name: string;
+  price: number;
+  day: string;
+  jalali_date: string;
+  date: string;
+  isReserve: boolean;
+  MaxQuantity: number;
+  type: ReserveFoodType;
+  type_fa: string;
+}
 
 function FoodReserveInvoice({
   food_id,
@@ -22,11 +38,20 @@ function FoodReserveInvoice({
   date,
   isReserve,
   MaxQuantity,
-}: any) {
+  type,
+  type_fa,
+}: FoodReserveInvoiceProps) {
   const dispatch = useDispatch();
 
   // مستقیم از ریداکس
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
+  const reserveItems = useSelector(reserveSelectItems) as ReserveCartItem[];
+  const isSide = type === "drink" || type === "appetizer";
+  const hasMainFoodForDay = reserveItems.some(
+    (item) =>
+      item.date === date &&
+      (!item.type || item.type === "lunch" || item.type === "dinner"),
+  );
 
   const itemToBasket = {
     id: weekly_menu_id,
@@ -36,6 +61,8 @@ function FoodReserveInvoice({
     day,
     jalali_date,
     date,
+    type,
+    type_fa,
   };
 
   if (MaxQuantity === 0) {
@@ -61,7 +88,7 @@ function FoodReserveInvoice({
     return (
       <Button
         className="max-w-2xs dark:bg-(--base-green) dark:text-white"
-        disabled={isReserve ? false : true}
+        disabled={!isReserve || (isSide && !hasMainFoodForDay)}
         onClick={() => {
           dispatch(
             addToReserveBasket({
@@ -71,7 +98,9 @@ function FoodReserveInvoice({
           );
         }}
       >
-        رزرو این غذا
+        {isSide && !hasMainFoodForDay
+          ? "ابتدا غذای اصلی این روز را انتخاب کنید"
+          : "رزرو این مورد"}
       </Button>
     );
 
