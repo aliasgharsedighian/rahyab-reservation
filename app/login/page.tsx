@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { logIn, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
@@ -180,8 +181,7 @@ function LoginPage() {
                           رمز عبور
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            type="password"
+                          <PasswordInput
                             placeholder="رمز عبور"
                             {...field}
                             className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"

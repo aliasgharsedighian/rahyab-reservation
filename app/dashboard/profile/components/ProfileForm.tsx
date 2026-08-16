@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Form,
   FormControl,
@@ -410,8 +411,7 @@ export default function ProfileForm({
                 <FormItem>
                   {/* <FormLabel>Current Password</FormLabel> */}
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder="رمز عبور فعلی"
                       {...field}
                     />
@@ -428,8 +428,7 @@ export default function ProfileForm({
                 <FormItem>
                   {/* <FormLabel>New Password</FormLabel> */}
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder="رمز عبور جدید"
                       {...field}
                     />
@@ -446,8 +445,7 @@ export default function ProfileForm({
                 <FormItem>
                   {/* <FormLabel>Confirm New Password</FormLabel> */}
                   <FormControl>
-                    <Input
-                      type="password"
+                    <PasswordInput
                       placeholder="تکرار رمز عبور جدید"
                       {...field}
                     />
