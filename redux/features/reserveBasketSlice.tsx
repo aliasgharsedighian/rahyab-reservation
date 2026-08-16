@@ -48,11 +48,18 @@ export const reserveBasketSlice = createSlice({
         const removedItem = state.cart[index];
         //the item exist in the basket ... remove it
         newBasket.splice(index, 1);
-        if (removedItem.type === "lunch" || removedItem.type === "dinner") {
+        if (
+          removedItem.type === "breakfast" ||
+          removedItem.type === "lunch" ||
+          removedItem.type === "dinner"
+        ) {
           const hasAnotherMainFood = newBasket.some(
             (item: any) =>
               item.date === removedItem.date &&
-              (!item.type || item.type === "lunch" || item.type === "dinner"),
+              (!item.type ||
+                item.type === "breakfast" ||
+                item.type === "lunch" ||
+                item.type === "dinner"),
           );
           if (!hasAnotherMainFood) {
             newBasket = newBasket.filter(

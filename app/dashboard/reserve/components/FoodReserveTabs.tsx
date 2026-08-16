@@ -55,6 +55,7 @@ export interface FoodReserveList {
 }
 
 const fallbackTypeTitle: Record<ReserveFoodType, string> = {
+  breakfast: "صبحانه",
   lunch: "ناهار",
   dinner: "شام",
   drink: "نوشیدنی",
@@ -135,12 +136,20 @@ function FoodReserveTabs({ reserveList }: { reserveList: FoodReserveList | null 
               ) : null}
               <div className="flex flex-col gap-4 md:gap-6">
                 {week.days.map((day) => {
-                  const mainGroups = day.foods.filter(({ type }) => type === "lunch" || type === "dinner");
+                  const mainGroups = day.foods.filter(
+                    ({ type }) =>
+                      type === "breakfast" ||
+                      type === "lunch" ||
+                      type === "dinner",
+                  );
                   const sideGroups = day.foods.filter(({ type }) => type === "drink" || type === "appetizer");
                   const hasMainFood = reserveItems.some(
                     (cartItem) =>
                       cartItem.date === day.date &&
-                      (!cartItem.type || cartItem.type === "lunch" || cartItem.type === "dinner"),
+                      (!cartItem.type ||
+                        cartItem.type === "breakfast" ||
+                        cartItem.type === "lunch" ||
+                        cartItem.type === "dinner"),
                   );
                   return (
                     <section key={day.date} className="flex flex-col gap-5 rounded-2xl border bg-white p-3 shadow-sm md:p-5 dark:bg-zinc-800">

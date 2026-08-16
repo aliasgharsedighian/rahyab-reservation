@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import type { ReserveCartItem } from "../types";
 
 const typeLabel = {
+  breakfast: "صبحانه",
   lunch: "ناهار",
   dinner: "شام",
   drink: "نوشیدنی",
@@ -26,12 +27,18 @@ export default function ReserveCartItems({ items }: { items: ReserveCartItem[] }
     <div className="flex flex-col gap-4 p-3">
       {days.map((dayItems) => {
         const sortedDayItems = [...dayItems].sort((a, b) => {
-          const order = { lunch: 0, dinner: 1, drink: 2, appetizer: 3 };
+          const order = { breakfast: 0, lunch: 1, dinner: 2, drink: 3, appetizer: 4 };
           return (a.type ? order[a.type] : 0) - (b.type ? order[b.type] : 0);
         });
         const first = sortedDayItems[0];
         const mainNames = sortedDayItems
-          .filter((item) => item.type === "lunch" || item.type === "dinner" || !item.type)
+          .filter(
+            (item) =>
+              item.type === "breakfast" ||
+              item.type === "lunch" ||
+              item.type === "dinner" ||
+              !item.type,
+          )
           .map((item) => item.name)
           .join("، ");
         return (

@@ -109,75 +109,77 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
           </div>
         ) : (
           <>
-        {/* ✅ هدر غذا */}
-          <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
-            <div className="flex flex-col">
-              <span className="font-bold text-lg">{data.food_name}</span>
-              <span className="text-sm text-(--secondary-text) flex items-center gap-2">
-                <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
-                {data.feedback_rate} ({data.feedback_count} رای) - (
-                {data.comment_count} نظر)
-              </span>
+            {/* ✅ هدر غذا */}
+            <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
+              <div className="flex flex-col">
+                <span className="font-bold text-lg">{data.food_name}</span>
+                <span className="text-sm text-(--secondary-text) flex items-center gap-2">
+                  <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
+                  {data.feedback_rate} ({data.feedback_count} رای) - (
+                  {data.comment_count} نظر)
+                </span>
+              </div>
+              <img
+                src={data.image_url}
+                className="w-20 h-20 rounded-lg object-cover"
+              />
             </div>
-            <img
-              src={data.image_url}
-              className="w-20 h-20 rounded-lg object-cover"
-            />
-          </div>
 
-        {/* ✅ لیست نظرات */}
-        <DirectionProvider dir="rtl">
-          <ScrollArea className="h-auto max-h-[35vh] overflow-auto">
-            <div
-              className={`space-y-2 ${data?.feedbacks?.length ? "border rounded-lg" : ""} `}
-            >
-              {data?.feedbacks?.length ? (
-                data.feedbacks.map((item: any, index: number) => (
-                  <div
-                    key={index}
-                    className=" p-3 border-b flex flex-col gap-1"
-                  >
-                    <div className="flex justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <StarIcon
-                          fill="#fbcb10"
-                          className="size-4 text-[#fbcb10]"
-                        />{" "}
-                        {item.rate}
-                      </span>
-                      <span className="text-(--secondary-text)">
-                        {item.created_day_name} - {item.created_at_jalali}
-                      </span>
-                    </div>
+            {/* ✅ لیست نظرات */}
+            <DirectionProvider dir="rtl">
+              <ScrollArea className="h-auto max-h-[35vh] overflow-auto">
+                <div
+                  className={`space-y-2 ${data?.feedbacks?.length ? "border rounded-lg" : ""} `}
+                >
+                  {data?.feedbacks?.length ? (
+                    data.feedbacks.map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        className=" p-3 border-b flex flex-col gap-1"
+                      >
+                        <div className="flex justify-between text-sm">
+                          <span className="flex items-center gap-2">
+                            <StarIcon
+                              fill="#fbcb10"
+                              className="size-4 text-[#fbcb10]"
+                            />{" "}
+                            {item.rate}
+                          </span>
+                          <span className="text-(--secondary-text)">
+                            {item.created_day_name} - {item.created_at_jalali}
+                          </span>
+                        </div>
 
-                    <p className="text-sm">{item.comment}</p>
+                        <p className="text-sm whitespace-break-spaces">
+                          {item.comment}
+                        </p>
 
-                    {/* <span className="text-xs text-green-600">
+                        {/* <span className="text-xs text-green-600">
                       {item.status}
                     </span> */}
-                  </div>
-                ))
-              ) : (
-                <p>نظری ثبت نشده</p>
-              )}
-            </div>
-          </ScrollArea>
-        </DirectionProvider>
+                      </div>
+                    ))
+                  ) : (
+                    <p>نظری ثبت نشده</p>
+                  )}
+                </div>
+              </ScrollArea>
+            </DirectionProvider>
 
-        {/* ✅ فرم ثبت نظر */}
-        <div className="text-sm">
-          <p>ثبت نظر فقط برای غذاهای رزرو شده توسط شما امکان‌پذیر است.</p>
-          <p>
-            برای ثبت نظر میتوانید به صفحه{" "}
-            <Link
-              href="/dashboard/history-reserve?page=1"
-              className="text-blue-600 iranSansBold text-sm"
-            >
-              تاریخچه رزرو
-            </Link>{" "}
-            مراجعه کنید.
-          </p>
-        </div>
+            {/* ✅ فرم ثبت نظر */}
+            <div className="text-sm">
+              <p>ثبت نظر فقط برای غذاهای رزرو شده توسط شما امکان‌پذیر است.</p>
+              <p>
+                برای ثبت نظر میتوانید به صفحه{" "}
+                <Link
+                  href="/dashboard/history-reserve?page=1"
+                  className="text-blue-600 iranSansBold text-sm"
+                >
+                  تاریخچه رزرو
+                </Link>{" "}
+                مراجعه کنید.
+              </p>
+            </div>
           </>
         )}
         {/* <div className="border-t pt-4 space-y-3">

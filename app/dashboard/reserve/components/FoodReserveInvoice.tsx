@@ -50,7 +50,10 @@ function FoodReserveInvoice({
   const hasMainFoodForDay = reserveItems.some(
     (item) =>
       item.date === date &&
-      (!item.type || item.type === "lunch" || item.type === "dinner"),
+      (!item.type ||
+        item.type === "breakfast" ||
+        item.type === "lunch" ||
+        item.type === "dinner"),
   );
 
   const itemToBasket = {

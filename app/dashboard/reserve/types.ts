@@ -11,10 +11,15 @@ export interface ReserveCartItem {
   price: number;
 }
 
-export type ReserveFoodType = "lunch" | "dinner" | "drink" | "appetizer";
+export type ReserveFoodType =
+  | "breakfast"
+  | "lunch"
+  | "dinner"
+  | "drink"
+  | "appetizer";
 
 export const isMainFoodType = (type?: string) =>
-  type === "lunch" || type === "dinner";
+  type === "breakfast" || type === "lunch" || type === "dinner";
 
 export interface UnreviewedReservation {
   id: number;

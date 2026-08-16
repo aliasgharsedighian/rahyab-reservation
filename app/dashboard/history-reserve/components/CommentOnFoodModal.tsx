@@ -264,7 +264,9 @@ function CommentOnFoodModal({
               <p>شما قبلا به این غذا نظر داده اید:</p>
               <div className="border p-3 rounded-lg bg-(--light-green)">
                 <p className="font-bold">نظر شما:</p>
-                <p>{has_feedback.comment}</p>
+                <p className="whitespace-break-spaces">
+                  {has_feedback.comment}
+                </p>
               </div>
               <span className="text-sm">وضعیت: {has_feedback.status}</span>
             </div>
