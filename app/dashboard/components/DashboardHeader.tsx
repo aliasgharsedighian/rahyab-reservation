@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { BellIcon, MoonStar, Sun } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useTheme } from "next-themes";
+import getAuthTokenAction from "@/actions/getAuthTokenAction";
 
 function DashboardHeader({ title }: any) {
   const { notificationsData, markSeenNotification } = useNotifications();
@@ -68,7 +69,13 @@ function DashboardHeader({ title }: any) {
 
   const getProfileDetail = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
+      if (!token) {
+        token = await getAuthTokenAction();
+        if (token) localStorage.setItem("token", token);
+      }
+      if (!token) return;
+
       const myHeaders = new Headers();
       myHeaders.append("Accept", "application/json");
       myHeaders.append("Authorization", `Bearer ${token}`);
@@ -82,16 +89,15 @@ function DashboardHeader({ title }: any) {
       );
       const result = await response.json();
       // console.log(result);
-      if (result.status === 200) {
+      if (response.ok && result.status === 200) {
         dispatch(logIn(result.data));
-      } else {
-        // dispatch(logOut());
+      } else if (response.status === 401 || result.status === 401) {
         localStorage.removeItem("token");
-        logoutCookiesAction();
-        // logoutAction(token);
+        await logoutCookiesAction();
+        push("/login");
       }
     } catch {}
-  }, [dispatch]);
+  }, [dispatch, push]);
 
   useEffect(() => {
     getProfileDetail();

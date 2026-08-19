@@ -1,6 +1,30 @@
+"use server";
+
 import loginCookiesAction from "./loginCookiesAction";
 
-export default async function loginAction(formData: any, loginForm: any) {
+interface LoginCredentials {
+  mobile: string;
+  password: string;
+}
+
+type LoginResponse =
+  | {
+      success: true;
+      message: string;
+      data: {
+        token: string;
+        user: unknown;
+      };
+    }
+  | {
+      success: false;
+      message: string;
+    };
+
+export default async function loginAction(
+  formData: LoginCredentials,
+  rememberMe: boolean,
+): Promise<LoginResponse> {
   const myHeaders = new Headers();
   myHeaders.append("Accept", "application/json");
   const myFormdata = new FormData();
@@ -17,15 +41,23 @@ export default async function loginAction(formData: any, loginForm: any) {
       },
     );
     const result = await response.json();
-    // console.log("result");
-    if (result.status === 200) {
-      loginForm.reset();
-      loginCookiesAction(result.data.token, true);
-      return result;
+    if (response.ok && result.status === 200 && result.data?.token) {
+      await loginCookiesAction(result.data.token, rememberMe);
+      return {
+        success: true,
+        message: result.message,
+        data: result.data,
+      };
     }
-    throw new Error(result.message);
+    return {
+      success: false,
+      message: result.message || "ورود ناموفق بود.",
+    };
   } catch (error) {
-    console.log({ error });
-    return error;
+    console.error("Login request failed", error);
+    return {
+      success: false,
+      message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.",
+    };
   }
 }

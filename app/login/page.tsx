@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { ShieldCheckIcon } from "lucide-react";
 import { RulesModal } from "../components/RulesModal";
+import { useRouter } from "next/navigation";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -37,8 +38,10 @@ const signinFormSchema = z.object({
 
 function LoginPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isPendingLogin, startTransitionLogin] = useTransition();
 
   const loginForm = useForm<z.infer<typeof signinFormSchema>>({
@@ -54,13 +57,21 @@ function LoginPage() {
   ) => {
     try {
       startTransitionLogin(async () => {
-        const promise = loginAction(values, loginForm);
+        const promise = loginAction(values, rememberMe).then((result) => {
+          if (!result.success || !result.data) {
+            throw new Error(result.message);
+          }
+          return result;
+        });
         toast.promise(promise, {
           loading: "در حال ورود...",
           success: (result) => {
             localStorage.setItem("token", result.data.token);
             dispatch(setToken(result.data.token));
             dispatch(logIn(result.data.user));
+            loginForm.reset();
+            router.replace("/dashboard/reserve?walletGuide=1");
+            router.refresh();
             return result.message;
           },
           error: (err) => err.message || "خطایی رخ داد",
@@ -198,7 +209,11 @@ function LoginPage() {
                       فراموشی رمز؟
                     </span>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" />
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(event) => setRememberMe(event.target.checked)}
+                      />
                       مرا به خاطر بسپار
                     </label>
                   </div>

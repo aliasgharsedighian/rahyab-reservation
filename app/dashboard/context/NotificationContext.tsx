@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
+import getAuthTokenAction from "@/actions/getAuthTokenAction";
 
 type NotificationContextType = {
   notificationsData: any[];
@@ -24,7 +25,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const getNotifications = async () => {
     try {
-      const token = localStorage.getItem("token");
+      let token = localStorage.getItem("token");
+      if (!token) {
+        token = await getAuthTokenAction();
+        if (token) localStorage.setItem("token", token);
+      }
+      if (!token) return;
 
       const myHeaders = new Headers();
       myHeaders.append("Accept", "application/json");
@@ -40,11 +46,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
       const result = await response.json();
 
-      if (result.status === 200) {
+      if (response.ok && result.status === 200) {
         setNotificationsData(result.data.notifications);
-      } else {
+      } else if (response.status === 401 || result.status === 401) {
         localStorage.removeItem("token");
-        logoutCookiesAction();
+        await logoutCookiesAction();
       }
     } catch (error) {
       console.error(error);

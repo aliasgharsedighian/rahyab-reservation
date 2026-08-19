@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { NextURL } from "next/dist/server/web/next-url";
 
 export function proxy(req: NextRequest) {
   const token = req.cookies.get("user_token")?.value || "";
-  const { pathname, origin } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
   // console.log(Boolean(token));
 
@@ -12,13 +11,17 @@ export function proxy(req: NextRequest) {
     // If the token is invalid and user already on the sign-in page,
     // redirect to /sign-in
     if (pathname.startsWith("/dashboard")) {
-      const loginUrl = new NextURL("/login", origin);
+      const loginUrl = req.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.search = "";
       return NextResponse.redirect(loginUrl);
     }
   } else {
     // If token is valid and trying to access sign-in, redirect to dashboard
     if (pathname === "/login") {
-      const dashboardUrl = new NextURL("/dashboard/reserve", origin);
+      const dashboardUrl = req.nextUrl.clone();
+      dashboardUrl.pathname = "/dashboard/reserve";
+      dashboardUrl.search = "";
       return NextResponse.redirect(dashboardUrl);
     }
   }

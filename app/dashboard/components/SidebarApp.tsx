@@ -157,18 +157,15 @@ function SidebarApp() {
         );
         const result = await res.json();
         if (result.status === 200) {
-          localStorage.removeItem("token");
-          dispatch(logOut());
-          logoutCookiesAction();
-          push("/");
           toast.success(result.message);
-        } else {
-          localStorage.removeItem("token");
-          dispatch(logOut());
-          push("/");
         }
       } catch (error) {
         console.log(error);
+      } finally {
+        localStorage.removeItem("token");
+        dispatch(logOut());
+        await logoutCookiesAction();
+        push("/login");
       }
     });
   };
