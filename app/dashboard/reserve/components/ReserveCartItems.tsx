@@ -45,7 +45,7 @@ export default function ReserveCartItems({ items }: { items: ReserveCartItem[] }
           <section key={first.date || first.jalali_date} className="overflow-hidden rounded-xl border bg-background">
             <header className="border-b bg-(--light-green) px-3 py-2">
               <strong className="text-sm">{first.day} {first.jalali_date}</strong>
-              {mainNames ? <p className="mt-1 truncate text-xs text-(--secondary-text)">غذای اصلی: {mainNames}</p> : null}
+              {mainNames ? <p className="mt-1 max-w-full whitespace-normal wrap-break-word text-xs leading-5 text-(--secondary-text)">غذای اصلی: {mainNames}</p> : null}
             </header>
             <div className="divide-y px-3">
               {sortedDayItems.map((item) => {

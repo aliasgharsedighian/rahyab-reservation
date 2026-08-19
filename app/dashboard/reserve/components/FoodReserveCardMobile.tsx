@@ -49,7 +49,7 @@ function FoodReserveCardMobile({
             <ChevronUp className="size-5" />
           </div>
         </DrawerTrigger>
-        <DrawerContent>
+        <DrawerContent className="data-[vaul-drawer-direction=bottom]:h-[92dvh] data-[vaul-drawer-direction=bottom]:max-h-[92dvh]">
           <DrawerDescription className="sr-only">
             جزئیات غذاهای انتخاب‌شده، موجودی کیف پول و مبلغ کل رزرو
           </DrawerDescription>
@@ -59,7 +59,7 @@ function FoodReserveCardMobile({
           </DrawerHeader>
 
           <DirectionProvider dir="rtl">
-            <ScrollArea className="h-auto max-h-[75vh] overflow-auto">
+            <ScrollArea className="min-h-0 flex-1 overflow-auto">
               <div
                 className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
               >
@@ -103,7 +103,7 @@ function FoodReserveCardMobile({
               </div>
             </ScrollArea>
           </DirectionProvider>
-          <DrawerFooter className="border-t">
+          <DrawerFooter className="shrink-0 border-t">
             {" "}
             {reserveCart.length !== 0 ? (
               <div className="w-full flex flex-col gap-4 px-3">

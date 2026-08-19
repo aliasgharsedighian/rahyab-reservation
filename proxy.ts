@@ -18,7 +18,7 @@ export function proxy(req: NextRequest) {
   } else {
     // If token is valid and trying to access sign-in, redirect to dashboard
     if (pathname === "/login") {
-      const dashboardUrl = new NextURL("/dashboard", origin);
+      const dashboardUrl = new NextURL("/dashboard/reserve", origin);
       return NextResponse.redirect(dashboardUrl);
     }
   }
