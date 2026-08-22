@@ -7,6 +7,7 @@ export interface ReserveCartItem {
   date: string;
   type?: ReserveFoodType;
   type_fa?: string;
+  reserved_food_day?: boolean;
   count: number;
   price: number;
 }

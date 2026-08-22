@@ -26,6 +26,7 @@ interface FoodReserveInvoiceProps {
   MaxQuantity: number;
   type: ReserveFoodType;
   type_fa: string;
+  reservedFoodDay: boolean;
 }
 
 function FoodReserveInvoice({
@@ -40,6 +41,7 @@ function FoodReserveInvoice({
   MaxQuantity,
   type,
   type_fa,
+  reservedFoodDay,
 }: FoodReserveInvoiceProps) {
   const dispatch = useDispatch();
 
@@ -47,7 +49,7 @@ function FoodReserveInvoice({
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
   const reserveItems = useSelector(reserveSelectItems) as ReserveCartItem[];
   const isSide = type === "drink" || type === "appetizer";
-  const hasMainFoodForDay = reserveItems.some(
+  const hasMainFoodForDay = reservedFoodDay || reserveItems.some(
     (item) =>
       item.date === date &&
       (!item.type ||
@@ -66,6 +68,7 @@ function FoodReserveInvoice({
     date,
     type,
     type_fa,
+    reserved_food_day: reservedFoodDay,
   };
 
   if (MaxQuantity === 0) {

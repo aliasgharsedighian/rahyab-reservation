@@ -53,10 +53,11 @@ export const reserveBasketSlice = createSlice({
           removedItem.type === "lunch" ||
           removedItem.type === "dinner"
         ) {
-          const hasAnotherMainFood = newBasket.some(
+          const hasAnotherMainFood = removedItem.reserved_food_day || newBasket.some(
             (item: any) =>
               item.date === removedItem.date &&
-              (!item.type ||
+              (item.reserved_food_day ||
+                !item.type ||
                 item.type === "breakfast" ||
                 item.type === "lunch" ||
                 item.type === "dinner"),
