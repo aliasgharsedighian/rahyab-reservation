@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { logIn, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -42,7 +42,7 @@ function LoginPage() {
 
   const [open, setOpen] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [isPendingLogin, startTransitionLogin] = useTransition();
+  const [isPendingLogin, setIsPendingLogin] = useState(false);
 
   const loginForm = useForm<z.infer<typeof signinFormSchema>>({
     resolver: zodResolver(signinFormSchema),
@@ -55,30 +55,34 @@ function LoginPage() {
   const handleLoginSubmit = async (
     values: z.infer<typeof signinFormSchema>,
   ) => {
+    if (isPendingLogin) return;
+
+    setIsPendingLogin(true);
+    const toastId = toast.loading("در حال ورود...");
+
     try {
-      startTransitionLogin(async () => {
-        const promise = loginAction(values, rememberMe).then((result) => {
-          if (!result.success || !result.data) {
-            throw new Error(result.message);
-          }
-          return result;
-        });
-        toast.promise(promise, {
-          loading: "در حال ورود...",
-          success: (result) => {
-            localStorage.setItem("token", result.data.token);
-            dispatch(setToken(result.data.token));
-            dispatch(logIn(result.data.user));
-            loginForm.reset();
-            router.replace("/dashboard/reserve?walletGuide=1");
-            router.refresh();
-            return result.message;
-          },
-          error: (err) => err.message || "خطایی رخ داد",
-        });
-      });
+      const result = await loginAction(values, rememberMe);
+      if (!result.success) {
+        toast.error(result.message, { id: toastId });
+        return;
+      }
+
+      try {
+        localStorage.setItem("token", result.data.token);
+      } catch (storageError) {
+        console.warn("Could not persist the login token locally", storageError);
+      }
+
+      dispatch(setToken(result.data.token));
+      dispatch(logIn(result.data.user));
+      loginForm.reset();
+      toast.success(result.message || "ورود با موفقیت انجام شد.", { id: toastId });
+      router.replace("/dashboard/reserve?walletGuide=1");
     } catch (error) {
-      console.log(error);
+      console.error("Login failed", error);
+      toast.error("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", { id: toastId });
+    } finally {
+      setIsPendingLogin(false);
     }
   };
 

@@ -51,14 +51,18 @@ const getReserveList = async () => {
     method: "GET",
     headers,
   };
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}weekly-menu`,
-    requestOptions,
-  );
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_ADDRESS}weekly-menu`,
+      requestOptions,
+    );
+    if (!res.ok) return null;
 
-  const reserveList = await res.json();
-  if (res.status === 200) {
-    return reserveList.data;
+    const reserveList = await res.json();
+    return reserveList.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch the weekly menu:", error);
+    return null;
   }
 };
 

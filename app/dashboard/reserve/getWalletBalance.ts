@@ -15,18 +15,17 @@ export async function getWalletBalance() {
   headers.append("Accept", "application/json");
   headers.append("Authorization", `Bearer ${token}`);
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}wallet?count=1&page=1`,
-    {
-      method: "GET",
-      headers,
-    },
-  );
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_ADDRESS}wallet?count=1&page=1`,
+      { method: "GET", headers },
+    );
+    if (!response.ok) return null;
 
-  if (!response.ok) {
+    const wallet: WalletBalanceResponse = await response.json();
+    return wallet.data.balance;
+  } catch (error) {
+    console.error("Failed to fetch the wallet balance:", error);
     return null;
   }
-
-  const wallet: WalletBalanceResponse = await response.json();
-  return wallet.data.balance;
 }
