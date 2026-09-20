@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
@@ -94,30 +96,18 @@ function ClientReservePage({
   }, [activeReserveCart]);
 
   const sendDataToApi = async () => {
-    const token = localStorage.getItem("token");
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
-
     const items = activeReserveCart.map((item) => ({
       weekly_menu_id: item.id,
       quantity: item.count,
     }));
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations`,
+      const { data: responseData } = await apiClient.post<ReservationResponse>(
+        "reservations",
         {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            items,
-          }),
+          items,
         },
       );
-
-      const responseData: ReservationResponse = await response.json();
       if (responseData.status !== 201) {
         toast.error("موجودی کیف پول کافی نیست.");
         const detail: WalletChargeGuideCartDetail | null =

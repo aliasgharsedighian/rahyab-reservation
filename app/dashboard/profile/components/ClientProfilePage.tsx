@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
 import ProfileForm from "./ProfileForm";
@@ -19,22 +21,9 @@ function ClientProfilePage({ profile, revalidateData, foodPreferences }: any) {
   const [isPending, startTransition] = useTransition();
 
   const handleLogoutUser = () => {
-    const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-
     startTransition(async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ADDRESS}auth/logout`,
-          {
-            method: "POST",
-            headers: myHeaders,
-            credentials: "include",
-          },
-        );
-        const result = await res.json();
+        const { data: result } = await apiClient.post("auth/logout");
         if (result.status === 200) {
           toast.success(result.message);
         }

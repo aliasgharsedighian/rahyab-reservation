@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { logIn, setToken } from "@/redux/features/auth-slice";
+import { logIn, logOut, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ import Image from "next/image";
 import { ShieldCheckIcon } from "lucide-react";
 import { RulesModal } from "../components/RulesModal";
 import { useRouter } from "next/navigation";
+import { clearClientSession } from "@/lib/api/client";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -43,6 +44,12 @@ function LoginPage() {
   const [open, setOpen] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isPendingLogin, setIsPendingLogin] = useState(false);
+
+  useEffect(() => {
+    // This also completes cleanup after a 401 detected during server rendering.
+    clearClientSession();
+    dispatch(logOut());
+  }, [dispatch]);
 
   const loginForm = useForm<z.infer<typeof signinFormSchema>>({
     resolver: zodResolver(signinFormSchema),

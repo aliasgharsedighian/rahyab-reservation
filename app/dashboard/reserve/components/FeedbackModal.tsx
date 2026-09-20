@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
@@ -40,20 +42,12 @@ function FeedbackModal({ open, setOpen, foodId }: FeedbackModalProps) {
   const [loading, setLoading] = useState(false);
 
   const fetchFeedbacks = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
-
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks/by-food?food_id=${foodId}`,
-        { headers },
+      const { data: json } = await apiClient.get<{ data: FeedbackData }>(
+        `reservation-feedbacks/by-food?food_id=${foodId}`,
       );
-      const json = (await res.json()) as { data: FeedbackData };
 
       setData(json.data);
     } catch (err) {

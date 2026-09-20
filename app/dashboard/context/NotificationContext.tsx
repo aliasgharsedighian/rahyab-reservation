@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import {
   createContext,
   useContext,
@@ -7,8 +9,6 @@ import {
   useState,
   ReactNode,
 } from "react";
-import logoutCookiesAction from "@/actions/logoutCookiesAction";
-import getAuthTokenAction from "@/actions/getAuthTokenAction";
 
 type NotificationContextType = {
   notificationsData: any[];
@@ -25,32 +25,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const getNotifications = async () => {
     try {
-      let token = localStorage.getItem("token");
-      if (!token) {
-        token = await getAuthTokenAction();
-        if (token) localStorage.setItem("token", token);
-      }
-      if (!token) return;
-
-      const myHeaders = new Headers();
-      myHeaders.append("Accept", "application/json");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications?count=10&page=1&seen=false`,
-        {
-          method: "GET",
-          headers: myHeaders,
-        },
+      const { data: result, status } = await apiClient.get(
+        "notifications?count=10&page=1&seen=false",
       );
 
-      const result = await response.json();
-
-      if (response.ok && result.status === 200) {
+      if (status === 200 && result.status === 200) {
         setNotificationsData(result.data.notifications);
-      } else if (response.status === 401 || result.status === 401) {
-        localStorage.removeItem("token");
-        await logoutCookiesAction();
       }
     } catch (error) {
       console.error(error);
@@ -59,25 +39,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const markSeenNotification = async (notificationId: number) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const myHeaders = new Headers();
-      myHeaders.append("accept", "*/*");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-      myHeaders.append("Content-Type", "application/json");
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications/mark-seen`,
+      const { data: result } = await apiClient.post(
+        "notifications/mark-seen",
         {
-          method: "POST",
-          headers: myHeaders,
-          body: JSON.stringify({
-            notification_id: notificationId,
-          }),
+          notification_id: notificationId,
         },
       );
-
-      const result = await response.json();
 
       if (result.status === 200) {
         await getNotifications();

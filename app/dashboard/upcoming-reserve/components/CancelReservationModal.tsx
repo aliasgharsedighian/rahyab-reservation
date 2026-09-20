@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TriangleAlert } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
 
 interface CancelFoodModalProps {
   open: boolean;
@@ -35,27 +36,14 @@ function CancelReservationModal({
   const [loading, setLoading] = useState(false);
 
   const handleCancelFood = async () => {
-    const token = localStorage.getItem("token");
-
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
-
     console.log(reservationId);
 
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/${reservationId}/cancel`,
-        {
-          method: "POST",
-          headers,
-        },
+      const { data: response } = await apiClient.post(
+        `reservations/${reservationId}/cancel`,
       );
-
-      const response = await res.json();
 
       if (response.status === 200) {
         toast.success(response.message || "رزرو غذا لغو شد");

@@ -1,8 +1,8 @@
-import { cookies } from "next/headers";
 import ClientReservePage from "./components/ClientReservePage";
 import DashboardHeader from "../components/DashboardHeader";
 import { getWalletBalance } from "./getWalletBalance";
 import type { UnreviewedReservation } from "./types";
+import { serverApiFetch } from "@/lib/api/server";
 
 interface ReservationHistoryResponse {
   data?: {
@@ -11,59 +11,25 @@ interface ReservationHistoryResponse {
 }
 
 const getUnreviewedReservations = async () => {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("user_token")?.value;
+  const params = new URLSearchParams({ count: "1", page: "1" });
+  const res = await serverApiFetch(
+    `reservations/history?${params.toString()}`,
+  );
 
-  if (!token) return [];
+  if (!res.ok) return [];
 
-  try {
-    const params = new URLSearchParams({ count: "1", page: "1" });
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_ADDRESS}reservations/history?${params.toString()}`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    if (!res.ok) return [];
-
-    const response = (await res.json()) as ReservationHistoryResponse;
-    return (response.data?.items ?? []).filter(
-      (item) =>
-        item.status !== "cancelled" && !item.has_feedback?.has_feedback,
-    );
-  } catch (error) {
-    console.error("Failed to fetch unreviewed reservations:", error);
-    return [];
-  }
+  const response = (await res.json()) as ReservationHistoryResponse;
+  return (response.data?.items ?? []).filter(
+    (item) => item.status !== "cancelled" && !item.has_feedback?.has_feedback,
+  );
 };
 
 const getReserveList = async () => {
-  const cookieStore = await cookies();
-  const browserId = cookieStore.get("user_token")?.value;
-  const headers = new Headers();
-  headers.append("Accept", "application/json");
-  headers.append("Authorization", `Bearer ${browserId}`);
-  const requestOptions = {
-    method: "GET",
-    headers,
-  };
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_ADDRESS}weekly-menu`,
-      requestOptions,
-    );
-    if (!res.ok) return null;
+  const res = await serverApiFetch("weekly-menu");
+  if (!res.ok) return null;
 
-    const reserveList = await res.json();
-    return reserveList.data ?? null;
-  } catch (error) {
-    console.error("Failed to fetch the weekly menu:", error);
-    return null;
-  }
+  const reserveList = await res.json();
+  return reserveList.data ?? null;
 };
 
 export default async function ReservePage() {

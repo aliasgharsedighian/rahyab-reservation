@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { serverApiFetch } from "@/lib/api/server";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardPagination from "../components/DashboardPagination";
 import WalletTable from "./components/WalletTable";
@@ -36,19 +36,7 @@ const getWalletDetail = async (
   if (status) {
     params.set("status", status);
   }
-  const cookieStore = await cookies();
-  const browserId = cookieStore.get("user_token")?.value;
-  var myHeaders = new Headers();
-  myHeaders.append("Accept", "application/json");
-  myHeaders.append("Authorization", `Bearer ${browserId}`);
-  var requestOptions = {
-    method: "GET",
-    headers: myHeaders,
-  };
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}wallet?${params.toString()}`,
-    requestOptions,
-  );
+  const res = await serverApiFetch(`wallet?${params.toString()}`);
 
   const wallet = await res.json();
   if (res.status === 200) {

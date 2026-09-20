@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,14 +39,7 @@ function IntrestProfile({
   const onSubmitUpdateProfile = async (values: Profile) => {
     const description = values.description;
 
-    const token = localStorage.getItem("token");
-
     const formData = new FormData();
-
-    const myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
 
     formData.append("description", description);
 
@@ -53,41 +48,26 @@ function IntrestProfile({
       formData.append("food_preferences[]", String(id));
     });
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
-      method: "POST",
-      body: formData,
-      headers: myHeaders,
-    });
+    const { data: response, status } = await apiClient.post(
+      "profile",
+      formData,
+    );
 
-    const response = await res.json();
-
-    if (res.status === 200) {
+    if (status === 200) {
       await onSubmitUpdateIntrests();
       toast.success(response.message);
     }
   };
 
   const onSubmitUpdateIntrests = async () => {
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_ADDRESS}profile/food-preferences`,
+    const { data: response, status } = await apiClient.post(
+      "profile/food-preferences",
       {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          food_preference_ids: selectedPreferences,
-        }),
+        food_preference_ids: selectedPreferences,
       },
     );
 
-    const response = await res.json();
-
-    if (res.ok) {
+    if (status >= 200 && status < 300) {
       // toast.success(response.message);
     } else {
       toast.error(response.message);

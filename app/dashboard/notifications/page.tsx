@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { serverApiFetch } from "@/lib/api/server";
 import DashboardHeader from "../components/DashboardHeader";
 import ClientNotificationsPage from "./components/ClientNotificationsPage";
 import DashboardPagination from "../components/DashboardPagination";
@@ -14,18 +14,8 @@ const getNotifications = async (
   per_page: string = "10",
   page: string = "1",
 ) => {
-  const cookieStore = await cookies();
-  const browserId = cookieStore.get("user_token")?.value;
-  var myHeaders = new Headers();
-  myHeaders.append("Accept", "application/json");
-  myHeaders.append("Authorization", `Bearer ${browserId}`);
-  var requestOptions = {
-    method: "GET",
-    headers: myHeaders,
-  };
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_ADDRESS}notifications?count=${per_page}&page=${page}`,
-    requestOptions,
+  const res = await serverApiFetch(
+    `notifications?count=${per_page}&page=${page}`,
   );
 
   const notifications = await res.json();

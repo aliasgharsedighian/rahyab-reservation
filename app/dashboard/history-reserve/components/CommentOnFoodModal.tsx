@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
@@ -55,18 +57,10 @@ function CommentOnFoodModal({
   const [rateError, setRateError] = useState(false);
 
   const fetchFeedbacks = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
-
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks/by-food?food_id=${foodId}`,
-        { headers },
+      const { data: json } = await apiClient.get<{ data: FoodFeedbackData }>(
+        `reservation-feedbacks/by-food?food_id=${foodId}`,
       );
-      const json = (await res.json()) as { data: FoodFeedbackData };
       setData(json.data);
     } catch (err) {
       console.error(err);
@@ -95,26 +89,15 @@ function CommentOnFoodModal({
       return;
     }
 
-    const token = localStorage.getItem("token");
-    const headers = new Headers();
-    headers.append("Accept", "*/*");
-    headers.append("Content-Type", "application/json");
-    headers.append("Authorization", `Bearer ${token}`);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks`,
+      const { data: response } = await apiClient.post(
+        "reservation-feedbacks",
         {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            reservation_id: reservationId,
-            rate,
-            comment,
-          }),
+          reservation_id: reservationId,
+          rate,
+          comment,
         },
       );
-
-      const response = await res.json();
 
       if (response.status === 200) {
         setComment("");

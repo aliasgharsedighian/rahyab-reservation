@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { useState, useTransition } from "react";
 import {
   Sidebar,
@@ -140,22 +142,9 @@ function SidebarApp() {
   // const [openDropDown, setOpenDropDown] = useState(false);
 
   const handleLogoutUser = () => {
-    const token = localStorage.getItem("token");
-    const myHeaders = new Headers();
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-
     startTransition(async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_ADDRESS}auth/logout`,
-          {
-            method: "POST",
-            headers: myHeaders,
-            credentials: "include",
-          },
-        );
-        const result = await res.json();
+        const { data: result } = await apiClient.post("auth/logout");
         if (result.status === 200) {
           toast.success(result.message);
         }

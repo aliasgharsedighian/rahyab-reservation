@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import React, { useCallback, useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,26 +17,20 @@ import {
 } from "@/components/ui/dialog";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 
-import { toast } from "sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { logIn, userInfoAccess } from "@/redux/features/auth-slice";
-import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { Button } from "@/components/ui/button";
 import { BellIcon, MoonStar, Sun } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useTheme } from "next-themes";
-import getAuthTokenAction from "@/actions/getAuthTokenAction";
 
 function DashboardHeader({ title }: any) {
   const { notificationsData, markSeenNotification } = useNotifications();
   const { resolvedTheme, setTheme } = useTheme();
   //   const userInfo = useSelector(userInfoAccess);
-  const { push } = useRouter();
   const dispatch = useDispatch();
-  const pathname = usePathname();
 
   const userInfoRedux: any = useSelector(userInfoAccess);
 
@@ -69,35 +65,13 @@ function DashboardHeader({ title }: any) {
 
   const getProfileDetail = useCallback(async () => {
     try {
-      let token = localStorage.getItem("token");
-      if (!token) {
-        token = await getAuthTokenAction();
-        if (token) localStorage.setItem("token", token);
-      }
-      if (!token) return;
-
-      const myHeaders = new Headers();
-      myHeaders.append("Accept", "application/json");
-      myHeaders.append("Authorization", `Bearer ${token}`);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_ADDRESS}profile`,
-        {
-          method: "GET",
-          headers: myHeaders,
-        },
-      );
-      const result = await response.json();
+      const { data: result, status } = await apiClient.get("profile");
       // console.log(result);
-      if (response.ok && result.status === 200) {
+      if (status === 200 && result.status === 200) {
         dispatch(logIn(result.data));
-      } else if (response.status === 401 || result.status === 401) {
-        localStorage.removeItem("token");
-        await logoutCookiesAction();
-        push("/login");
       }
     } catch {}
-  }, [dispatch, push]);
+  }, [dispatch]);
 
   useEffect(() => {
     getProfileDetail();

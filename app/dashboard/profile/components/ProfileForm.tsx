@@ -1,5 +1,7 @@
 "use client";
 
+import { apiClient } from "@/lib/api/client";
+
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -69,13 +71,7 @@ export default function ProfileForm({
   });
 
   const onSubmit = async (data: Profile) => {
-    const token = localStorage.getItem("token");
     const formData = new FormData();
-    var myHeaders = new Headers();
-
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
 
     formData.append("name", data.name);
     formData.append("family", data.family);
@@ -87,15 +83,12 @@ export default function ProfileForm({
     // console.log("Submitting:", data);
 
     // مثال API
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
-      method: "POST",
-      body: formData,
-      headers: myHeaders,
-    });
+    const { data: response, status } = await apiClient.post(
+      "profile",
+      formData,
+    );
 
-    const response = await res.json();
-
-    if (res.status === 200) {
+    if (status === 200) {
       toast.success(response.message);
     }
   };
@@ -104,25 +97,16 @@ export default function ProfileForm({
     try {
       setIsUploading(true);
 
-      const token = localStorage.getItem("token");
-
       const formData = new FormData();
-      const myHeaders = new Headers();
-
-      myHeaders.append("Accept", "*/*");
-      myHeaders.append("Authorization", `Bearer ${token}`);
 
       formData.append("avatar_url", selectedFile);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
-        method: "POST",
-        body: formData,
-        headers: myHeaders,
-      });
+      const { data: response, status } = await apiClient.post(
+        "profile",
+        formData,
+      );
 
-      const response = await res.json();
-
-      if (res.ok) {
+      if (status >= 200 && status < 300) {
         toast.success(response.message);
       } else {
         toast.error(response.message || "خطا در آپلود تصویر");
@@ -140,30 +124,19 @@ export default function ProfileForm({
     const password = values.password;
     const password_confirmation = values.password_confirmation;
 
-    const token = localStorage.getItem("token");
     const formData = new FormData();
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
 
     formData.append("current_password", current_password);
     formData.append("password", password);
     formData.append("password_confirmation", password_confirmation);
 
     // مثال API
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_ADDRESS}profile/change-password`,
-      {
-        method: "POST",
-        body: formData,
-        headers: myHeaders,
-      },
+    const { data: response, status } = await apiClient.post(
+      "profile/change-password",
+      formData,
     );
 
-    const response = await res.json();
-
-    if (res.status === 200) {
+    if (status === 200) {
       toast.success(response.message);
     }
   };
@@ -171,24 +144,16 @@ export default function ProfileForm({
   const onSubmitInterests = async (values: Profile) => {
     const description = values.current_password;
 
-    const token = localStorage.getItem("token");
     const formData = new FormData();
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Accept", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
 
     formData.append("description", description);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_ADDRESS}profile`, {
-      method: "POST",
-      body: formData,
-      headers: myHeaders,
-    });
+    const { data: response, status } = await apiClient.post(
+      "profile",
+      formData,
+    );
 
-    const response = await res.json();
-
-    if (res.status === 200) {
+    if (status === 200) {
       toast.success(response.message);
     }
   };
