@@ -4,13 +4,12 @@ import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   removeAllItemsFromReserve,
   reserveSelectItems,
-  reserveSelectTotalPrice,
-  reserveTotalFoodCount,
+  updateReserveCart,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
 import type { ReserveCartItem, UnreviewedReservation } from "../types";
@@ -44,15 +43,55 @@ function ClientReservePage({
   const router = useRouter();
 
   const reserveCart = useSelector(reserveSelectItems) as ReserveCartItem[];
-  const totalPrice = useSelector(reserveSelectTotalPrice);
-  const totalCount = useSelector(reserveTotalFoodCount);
-
   const isMobile = useDetectMobile();
+
+  const firstReservableDate = useMemo(() => {
+    for (const week of reserveList?.weeks ?? []) {
+      for (const day of week.days) {
+        const timestamp = Date.parse(day.date);
+
+        if (!Number.isNaN(timestamp)) return timestamp;
+      }
+    }
+
+    return null;
+  }, [reserveList]);
+
+  const activeReserveCart = useMemo(() => {
+    if (firstReservableDate === null) return reserveCart;
+
+    return reserveCart.filter((item) => {
+      const itemDate = Date.parse(item.date);
+
+      // Keep legacy/malformed items rather than deleting user data unexpectedly.
+      return Number.isNaN(itemDate) || itemDate >= firstReservableDate;
+    });
+  }, [firstReservableDate, reserveCart]);
+
+  useEffect(() => {
+    if (activeReserveCart.length !== reserveCart.length) {
+      dispatch(updateReserveCart(activeReserveCart));
+    }
+  }, [activeReserveCart, dispatch, reserveCart.length]);
+
+  const totalPrice = useMemo(
+    () =>
+      activeReserveCart.reduce(
+        (total, item) => total + item.price * item.count,
+        0,
+      ),
+    [activeReserveCart],
+  );
+  const totalCount = useMemo(
+    () =>
+      activeReserveCart.reduce((total, item) => total + item.count, 0),
+    [activeReserveCart],
+  );
   const sortedReserveCart = useMemo(() => {
-    return [...reserveCart].sort((a, b) =>
+    return [...activeReserveCart].sort((a, b) =>
       a.jalali_date.localeCompare(b.jalali_date),
     );
-  }, [reserveCart]);
+  }, [activeReserveCart]);
 
   const sendDataToApi = async () => {
     const token = localStorage.getItem("token");
@@ -61,7 +100,7 @@ function ClientReservePage({
     headers.append("Content-Type", "application/json");
     headers.append("Authorization", `Bearer ${token}`);
 
-    const items = reserveCart.map((item) => ({
+    const items = activeReserveCart.map((item) => ({
       weekly_menu_id: item.id,
       quantity: item.count,
     }));
@@ -119,7 +158,7 @@ function ClientReservePage({
       </div>
       {isMobile ? (
         <FoodReserveCardMobile
-          reserveCart={reserveCart}
+          reserveCart={activeReserveCart}
           sortedReserveCart={sortedReserveCart}
           totalPrice={totalPrice}
           totalCount={totalCount}
@@ -129,7 +168,7 @@ function ClientReservePage({
       ) : (
         <div className="basis-4/12 w-full ml-6 border-r">
           <FoodReserveCart
-            reserveCart={reserveCart}
+            reserveCart={activeReserveCart}
             sortedReserveCart={sortedReserveCart}
             totalPrice={totalPrice}
             totalCount={totalCount}

@@ -109,7 +109,7 @@ export const reserveBasketSlice = createSlice({
     removeAllItemsFromReserve: (state, action: PayloadAction<any>) => {
       state.cart = [];
     },
-    updateReserveCart: (state, action: any) => {
+    updateReserveCart: (state, action: PayloadAction<reserveCartType[]>) => {
       state.cart = action.payload;
     },
   },
