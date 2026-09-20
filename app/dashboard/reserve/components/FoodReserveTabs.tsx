@@ -13,7 +13,6 @@ import {
   ChevronDownIcon,
   InfoIcon,
   MessageCircleIcon,
-  StarIcon,
   UtensilsIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -21,6 +20,7 @@ import { useSelector } from "react-redux";
 import type { ReserveCartItem, ReserveFoodType } from "../types";
 import FeedbackModal from "./FeedbackModal";
 import FoodReserveInvoice from "./FoodReserveInvoice";
+import { RatingStars } from "@/components/ui/rating-stars";
 
 interface ReserveFood {
   food_id: number;
@@ -114,7 +114,7 @@ function FoodReserveTabs({
             className="h-auto max-w-full shrink-0 self-start rounded-full p-0"
           >
             <span className="flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] text-zinc-700 sm:text-xs">
-              <StarIcon fill="currentColor" className="size-4 text-amber-400" />
+              <RatingStars value={food.feedback_rate} />
               <span className="font-semibold tabular-nums">
                 {food.feedback_rate ?? "—"}
               </span>

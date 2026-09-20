@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { StarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { RatingStars } from "@/components/ui/rating-stars";
 
 interface FeedbackState {
   has_feedback: boolean;
@@ -152,7 +153,7 @@ function CommentOnFoodModal({
             <div className="flex flex-col">
               <span className="font-bold text-lg">{data.food_name}</span>
               <span className="text-sm text-(--secondary-text) flex items-center gap-2">
-                <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
+                <RatingStars value={data.feedback_rate} />
                 {data.feedback_rate} ({data.feedback_count} نظر)
               </span>
             </div>
@@ -199,22 +200,11 @@ function CommentOnFoodModal({
             </div>
 
             {has_feedback?.has_feedback ? (
-              <div
-                className="flex gap-1"
-                role="img"
-                aria-label={`امتیاز ثبت‌شده ${rate} از ۵`}
-              >
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <StarIcon
-                    key={num}
-                    className={`size-8 ${
-                      num <= rate
-                        ? "fill-amber-400 text-amber-400"
-                        : "fill-transparent text-muted-foreground/40"
-                    }`}
-                  />
-                ))}
-              </div>
+              <RatingStars
+                value={rate}
+                starClassName="size-8"
+                label={`امتیاز ثبت‌شده ${rate} از ۵`}
+              />
             ) : (
               <div
                 className="flex w-fit gap-1 rounded-lg p-1"

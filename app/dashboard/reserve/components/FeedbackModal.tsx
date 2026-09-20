@@ -1,51 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { StarIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { RatingStars } from "@/components/ui/rating-stars";
 
-function FeedbackModal({ open, setOpen, foodId }: any) {
-  const [data, setData] = useState<any>(null);
+interface FeedbackItem {
+  rate: number | string;
+  created_day_name: string;
+  created_at_jalali: string;
+  comment: string;
+}
+
+interface FeedbackData {
+  food_name: string;
+  feedback_rate: number | string;
+  feedback_count: number;
+  comment_count: number;
+  image_url: string;
+  feedbacks: FeedbackItem[];
+}
+
+interface FeedbackModalProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  foodId: number | null;
+}
+
+function FeedbackModal({ open, setOpen, foodId }: FeedbackModalProps) {
+  const [data, setData] = useState<FeedbackData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [comment, setComment] = useState("");
-  const [rate, setRate] = useState(5);
-
-  // ✅ fetch data وقتی مودال باز میشه
-  useEffect(() => {
-    if (open && foodId) {
-      fetchFeedbacks();
-    }
-  }, [open, foodId]);
-
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-    // console.log(foodId);
+    const headers = new Headers();
+    headers.append("Accept", "*/*");
+    headers.append("Content-Type", "application/json");
+    headers.append("Authorization", `Bearer ${token}`);
+
     try {
       setLoading(true);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_ADDRESS}reservation-feedbacks/by-food?food_id=${foodId}`,
-        {
-          headers: myHeaders,
-        },
+        { headers },
       );
-      const json = await res.json();
+      const json = (await res.json()) as { data: FeedbackData };
 
       setData(json.data);
     } catch (err) {
@@ -53,34 +61,18 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [foodId]);
 
-  // ✅ ثبت نظر
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
-    var myHeaders = new Headers();
-    myHeaders.append("Accept", "*/*");
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Bearer ${token}`);
-    try {
-      await fetch(`/api/foods/${foodId}/feedbacks`, {
-        method: "POST",
-        body: JSON.stringify({
-          rate,
-          comment,
-        }),
-      });
+  // ✅ fetch data وقتی مودال باز میشه
+  useEffect(() => {
+    if (!open || !foodId) return;
 
-      setComment("");
-      setRate(5);
+    const timeout = window.setTimeout(() => {
+      void fetchFeedbacks();
+    }, 0);
 
-      fetchFeedbacks(); // رفرش لیست
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  console.log("data", data);
+    return () => window.clearTimeout(timeout);
+  }, [fetchFeedbacks, foodId, open]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -114,13 +106,14 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
               <div className="flex flex-col">
                 <span className="font-bold text-lg">{data.food_name}</span>
                 <span className="text-sm text-(--secondary-text) flex items-center gap-2">
-                  <StarIcon fill="#fbcb10" className="text-[#fbcb10]" />{" "}
+                  <RatingStars value={data.feedback_rate} />
                   {data.feedback_rate} ({data.feedback_count} رای) - (
                   {data.comment_count} نظر)
                 </span>
               </div>
               <img
                 src={data.image_url}
+                alt={data.food_name}
                 className="w-20 h-20 rounded-lg object-cover"
               />
             </div>
@@ -132,17 +125,14 @@ function FeedbackModal({ open, setOpen, foodId }: any) {
                   className={`space-y-2 ${data?.feedbacks?.length ? "border rounded-lg" : ""} `}
                 >
                   {data?.feedbacks?.length ? (
-                    data.feedbacks.map((item: any, index: number) => (
+                    data.feedbacks.map((item, index) => (
                       <div
                         key={index}
                         className=" p-3 border-b flex flex-col gap-1"
                       >
                         <div className="flex justify-between text-sm">
                           <span className="flex items-center gap-2">
-                            <StarIcon
-                              fill="#fbcb10"
-                              className="size-4 text-[#fbcb10]"
-                            />{" "}
+                            <RatingStars value={item.rate} />
                             {item.rate}
                           </span>
                           <span className="text-(--secondary-text)">
