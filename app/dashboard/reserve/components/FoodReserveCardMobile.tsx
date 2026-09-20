@@ -5,6 +5,7 @@ import {
   ChevronUp,
   ShoppingBasketIcon,
   WalletCardsIcon,
+  XIcon,
 } from "lucide-react";
 import {
   Drawer,
@@ -53,9 +54,18 @@ function FoodReserveCardMobile({
           <DrawerDescription className="sr-only">
             جزئیات غذاهای انتخاب‌شده، موجودی کیف پول و مبلغ کل رزرو
           </DrawerDescription>
-          <DrawerHeader>
-            <DrawerTitle className="sr-only">سبد رزرو شما</DrawerTitle>
-            <DrawerClose>بستن</DrawerClose>
+          <DrawerHeader className="flex-row items-center justify-between border-b px-4 py-2 text-right">
+            <DrawerTitle className="font-bold">سبد رزرو شما</DrawerTitle>
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="بستن سبد رزرو"
+              >
+                <XIcon className="size-5" />
+              </Button>
+            </DrawerClose>
           </DrawerHeader>
 
           <DirectionProvider dir="rtl">
