@@ -21,7 +21,7 @@ function RatingStars({
   const normalizedValue = Number.isFinite(numericValue)
     ? Math.min(Math.max(numericValue, 0), max)
     : 0;
-  const roundedValue = Math.round(normalizedValue * 2) / 2;
+  const displayValue = Math.floor(normalizedValue * 2) / 2;
 
   return (
     <span
@@ -31,7 +31,7 @@ function RatingStars({
       className={cn("inline-flex shrink-0 items-center gap-0.5", className)}
     >
       {Array.from({ length: max }, (_, index) => {
-        const fill = Math.min(Math.max(roundedValue - index, 0), 1);
+        const fill = Math.min(Math.max(displayValue - index, 0), 1);
 
         return (
           <span
