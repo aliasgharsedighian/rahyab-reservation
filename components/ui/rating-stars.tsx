@@ -21,7 +21,11 @@ function RatingStars({
   const normalizedValue = Number.isFinite(numericValue)
     ? Math.min(Math.max(numericValue, 0), max)
     : 0;
-  const displayValue = Math.floor(normalizedValue * 2) / 2;
+  const wholeStars = Math.floor(normalizedValue);
+  const displayValue =
+    normalizedValue > wholeStars
+      ? Math.min(wholeStars + 0.5, max)
+      : wholeStars;
 
   return (
     <span
