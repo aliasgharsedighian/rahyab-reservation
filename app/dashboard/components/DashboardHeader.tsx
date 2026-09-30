@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { BellIcon, MoonStar, Sun } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useTheme } from "next-themes";
+import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
 
 function DashboardHeader({ title }: any) {
   const { notificationsData, markSeenNotification } = useNotifications();
@@ -69,8 +70,13 @@ function DashboardHeader({ title }: any) {
       // console.log(result);
       if (status === 200 && result.status === 200) {
         dispatch(logIn(result.data));
+        const passwordChangeIsRequired =
+          Number(result.data?.must_change_password) === 1;
+        return !passwordChangeIsRequired;
       }
     } catch {}
+
+    return false;
   }, [dispatch]);
 
   useEffect(() => {
@@ -83,6 +89,10 @@ function DashboardHeader({ title }: any) {
 
   return (
     <>
+      <ForcedPasswordChangeModal
+        open={Number(userInfoRedux?.must_change_password) === 1}
+        onPasswordChanged={getProfileDetail}
+      />
       <Dialog open={openNotif} onOpenChange={setOpenNotif}>
         <DialogContent className="rtl max-w-md">
           <DialogHeader>
