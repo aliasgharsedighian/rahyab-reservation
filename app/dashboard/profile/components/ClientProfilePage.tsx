@@ -1,120 +1,55 @@
 "use client";
 
-import { apiClient } from "@/lib/api/client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import useDetectMobile from "@/app/components/hooks/DetectMobile";
+import { BanknoteIcon, MessageSquareIcon, UtensilsIcon } from "lucide-react";
 import ProfileForm from "./ProfileForm";
-import { Button } from "@/components/ui/button";
-import { LogOutIcon } from "lucide-react";
-import { useTransition } from "react";
-import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
-import { logOut } from "@/redux/features/auth-slice";
-import { toast } from "sonner";
-import logoutCookiesAction from "@/actions/logoutCookiesAction";
+import type { FoodPreferences, Profile } from "../types";
 
-function ClientProfilePage({ profile, revalidateData, foodPreferences }: any) {
-  const isMobile = useDetectMobile();
-  const dispatch = useDispatch();
-  const { push } = useRouter();
-  const [isPending, startTransition] = useTransition();
+interface ClientProfilePageProps {
+  profile: Profile;
+  foodPreferences: FoodPreferences[];
+  revalidateData: () => void | Promise<void>;
+}
 
-  const handleLogoutUser = () => {
-    startTransition(async () => {
-      try {
-        const { data: result } = await apiClient.post("auth/logout");
-        if (result.status === 200) {
-          toast.success(result.message);
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        localStorage.removeItem("token");
-        dispatch(logOut());
-        await logoutCookiesAction();
-        push("/login");
-      }
-    });
-  };
-
+function ProfileStatistics({ title, count, paid }: { title: string; count: number; paid: number }) {
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <div className="mb-6 flex flex-col gap-3 mr-4">
-        <h2 className="text-2xl font-bold">پروفایل کاربری</h2>
-        <p className="text-(--secondary-text)">
-          اطلاعات حساب کاربری خود را مدیریت کنید.
-        </p>
-      </div>
-      <div className="flex flex-col md:flex-row gap-6 w-[92vw] md:w-full">
-        <div className="md:basis-9/12 3xl:basis-10/12 w-full mr-4">
-          <ProfileForm profile={profile} foodPreferences={foodPreferences} />
+    <section aria-label={title} className="space-y-5 rounded-xl border bg-card p-4 sm:p-5">
+      <h2 className="text-lg font-bold">{title}</h2>
+      <dl className="grid grid-cols-2">
+        <div className="min-w-0 space-y-2 border-l px-2 text-center">
+          <UtensilsIcon className="mx-auto size-6 text-(--base-green)" aria-hidden="true" />
+          <dt className="text-xs text-(--secondary-text) sm:text-sm">تعداد سفارش</dt>
+          <dd className="break-words font-bold">{count.toLocaleString("fa-IR")}</dd>
         </div>
-        <div className="flex md:basis-3/12 3xl:basis-2/12 md:ml-6">
-          <div className="flex flex-col gap-4 w-full">
-            {/* کارت یک ماه اخیر */}
-            <Card className="rounded-2xl shadow-md h-fit">
-              <CardHeader>
-                <CardTitle className="text-base iranSansBold">
-                  یک ماه اخیر
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>تعداد سفارش</span>
-                  <span className="font-bold">
-                    {profile.servings_ordered_last_month}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>مبلغ پرداختی</span>
-                  <span className="font-bold">
-                    {profile.reserved_total_paid_last_month.toLocaleString()}{" "}
-                    تومان
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="min-w-0 space-y-2 px-2 text-center">
+          <BanknoteIcon className="mx-auto size-6 text-(--base-green)" aria-hidden="true" />
+          <dt className="text-xs text-(--secondary-text) sm:text-sm">مبلغ پرداختی</dt>
+          <dd className="break-words font-bold">{paid.toLocaleString("fa-IR")} تومان</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
 
-            {/* کارت کلی */}
-            <Card className="rounded-2xl shadow-md h-fit">
-              <CardHeader>
-                <CardTitle className="text-base iranSansBold">کلی</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>تعداد سفارش</span>
-                  <span className="font-bold">
-                    {profile.servings_ordered_total}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>مبلغ پرداختی</span>
-                  <span className="font-bold">
-                    {profile.reserved_total_paid_total.toLocaleString()} تومان
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* کارت بازخورد */}
-            <Card className="rounded-2xl shadow-md h-fit">
-              <CardHeader>
-                <CardTitle className="text-base iranSansBold">
-                  بازخوردها
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center justify-center">
-                <span className="text-3xl font-bold">
-                  {profile.reservation_feedbacks_count}
-                </span>
-              </CardContent>
-            </Card>
-          </div>
+export default function ClientProfilePage({ profile, foodPreferences }: ClientProfilePageProps) {
+  return (
+    <div className="mx-2 min-w-0 md:mx-6">
+      <div className="w-full space-y-4">
+        <header className="mb-6 space-y-2">
+          <h1 className="text-2xl font-bold sm:text-3xl">پروفایل کاربری</h1>
+          <p className="text-sm leading-7 text-(--secondary-text)">اطلاعات حساب کاربری خود را مدیریت کنید.</p>
+        </header>
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_16rem] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
+          <ProfileForm profile={profile} foodPreferences={foodPreferences} />
+          <aside aria-label="آمار حساب کاربری" className="min-w-0 space-y-4">
+        <ProfileStatistics title="یک ماه اخیر" count={profile.servings_ordered_last_month} paid={profile.reserved_total_paid_last_month} />
+        <ProfileStatistics title="کلی" count={profile.servings_ordered_total} paid={profile.reserved_total_paid_total} />
+        <section aria-label="بازخوردها" className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4 sm:p-5">
+          <h2 className="text-lg font-bold">بازخوردها</h2>
+          <p className="flex items-center gap-3 text-xl font-bold"><MessageSquareIcon className="size-6 text-(--base-green)" aria-hidden="true" />{profile.reservation_feedbacks_count.toLocaleString("fa-IR")}</p>
+        </section>
+          </aside>
         </div>
       </div>
     </div>
   );
 }
-
-export default ClientProfilePage;
