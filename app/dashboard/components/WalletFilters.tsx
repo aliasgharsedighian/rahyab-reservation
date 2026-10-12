@@ -49,12 +49,14 @@ export default function WalletFilters() {
 
   return (
     <ResponsiveFilters
+      compact
       activeCount={activeCount}
       onClear={handleClearFilters}
       description="تراکنش‌ها را در یک بازه زمانی مشخص مشاهده کنید."
     >
-        <div className="grid grid-cols-1 gap-4 md:max-w-2xl md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
           <DateFilter
+            compact
             label="از تاریخ"
             value={searchParams.get("created_at_from_jalali")}
             onChange={(value) =>
@@ -62,6 +64,7 @@ export default function WalletFilters() {
             }
           />
           <DateFilter
+            compact
             label="تا تاریخ"
             value={searchParams.get("created_at_to_jalali")}
             onChange={(value) =>

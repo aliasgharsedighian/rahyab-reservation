@@ -1,88 +1,43 @@
 "use client";
 
-import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { MinusIcon, PlusIcon } from "lucide-react";
 import WalletFilters from "../../components/WalletFilters";
-
-interface WalletTransaction {
-  id: number;
-  type: "افزایش" | "کاهش";
-  amount: number;
-  description: string;
-  created_at: string;
-  created_at_jalali: string;
-  created_day_name: string;
-}
+import type { WalletTransaction } from "../types";
 
 interface WalletTableProps {
   walletList: WalletTransaction[];
   revalidateData: () => Promise<void>;
 }
 
-function WalletTable({ walletList }: WalletTableProps) {
+export default function WalletTable({ walletList }: WalletTableProps) {
   return (
-    <>
+    <div className="min-w-0 space-y-4">
       <WalletFilters />
-      <div className="w-full overflow-x-auto rounded-md">
-        <div className="border border-border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 bg-transparent text-(--secondary-text) rounded-t-md min-w-max lg:min-w-full">
-          <div className="lg:col-span-1 p-2 md:p-4  flex items-center">
-            ردیف
-          </div>
-          <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
-            تاریخ
-          </div>
-          <div className="lg:col-span-2 p-2 md:p-4  flex items-center">نوع</div>
-          <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
-            مبلغ (تومان)
-          </div>
-          <div className="lg:col-span-5 p-4  flex items-center">توضیحات</div>
-        </div>
-
-        {walletList.length === 0 && (
-          <div className="border border-border border-t-0 p-8 text-center text-(--secondary-text)">
-            موردی یافت نشد
-          </div>
-        )}
-
-        {walletList.map((item, index) => {
-          const isCredit = item.type === "افزایش";
-          const AmountIcon = isCredit ? ArrowUpIcon : ArrowDownIcon;
-
-          return (
-            <div
-              key={item.id}
-              className="border-l border-b text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px] lg:grid-cols-12 hover:bg-(--light-green) transition min-w-max lg:min-w-full"
-            >
-              <div className="lg:col-span-1 p-2 md:p-4 border-r flex items-center">
-                {index + 1}
-              </div>
-              <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
-                {item.created_at_jalali}
-              </div>
-              <div className="lg:col-span-2 p-2 md:p-4 flex items-center">
-                {item.type}
-              </div>
-
-              <div className="lg:col-span-2 p-2 md:p-4  flex items-center">
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 ${
-                    isCredit
-                      ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400"
-                      : "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
-                  }`}
-                >
-                  <AmountIcon aria-hidden="true" className="size-4" />
-                  {item.amount?.toLocaleString()}
-                </span>
-              </div>
-              <div className="lg:col-span-5 p-2 md:p-4 flex items-center">
-                {item.description}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </>
+      {walletList.length === 0 ? (
+        <p className="rounded-xl border bg-card p-8 text-center text-sm text-(--secondary-text)">موردی یافت نشد</p>
+      ) : (
+        <ul aria-label="تراکنش‌های کیف پول" className="space-y-3">
+          {walletList.map(item => {
+            const isCredit = item.type === "افزایش";
+            const Icon = isCredit ? PlusIcon : MinusIcon;
+            return (
+              <li key={item.id}>
+                <article className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-xl border bg-card p-4 sm:gap-4 sm:p-5">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className={"flex size-10 shrink-0 items-center justify-center rounded-full sm:size-11 " + (isCredit ? "bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400" : "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400")}><Icon className="size-5" aria-hidden="true" /></span>
+                    <div className="min-w-0 space-y-1.5">
+                      <h3 className="font-bold leading-6">{item.type}</h3>
+                      <p className="whitespace-pre-wrap text-sm leading-7 wrap-anywhere">{item.description}</p>
+                      <p className="flex flex-wrap gap-x-1 text-xs leading-6 text-(--secondary-text)"><span>{item.created_day_name}،</span><bdi dir="ltr">{item.created_at_jalali}</bdi></p>
+                    </div>
+                  </div>
+                  <p className={"max-w-28 break-all text-left text-sm font-bold leading-6 tabular-nums sm:max-w-40 " + (isCredit ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}><bdi dir="ltr">{isCredit ? "+" : "−"}{Math.abs(item.amount).toLocaleString("fa-IR")}</bdi><span className="sr-only"> تومان</span></p>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
-
-export default WalletTable;

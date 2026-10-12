@@ -3,8 +3,8 @@ import { serverApiFetch } from "@/lib/api/server";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardPagination from "../components/DashboardPagination";
 import WalletTable from "./components/WalletTable";
-import { MinusIcon, PlusIcon, Wallet2Icon } from "lucide-react";
-import WalletChargeGuideButton from "./components/WalletChargeGuideButton";
+import WalletSummary from "./components/WalletSummary";
+import type { WalletResponse } from "./types";
 
 interface Props {
   searchParams: Promise<{
@@ -38,7 +38,7 @@ const getWalletDetail = async (
   }
   const res = await serverApiFetch(`wallet?${params.toString()}`);
 
-  const wallet = await res.json();
+  const wallet: WalletResponse = await res.json();
   if (res.status === 200) {
     return wallet.data;
   }
@@ -63,80 +63,32 @@ export default async function WalletPage({ searchParams }: Props) {
     revalidatePath(`/dashboard/wallet`);
   }
 
+  if (!wallet) return;
+
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"کیف پول"} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:mx-6">
-        {/* Balance */}
-        <div className="rounded-xl border bg-(--light-green) p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                موجودی قابل استفاده
-              </p>
-              <h3 className="mt-2 text-xl font-bold">
-                {wallet.balance.toLocaleString()} تومان
-              </h3>
-            </div>
-
-            <div className="rounded-full bg-background/70 p-3">
-              <Wallet2Icon className="size-5" />
-            </div>
-          </div>
-
-          <WalletChargeGuideButton />
-        </div>
-
-        {/* Total Credit */}
-        <div className="rounded-xl border bg-green-50 p-5 dark:bg-(--light-green)">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700">مجموع واریزی‌ها</p>
-              <h3 className="mt-2 text-xl font-bold text-green-800">
-                {wallet.total_credit.toLocaleString()} تومان
-              </h3>
-            </div>
-
-            <div className="rounded-full bg-green-100 p-3">
-              <PlusIcon className="size-5 text-green-700" />
-            </div>
-          </div>
-        </div>
-
-        {/* Total Debit */}
-        <div className="rounded-xl border bg-red-50 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-700">مجموع هزینه‌ها</p>
-              <h3 className="mt-2 text-xl font-bold text-red-800">
-                {wallet.total_debit.toLocaleString()} تومان
-              </h3>
-            </div>
-
-            <div className="rounded-full bg-red-100 p-3">
-              <MinusIcon className="size-5 text-red-700" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <div className="mx-2 md:mx-6"><div className="mx-auto w-full max-w-5xl"><WalletSummary wallet={wallet} /></div></div>
 
       <div className="w-full flex flex-col gap-3">
-        <div className="flex flex-col gap-4 mx-2 md:mx-6">
-          <div className="mb-6 flex flex-col gap-3">
-            <h2 className="text-2xl font-bold">تراکنش‌های کیف پول</h2>
-            <p className="text-(--secondary-text)">
-              لیست دریافتی‌ها و پرداختی‌های شما
-            </p>
+        <div className="mx-2 flex min-w-0 flex-col gap-4 md:mx-6">
+          <div className="mx-auto w-full max-w-5xl space-y-5">
+            <div className="mb-2 flex flex-col gap-2">
+              <h2 className="text-2xl font-bold sm:text-3xl">تراکنش‌های کیف پول</h2>
+              <p className="text-(--secondary-text)">
+                لیست دریافتی‌ها و پرداختی‌های شما
+              </p>
+            </div>
+            <WalletTable
+              walletList={wallet?.transactions}
+              revalidateData={revalidateData}
+            />
+            <DashboardPagination
+              per_page={per_page}
+              page={page}
+              posts={wallet?.pagination.total || per_page}
+            />
           </div>
-          <WalletTable
-            walletList={wallet?.transactions}
-            revalidateData={revalidateData}
-          />
-          <DashboardPagination
-            per_page={per_page}
-            page={page}
-            posts={wallet?.pagination.total || per_page}
-          />
         </div>
       </div>
     </div>

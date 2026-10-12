@@ -16,9 +16,8 @@ export default function WalletChargeGuideButton() {
   };
 
   return (
-    <Button className="mt-4 w-full" onClick={handleOpenChargeGuide}>
-      <PlusIcon />
-      افزایش اعتبار
+    <Button type="button" size="icon" aria-label="افزایش اعتبار کیف پول" title="افزایش اعتبار کیف پول" className="size-11 shrink-0 rounded-full bg-(--base-green) text-white hover:bg-(--base-green)/90 dark:text-zinc-950" onClick={handleOpenChargeGuide}>
+      <PlusIcon className="size-6" aria-hidden="true" />
     </Button>
   );
 }
