@@ -42,7 +42,7 @@ export default async function ReservePage() {
 
   return (
     <div className="flex flex-col gap-6 w-full mb-56 md:mb-10">
-      <DashboardHeader title={"رزرو غذا"} />
+      <DashboardHeader title={"رزرو غذا"} stickyHeightVariable="--reserve-header-height" />
       <ClientReservePage
         reserveList={reserveList}
         walletBalance={walletBalance}

@@ -1,3 +1,9 @@
+.dayHeader {
+  position: sticky;
+  top: var(--reserve-header-height, 5rem);
+  z-index: 10;
+}
+
 .dayPanel {
   min-width: 0;
 }

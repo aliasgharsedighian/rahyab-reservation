@@ -27,6 +27,7 @@ const boldFont = localFont({
 
 export const viewport: Viewport = {
   themeColor: "#02c14c",
+  viewportFit: "cover",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,

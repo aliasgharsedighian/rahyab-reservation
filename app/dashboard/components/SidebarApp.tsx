@@ -36,6 +36,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useDispatch } from "react-redux";
 import { logOut } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
@@ -131,9 +132,10 @@ const dashboardList = [
 function SidebarApp() {
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const [, startTransition] = useTransition();
+  const [isLoggingOut, startTransition] = useTransition();
   const { push } = useRouter();
 
+  const [openLogoutConfirm, setOpenLogoutConfirm] = useState(false);
   const [openRulesModal, setOpenRulesModal] = useState(false);
   const [openContactModal, setOpenContactModal] = useState(false);
 
@@ -143,6 +145,7 @@ function SidebarApp() {
   // const [openDropDown, setOpenDropDown] = useState(false);
 
   const handleLogoutUser = () => {
+    if (isLoggingOut) return;
     startTransition(async () => {
       try {
         const { data: result } = await apiClient.post("auth/logout");
@@ -155,6 +158,7 @@ function SidebarApp() {
         localStorage.removeItem("token");
         dispatch(logOut());
         await logoutCookiesAction();
+        setOpenLogoutConfirm(false);
         push("/login");
       }
     });
@@ -169,6 +173,17 @@ function SidebarApp() {
 
   return (
     <>
+      <AlertDialog open={openLogoutConfirm} onOpenChange={(value) => { if (!isLoggingOut) setOpenLogoutConfirm(value); }}>
+        <AlertDialogContent dir="rtl" className="gap-5 rounded-2xl text-right">
+          <span className="flex size-12 items-center justify-center rounded-full bg-red-500/10 text-red-500"><LogOutIcon className="size-6" /></span>
+          <AlertDialogTitle className="text-lg font-bold">خروج از حساب کاربری</AlertDialogTitle>
+          <AlertDialogDescription className="text-right leading-7">مطمئنید می‌خواهید از حساب کاربری خارج شوید؟ سبد رزرو شما پس از خروج پاک می‌شود.</AlertDialogDescription>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={isLoggingOut}>انصراف</AlertDialogCancel>
+            <Button variant="destructive" disabled={isLoggingOut} onClick={handleLogoutUser}>{isLoggingOut ? "در حال خروج..." : "بله، خارج می‌شوم"}</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <ContactModal
         open={openContactModal}
         onOpenChange={setOpenContactModal}
@@ -321,7 +336,7 @@ function SidebarApp() {
             )}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="border-t bg-background pb-[max(0.5rem,env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
+        <SidebarFooter className="border-t bg-background pb-[calc(1rem+env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
           {/* Rules */}
           <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
             <SidebarMenuButton
@@ -387,7 +402,7 @@ function SidebarApp() {
               <Button
                 className="p-3 items-start justify-start gap-4 h-full text-red-500"
                 variant="ghost"
-                onClick={handleLogoutUser}
+                onClick={() => setOpenLogoutConfirm(true)}
               >
                 <LogOutIcon className="size-5 text-red-500" />
                 <p>خروج از حساب کاربری</p>

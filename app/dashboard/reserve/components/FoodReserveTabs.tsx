@@ -55,7 +55,7 @@ function ReserveDaySection({ trigger, children }: { trigger: ReactNode; children
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <Collapsible open={expanded} onOpenChange={setExpanded} className="group/day overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-800">
+    <Collapsible open={expanded} onOpenChange={setExpanded} className="group/day relative isolate overflow-clip rounded-xl border bg-white shadow-sm dark:bg-zinc-800">
       {trigger}
       <CollapsibleContent forceMount inert={!expanded} className={styles.dayPanel}>
         <div className={styles.dayContent}>
@@ -281,7 +281,7 @@ function FoodReserveTabs({
                   return (
                     <ReserveDaySection key={day.date} trigger={
 
-                      <CollapsibleTrigger className="flex w-full items-center gap-2 border-b bg-zinc-50 px-3 py-3 text-right text-sm sm:text-base dark:bg-zinc-800">
+                      <CollapsibleTrigger className={`${styles.dayHeader} flex w-full items-center gap-2 rounded-t-xl border-b bg-zinc-50 px-3 py-3 text-right text-sm shadow-sm sm:text-base dark:bg-zinc-800`}>
                         <span className="h-7 w-1 rounded-full bg-(--base-green)" />
                         <strong>{day.day_name}</strong>
                         <span>{day.jalali_date}</span>

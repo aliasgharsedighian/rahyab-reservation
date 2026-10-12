@@ -2,7 +2,7 @@
 
 import { apiClient } from "@/lib/api/client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
@@ -24,7 +24,36 @@ import { useTheme } from "next-themes";
 import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
 import HeaderReserveCart from "./HeaderReserveCart";
 
-function DashboardHeader({ title }: { title: string }) {
+function DashboardHeader({
+  title,
+  stickyHeightVariable,
+}: {
+  title: string;
+  stickyHeightVariable?: `--${string}`;
+}) {
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    const container = header?.parentElement;
+    if (!header || !container || !stickyHeightVariable) return;
+
+    // Let sticky content below this header follow its actual responsive height.
+    const updateHeight = () => {
+      container.style.setProperty(
+        stickyHeightVariable,
+        `${header.getBoundingClientRect().height}px`,
+      );
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(header);
+    return () => {
+      observer.disconnect();
+      container.style.removeProperty(stickyHeightVariable);
+    };
+  }, [stickyHeightVariable]);
+
   const { notificationsData, markSeenNotification } = useNotifications();
   const { resolvedTheme, setTheme } = useTheme();
   //   const userInfo = useSelector(userInfoAccess);
@@ -85,7 +114,7 @@ function DashboardHeader({ title }: { title: string }) {
         onPasswordChanged={getProfileDetail}
       />
       <NotificationDetails notification={selectedNotif} open={openNotif} onOpenChange={setOpenNotif} />
-      <div className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
+      <div ref={headerRef} className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
         <div className="flex min-w-0 items-start gap-2 sm:gap-3">
           <SidebarTrigger className="flex md:hidden sticky top-9 " />
 

@@ -3,6 +3,7 @@
 import type { ReserveCartItem } from "@/app/dashboard/reserve/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "sonner";
+import { logOut } from "./auth-slice";
 import { hasMainFoodForDate, isSideFood, removeOrphanedSides } from "@/app/dashboard/reserve/cartRules";
 
 // Optional fields support persisted carts from the earlier basket model.
@@ -113,6 +114,11 @@ export const reserveBasketSlice = createSlice({
     updateReserveCart: (state, action: PayloadAction<ReserveCartItem[]>) => {
       state.cart = removeOrphanedSides(action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(logOut, (state) => {
+      state.cart = [];
+    });
   },
 });
 

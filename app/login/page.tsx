@@ -1,5 +1,6 @@
 "use client";
 
+import { toEnglishDigits } from "@/lib/digits";
 import loginAction from "@/actions/loginAction";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +33,12 @@ const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 const signinFormSchema = z.object({
   mobile: z
     .string("شماره موبایل خود را وارد کنید.")
-    .regex(phoneRegex, "شماره وارد شده صحیح نیست.")
-    .min(1, { message: "شماره موبایل خود را وارد کنید." }),
+    .transform((value) => toEnglishDigits(value).trim())
+    .pipe(
+      z.string()
+        .regex(phoneRegex, "شماره وارد شده صحیح نیست.")
+        .min(1, { message: "شماره موبایل خود را وارد کنید." }),
+    ),
   password: z.string().min(8, "حداقل ۸ کاراکتر وارد کنید"),
 });
 
@@ -185,6 +190,9 @@ function LoginPage() {
                             type="text"
                             placeholder="مثلاً 09123456789"
                             {...field}
+                            inputMode="tel"
+                            autoComplete="tel"
+                            onChange={(event) => field.onChange(toEnglishDigits(event.target.value))}
                             className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                           />
                         </FormControl>

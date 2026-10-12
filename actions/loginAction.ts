@@ -1,5 +1,6 @@
 "use server";
 
+import { toEnglishDigits } from "@/lib/digits";
 import loginCookiesAction from "./loginCookiesAction";
 
 interface LoginCredentials {
@@ -28,7 +29,7 @@ export default async function loginAction(
   const myHeaders = new Headers();
   myHeaders.append("Accept", "application/json");
   const myFormdata = new FormData();
-  myFormdata.append("mobile", formData.mobile);
+  myFormdata.append("mobile", toEnglishDigits(formData.mobile).trim());
   myFormdata.append("password", formData.password);
   try {
     const response = await fetch(
