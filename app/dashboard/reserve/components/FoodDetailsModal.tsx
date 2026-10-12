@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BanknoteIcon, UtensilsIcon, XIcon } from "lucide-react";
+import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -53,11 +53,17 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3 sm:px-5">
-      <div className="mb-3 flex aspect-[4/3] max-h-[45dvh] items-center justify-center overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+      <div className="relative mb-3 flex aspect-[4/3] max-h-[45dvh] items-center justify-center overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={food.name} className="size-full object-cover" />
         ) : <UtensilsIcon className="size-16 text-(--secondary-text)" aria-hidden="true" />}
+        {food.reserved_count > 0 ? (
+          <span className="absolute inset-x-1 top-2 flex items-center justify-center gap-1 rounded-lg border border-(--base-green)/30 bg-background/95 px-1.5 py-1.5 text-[10px] font-semibold text-(--base-green) sm:text-xs">
+            <CheckCircle2Icon className="size-4 shrink-0" aria-hidden="true" />
+            از این غذا {food.reserved_count.toLocaleString("fa-IR")} عدد رزرو کرده‌اید
+          </span>
+        ) : null}
       </div>
       <div className="space-y-4 rounded-2xl border bg-zinc-50/70 p-3 text-right dark:bg-zinc-900/50 sm:p-4">
         <Title className="text-xl font-bold leading-8 sm:text-2xl">{food.name}</Title>
