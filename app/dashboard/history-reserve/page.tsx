@@ -3,6 +3,7 @@ import { serverApiFetch } from "@/lib/api/server";
 import DashboardPagination from "../components/DashboardPagination";
 import ReserveHistoryTable from "./components/ReserveHistoryTable";
 import DashboardHeader from "../components/DashboardHeader";
+import type { ReservationHistoryResponse } from "./types";
 
 interface Props {
   searchParams: Promise<{
@@ -44,7 +45,7 @@ const getReserveHistory = async (
     `reservations/history?${params.toString()}`,
   );
 
-  const reserveHistory = await res.json();
+  const reserveHistory: ReservationHistoryResponse = await res.json();
   if (res.status === 200) {
     return reserveHistory.data;
   }
@@ -75,15 +76,15 @@ export default async function HistoryReservePage({ searchParams }: Props) {
     revalidatePath(`/dashboard/history-reserve`);
   }
 
-  if (!reserveHistory.items) return;
+  if (!reserveHistory?.items) return;
 
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"رزروهای گذشته"} />
       <div className="w-full flex flex-col gap-3 ">
         <div className="flex flex-col gap-4 mx-2 md:mx-6">
-          <div className="mb-6 flex flex-col gap-3">
-            <h2 className="text-2xl font-bold">رزرو‌های گذشته</h2>
+          <div className="mb-2 flex flex-col gap-2">
+            <h2 className="text-2xl font-bold sm:text-3xl">رزرو‌های گذشته</h2>
             <p className="text-(--secondary-text)">
               لیست غذاهای رزرو شده گذشته شما
             </p>

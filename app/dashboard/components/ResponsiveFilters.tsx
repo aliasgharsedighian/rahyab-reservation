@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -29,6 +30,7 @@ function getMobileSnapshot() {
 }
 
 interface ResponsiveFiltersProps {
+  compact?: boolean;
   children: ReactNode;
   activeCount: number;
   onClear: () => void;
@@ -36,6 +38,7 @@ interface ResponsiveFiltersProps {
 }
 
 export default function ResponsiveFilters({
+  compact = false,
   children,
   activeCount,
   onClear,
@@ -62,11 +65,31 @@ export default function ResponsiveFilters({
     </Button>
   );
 
+  const compactTrigger = (
+    <Button type="button" variant="outline" className="h-auto min-h-16 w-full justify-between rounded-xl bg-card px-4 py-3 shadow-sm">
+      <span className="flex items-center gap-3 text-right">
+        <Filter className="size-5 shrink-0 text-(--base-green)" aria-hidden="true" />
+        <span><span className="block text-sm font-bold">فیلتر نتایج</span><span className="mt-1 block text-xs font-normal text-(--secondary-text)">{activeCount > 0 ? activeCount.toLocaleString("fa-IR") + " فیلتر فعال" : "بدون فیلتر"}</span></span>
+      </span>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--light-green) text-(--base-green)"><SlidersHorizontal className="size-4" aria-hidden="true" /></span>
+    </Button>
+  );
+
+  if (compact && !isMobile) return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger asChild>{compactTrigger}</CollapsibleTrigger>
+      <CollapsibleContent className="mt-2 rounded-xl border bg-card p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3"><p className="text-xs text-(--secondary-text)">{description}</p>{clearButton}</div>
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen} direction="bottom">
         <DrawerTrigger asChild>
-          <Button
+          {compact ? compactTrigger : <Button
             type="button"
             variant="outline"
             className="mb-4 h-12 w-full justify-between rounded-xl border-dashed bg-card px-4 shadow-sm"
@@ -86,7 +109,7 @@ export default function ResponsiveFilters({
                 بدون فیلتر
               </span>
             )}
-          </Button>
+          </Button>}
         </DrawerTrigger>
 
         <DrawerContent className="max-h-[88vh] rounded-t-3xl" dir="rtl">

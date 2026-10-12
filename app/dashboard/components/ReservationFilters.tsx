@@ -10,7 +10,7 @@ import ResponsiveFilters from "./ResponsiveFilters";
 
 type DateFilterKey = "reserve_date_from_jalali" | "reserve_date_to_jalali";
 
-export default function ReservationFilters() {
+export default function ReservationFilters({ compact = false }: { compact?: boolean } = {}) {
   const { searchParams, updateFilter, clearFilters } = useReservationFilters();
   const [foodName, setFoodName] = useState(searchParams.get("food_name") || "");
   const [dateError, setDateError] = useState<string | null>(null);
@@ -60,6 +60,7 @@ export default function ReservationFilters() {
 
   return (
     <ResponsiveFilters
+      compact={compact}
       activeCount={activeCount}
       onClear={handleClearFilters}
       description="جستجو را بر اساس نام غذا، بازه تاریخ یا وضعیت محدود کنید."

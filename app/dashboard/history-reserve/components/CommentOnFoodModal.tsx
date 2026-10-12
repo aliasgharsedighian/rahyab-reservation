@@ -6,27 +6,24 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
+  DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { StarIcon } from "lucide-react";
+import { StarIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { RatingStars } from "@/components/ui/rating-stars";
+import type { ReservationFeedbackResponse } from "../types";
+import type { FoodFeedbackData } from "../../reserve/types";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 
 interface FeedbackState {
   has_feedback: boolean;
   rate: number | null;
   comment: string | null;
   status: string | null;
-}
-
-interface FoodFeedbackData {
-  food_name: string;
-  feedback_rate: number;
-  feedback_count: number;
-  image_url: string;
 }
 
 interface CommentOnFoodModalProps {
@@ -50,6 +47,7 @@ function CommentOnFoodModal({
   onSubmitted,
   promptMessage,
 }: CommentOnFoodModalProps) {
+  const isMobile = useIsMobile();
   const [data, setData] = useState<FoodFeedbackData | null>(null);
   const [comment, setComment] = useState("");
   const [rate, setRate] = useState(0);
@@ -90,7 +88,7 @@ function CommentOnFoodModal({
     }
 
     try {
-      const { data: response } = await apiClient.post(
+      const { data: response } = await apiClient.post<ReservationFeedbackResponse>(
         "reservation-feedbacks",
         {
           reservation_id: reservationId,
@@ -115,14 +113,23 @@ function CommentOnFoodModal({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="rtl max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-center iranSansBold text-xl">
-            نظرات غذا
-          </DialogTitle>
-        </DialogHeader>
+  const Title = isMobile ? DrawerTitle : DialogTitle;
+  const Description = isMobile ? DrawerDescription : DialogDescription;
+  const statusLabels: Record<string, string> = {
+    published: "منتشر شده",
+    approved: "تأیید شده",
+    pending: "در انتظار بررسی",
+    rejected: "رد شده",
+  };
+  const feedbackStatus = has_feedback?.status;
+  const statusLabel = feedbackStatus
+    ? statusLabels[feedbackStatus] ?? feedbackStatus
+    : "وضعیت نامشخص";
+
+  const content = (
+    <div className="space-y-4">
+        <Title className="text-center iranSansBold text-xl">نظرات غذا</Title>
+        <Description className="sr-only">امتیاز و نظر شما، وضعیت انتشار و نظرات کاربران دربارهٔ غذا</Description>
 
         {promptMessage && (
           <p className="text-center text-sm text-(--secondary-text)">
@@ -132,19 +139,22 @@ function CommentOnFoodModal({
 
         {/* ✅ هدر غذا */}
         {data && (
-          <div className="flex items-start justify-between gap-4 border p-3 rounded-xl">
-            <div className="flex flex-col">
+          <div className="flex items-start gap-4 border p-3 rounded-xl">
+            {data.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.image_url}
+              alt={data.food_name}
+              className="w-20 h-20 shrink-0 rounded-lg object-cover"
+            />
+            )}
+            <div className="flex min-w-0 flex-col">
               <span className="font-bold text-lg">{data.food_name}</span>
               <span className="text-sm text-(--secondary-text) flex items-center gap-2">
                 <RatingStars value={data.feedback_rate} />
                 {data.feedback_rate} ({data.feedback_count} نظر)
               </span>
             </div>
-            <img
-              src={data.image_url}
-              alt={data.food_name}
-              className="w-20 h-20 rounded-lg object-cover"
-            />
           </div>
         )}
 
@@ -224,6 +234,25 @@ function CommentOnFoodModal({
               </div>
             )}
 
+            {has_feedback?.has_feedback && (
+              <div className="mt-3 space-y-3">
+                {has_feedback.comment && (
+                  <p className="whitespace-pre-wrap break-words text-sm leading-7">
+                    {has_feedback.comment}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  <p className="text-xs text-(--secondary-text)">وضعیت نظر</p>
+                  <div className="rounded-lg border border-(--base-green)/25 bg-(--light-green) px-3 py-2 text-center text-sm font-bold" role="status" aria-label="وضعیت نظر">
+                    {statusLabel}
+                  </div>
+                </div>
+                <p className="text-center text-xs leading-6 text-(--secondary-text)">
+                  شما قبلاً به این غذا نظر داده‌اید.
+                </p>
+              </div>
+            )}
+
             {rateError && (
               <p className="mt-2 text-sm font-medium text-red-600" role="alert">
                 امتیاز خود را ثبت کنید.
@@ -231,35 +260,58 @@ function CommentOnFoodModal({
             )}
           </div>
 
-          {/* ✅ textarea ثبت نظر */}
-          {has_feedback?.has_feedback ? (
-            <div className="flex flex-col gap-2">
-              <p>شما قبلا به این غذا نظر داده اید:</p>
-              <div className="border p-3 rounded-lg bg-(--light-green)">
-                <p className="font-bold">نظر شما:</p>
-                <p className="whitespace-break-spaces">
-                  {has_feedback.comment}
-                </p>
-              </div>
-              <span className="text-sm">وضعیت: {has_feedback.status}</span>
-            </div>
-          ) : (
-            <Textarea
-              placeholder="نظر خود را بنویسید..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-          )}
-
-          {/* ✅ دکمه ثبت نظر */}
-          {has_feedback?.has_feedback ? (
-            <Button disabled>شما قبلا به این غذا نظر داده اید</Button>
-          ) : (
-            <Button onClick={handleSubmit} className="w-full">
-              ثبت نظر
-            </Button>
+          {!has_feedback?.has_feedback && (
+            <>
+              <Textarea
+                placeholder="نظر خود را بنویسید..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              <Button onClick={handleSubmit} className="w-full">
+                ثبت نظر
+              </Button>
+            </>
           )}
         </div>
+        {data && (
+          <section aria-labelledby="other-food-feedback-title" className="space-y-3">
+            <h3 id="other-food-feedback-title" className="font-bold">نظرات بقیه راجع به این غذا</h3>
+            <div className="divide-y overflow-hidden rounded-xl border">
+            {data.feedbacks?.length ? data.feedbacks.map((feedback, index) => (
+              <article key={index} className="space-y-2 p-3 text-right">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                  <RatingStars value={feedback.rate} />
+                  <span className="ms-auto text-left text-xs text-(--secondary-text)">
+                    {feedback.created_day_name} · <bdi dir="ltr">{feedback.created_at_jalali}</bdi>
+                  </span>
+                </div>
+                {feedback.comment && <p className="whitespace-pre-wrap break-words text-sm leading-7">{feedback.comment}</p>}
+              </article>
+            )) : <p className="p-3 text-sm text-(--secondary-text)">هنوز نظری ثبت نشده است.</p>}
+            </div>
+          </section>
+        )}
+    </div>
+  );
+
+  if (isMobile) return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerContent dir="rtl" className="border border-(--base-green)/30 data-[vaul-drawer-direction=bottom]:h-[88dvh] data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">
+        <DrawerClose asChild>
+          <Button variant="ghost" size="icon" className="absolute left-3 top-2" aria-label="بستن نظرات غذا"><XIcon className="size-5" /></Button>
+        </DrawerClose>
+        <div className="h-5 shrink-0" />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          {content}
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent dir="rtl" className="rtl max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+        {content}
       </DialogContent>
     </Dialog>
   );
