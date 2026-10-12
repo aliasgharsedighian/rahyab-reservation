@@ -32,7 +32,7 @@ export const reserveBasketSlice = createSlice({
   reducers: {
     addToReserveBasket: (state, action: PayloadAction<ReserveCartItem>) => {
       if (isSideFood(action.payload.type) && !hasMainFoodForDate(
-        state.cart, action.payload.date,
+        state.cart, action.payload.date, action.payload.reserved_food_day,
       )) return;
       const itemInCart = state.cart.find(
         (item) => item.id === action.payload.id,
@@ -79,7 +79,7 @@ export const reserveBasketSlice = createSlice({
     ) => {
       const item = state.cart.find((item) => item.id === action.payload)!;
       if (!item || (isSideFood(item.type) && !hasMainFoodForDate(
-        state.cart, item.date,
+        state.cart, item.date, item.reserved_food_day,
       ))) return;
       item.count++;
     },

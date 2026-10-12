@@ -1,4 +1,4 @@
-import type { ReserveCartItem } from "./types";
+import type { ReserveCartItem, ReserveDay } from "./types";
 import { isMainFoodType } from "./types";
 
 // Accept explicit API boolean values, never JavaScript truthiness (e.g. "0").
@@ -10,18 +10,23 @@ export function isSideFood(type?: string): boolean {
   return type === "drink" || type === "appetizer";
 }
 
+// Match the existing reservation badge, but only for main foods in this day.
+export function hasReservedMainFoodForDay(day: ReserveDay): boolean {
+  return day.foods.some((group) => isMainFoodType(group.type) &&
+    group.items.some((food) => food.reserved_count > 0));
+}
+
 export function hasMainFoodForDate(
   items: ReserveCartItem[],
   date: string,
+  hasReservedMainFood: unknown = false,
 ): boolean {
-  // Only a positive main-food quantity in this day's basket unlocks sides.
-  // reserved_food_day must never bypass this dependency.
-  return items.some(
+  return isConfirmedReservation(hasReservedMainFood) || items.some(
     (item) => item.date === date && item.count > 0 && isMainFoodType(item.type),
   );
 }
 
 export function removeOrphanedSides(items: ReserveCartItem[]): ReserveCartItem[] {
   return items.filter((item) => !isSideFood(item.type) ||
-    hasMainFoodForDate(items, item.date));
+    hasMainFoodForDate(items, item.date, item.reserved_food_day));
 }

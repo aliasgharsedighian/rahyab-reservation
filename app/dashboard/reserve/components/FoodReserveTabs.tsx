@@ -17,7 +17,7 @@ import {
   UtensilsIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { hasMainFoodForDate } from "../cartRules";
+import { hasMainFoodForDate, hasReservedMainFoodForDay } from "../cartRules";
 import styles from "./FoodReserveTabs.module.css";
 import { useSelector } from "react-redux";
 import type {
@@ -217,7 +217,7 @@ function FoodReserveTabs({
             MaxQuantity={food.max_reservation_quantity}
             type={group.type}
             type_fa={group.type_fa || fallbackTypeTitle[group.type]}
-            reservedFoodDay={day.reserved_food_day}
+            hasReservedMainFood={hasReservedMainFoodForDay(day)}
           />
         </div>
         <Button
@@ -276,7 +276,7 @@ function FoodReserveTabs({
                     ({ type }) => type === "drink" || type === "appetizer",
                   );
                   const hasMainFood = hasMainFoodForDate(
-                    reserveItems, day.date,
+                    reserveItems, day.date, hasReservedMainFoodForDay(day),
                   );
                   return (
                     <ReserveDaySection key={day.date} trigger={

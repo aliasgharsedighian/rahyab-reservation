@@ -7,6 +7,7 @@ export interface ReserveCartItem {
   date: string;
   type?: ReserveFoodType;
   type_fa?: string;
+  // Derived from main-food reserved_count for this date, not the API day flag.
   reserved_food_day?: boolean;
   count: number;
   price: number;

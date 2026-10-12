@@ -27,7 +27,7 @@ interface FoodReserveInvoiceProps {
   MaxQuantity: number;
   type: ReserveFoodType;
   type_fa: string;
-  reservedFoodDay: boolean;
+  hasReservedMainFood: boolean;
   reserveLabel?: string;
 }
 
@@ -43,7 +43,7 @@ function FoodReserveInvoice({
   MaxQuantity,
   type,
   type_fa,
-  reservedFoodDay,
+  hasReservedMainFood,
   reserveLabel = "رزرو",
 }: FoodReserveInvoiceProps) {
   const dispatch = useDispatch();
@@ -52,7 +52,7 @@ function FoodReserveInvoice({
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
   const reserveItems = useSelector(reserveSelectItems);
   const isSide = isSideFood(type);
-  const hasMainFoodForDay = hasMainFoodForDate(reserveItems, date);
+  const hasMainFoodForDay = hasMainFoodForDate(reserveItems, date, hasReservedMainFood);
 
   const itemToBasket = {
     id: weekly_menu_id,
@@ -64,7 +64,7 @@ function FoodReserveInvoice({
     date,
     type,
     type_fa,
-    reserved_food_day: isConfirmedReservation(reservedFoodDay),
+    reserved_food_day: isConfirmedReservation(hasReservedMainFood),
   };
 
   if (MaxQuantity === 0) {

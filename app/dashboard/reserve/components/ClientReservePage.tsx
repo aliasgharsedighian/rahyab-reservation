@@ -21,7 +21,7 @@ import {
   type WalletChargeGuideCartDetail,
 } from "../../components/WalletChargeGuideModal";
 import ReservationSuccessModal from "./ReservationSuccessModal";
-import { isConfirmedReservation, removeOrphanedSides } from "../cartRules";
+import { hasReservedMainFoodForDay, removeOrphanedSides } from "../cartRules";
 import ReservationFeedbackPrompt from "./ReservationFeedbackPrompt";
 
 interface ClientReservePageProps {
@@ -67,7 +67,7 @@ function ClientReservePage({
     const menuItems = new Map((reserveList?.weeks ?? []).flatMap((week) =>
       week.days.flatMap((day) => day.foods.flatMap((group) => group.items.map((food) =>
         [String(food.weekly_menu_id), { type: group.type, type_fa: group.type_fa,
-          reserved_food_day: isConfirmedReservation(day.reserved_food_day) }] as const,
+          reserved_food_day: hasReservedMainFoodForDay(day) }] as const,
       ))),
     ));
     const currentItems = reserveCart.map((item) => {

@@ -12,6 +12,7 @@ import { RatingStars } from "@/components/ui/rating-stars";
 import { Spinner } from "@/components/ui/spinner";
 import type { FoodFeedbackData, SelectedReserveFood } from "../types";
 import FoodReserveInvoice from "./FoodReserveInvoice";
+import { hasReservedMainFoodForDay } from "../cartRules";
 
 interface FoodDetailsModalProps {
   open: boolean;
@@ -85,7 +86,7 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
           MaxQuantity={food.max_reservation_quantity}
           type={group.type}
           type_fa={group.type_fa}
-          reservedFoodDay={day.reserved_food_day}
+          hasReservedMainFood={hasReservedMainFoodForDay(day)}
           reserveLabel={"رزرو " + food.name}
         />
         <section aria-label="نظرات غذا" className="space-y-3 pt-2">
