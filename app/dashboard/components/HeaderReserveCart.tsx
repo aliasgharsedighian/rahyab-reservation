@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
-import { ShoppingBasketIcon, XIcon } from "lucide-react";
+import { ShoppingCartIcon, XIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { reserveSelectItems } from "@/redux/features/reserveBasketSlice";
 import { Button } from "@/components/ui/button";
@@ -24,19 +24,19 @@ export default function HeaderReserveCart() {
 
   const trigger = (
     <Button variant="ghost" size="icon" className="relative shrink-0" aria-label={"مشاهده سبد رزرو، " + totalCount.toLocaleString("fa-IR") + " عدد"}>
-      <ShoppingBasketIcon className="size-5 text-(--base-green)" aria-hidden="true" />
+      <ShoppingCartIcon className="size-5 text-(--base-green)" aria-hidden="true" />
       {totalCount > 0 ? <span aria-hidden="true" className="absolute -right-1 -top-1 flex min-w-4 items-center justify-center rounded-full bg-(--base-green) px-1 text-[10px] leading-4 text-white">{totalCount > 99 ? "۹۹+" : totalCount.toLocaleString("fa-IR")}</span> : null}
     </Button>
   );
   const content = (
     <>
       <div className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3">
-        <Title className="flex items-center gap-2 text-base font-bold"><ShoppingBasketIcon className="size-5 text-(--base-green)" aria-hidden="true" />سبد رزرو شما</Title>
+        <Title className="flex items-center gap-2 text-base font-bold"><ShoppingCartIcon className="size-5 text-(--base-green)" aria-hidden="true" />سبد رزرو شما</Title>
         <Close asChild><Button variant="ghost" size="icon" aria-label="بستن سبد رزرو"><XIcon className="size-5" /></Button></Close>
       </div>
       <Description className="sr-only">غذاهای انتخاب‌شده و جمع مبلغ سبد رزرو؛ برای نهایی کردن به صفحه رزرو بروید.</Description>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" tabIndex={0} aria-label="غذاهای انتخاب‌شده">
-        {items.length ? <ReserveCartItems items={sortedItems} /> : <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-4 text-sm text-(--secondary-text)"><ShoppingBasketIcon className="size-10 text-(--base-green)" aria-hidden="true" />سبد رزرو شما خالی است.</div>}
+        {items.length ? <ReserveCartItems items={sortedItems} /> : <div className="flex min-h-48 flex-col items-center justify-center gap-3 px-4 text-sm text-(--secondary-text)"><ShoppingCartIcon className="size-10 text-(--base-green)" aria-hidden="true" />سبد رزرو شما خالی است.</div>}
       </div>
       <div className="shrink-0 space-y-3 border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between text-sm"><span>تعداد کل</span><span>{totalCount.toLocaleString("fa-IR")} عدد</span></div>

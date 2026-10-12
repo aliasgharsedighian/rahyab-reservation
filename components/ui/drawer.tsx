@@ -55,8 +55,11 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  showHandle = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+}: React.ComponentProps<typeof DrawerPrimitive.Content> & {
+  showHandle?: boolean
+}) {
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
@@ -68,7 +71,9 @@ function DrawerContent({
         )}
         {...props}
       >
-        <DrawerPrimitive.Handle className="mt-3 shrink-0 touch-none cursor-grab active:cursor-grabbing" />
+        {showHandle && (
+          <DrawerPrimitive.Handle className="mt-3 shrink-0 touch-none cursor-grab active:cursor-grabbing" />
+        )}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>

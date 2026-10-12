@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   ChevronUp,
-  ShoppingBasketIcon,
+  ShoppingCartIcon,
   WalletCardsIcon,
   XIcon,
 } from "lucide-react";
@@ -74,7 +74,7 @@ function FoodReserveCardMobile({
                   <ReserveCartItems items={sortedReserveCart} />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center">
-                    <ShoppingBasketIcon className="size-12 text-(--base-green)" />
+                    <ShoppingCartIcon className="size-12 text-(--base-green)" />
                     <p className="text-(--secondary-text)">سبد شما خالی است</p>
                   </div>
                 )}

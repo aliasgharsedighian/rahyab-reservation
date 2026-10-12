@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ShoppingBasketIcon, WalletCardsIcon } from "lucide-react";
+import { ShoppingCartIcon, WalletCardsIcon } from "lucide-react";
 import type { ReserveCartItem } from "../types";
 import ReserveCartItems from "./ReserveCartItems";
 
@@ -18,13 +18,13 @@ export default function FoodReserveCart({ reserveCart, sortedReserveCart, totalP
   return (
     <section aria-label="سبد رزرو شما" className="flex h-[calc(100dvh-8rem)] min-h-80 flex-col overflow-hidden rounded-2xl border border-(--base-green)/30 bg-zinc-50/70 shadow-sm dark:bg-zinc-900/50">
       <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
-        <ShoppingBasketIcon className="size-5 text-(--base-green)" aria-hidden="true" />
+        <ShoppingCartIcon className="size-5 text-(--base-green)" aria-hidden="true" />
         <h2 className="text-sm font-bold">سبد رزرو شما</h2>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" tabIndex={0} aria-label="غذاهای سبد رزرو">
         {reserveCart.length ? <ReserveCartItems items={sortedReserveCart} /> : (
           <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 px-3 text-center text-sm text-(--secondary-text)">
-            <ShoppingBasketIcon className="size-9 text-(--base-green)" aria-hidden="true" />سبد رزرو شما خالی است.
+            <ShoppingCartIcon className="size-9 text-(--base-green)" aria-hidden="true" />سبد رزرو شما خالی است.
           </div>
         )}
       </div>

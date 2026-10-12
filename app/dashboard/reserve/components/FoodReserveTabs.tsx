@@ -67,6 +67,35 @@ function ReserveDaySection({ trigger, children }: { trigger: ReactNode; children
   );
 }
 
+function ReserveSideSection({
+  defaultOpen,
+  trigger,
+  children,
+}: {
+  defaultOpen: boolean;
+  trigger: ReactNode;
+  children: ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(defaultOpen);
+
+  return (
+    <Collapsible
+      open={expanded}
+      onOpenChange={setExpanded}
+      className="group rounded-xl border border-(--base-green)/30 bg-(--light-green)/30"
+    >
+      {trigger}
+      <CollapsibleContent forceMount inert={!expanded} className={styles.dayPanel}>
+        <div className={styles.dayContent}>
+          <div className="min-h-0 overflow-hidden">
+            <div className="px-3 pb-3 md:px-4 md:pb-4">{children}</div>
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 function FoodReserveTabs({
   reserveList,
 }: {
@@ -296,26 +325,26 @@ function FoodReserveTabs({
                           </div>
                         )}
                         {sideGroups.length ? (
-                          <Collapsible
+                          <ReserveSideSection
                             key={hasMainFood ? "main-selected" : "no-main"}
                             defaultOpen={hasMainFood}
-                            className="group rounded-xl border border-(--base-green)/30 bg-(--light-green)/30"
+                            trigger={
+                              <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 p-3 text-right md:p-4">
+                                <span>
+                                  <span className="flex items-center gap-2 font-bold">
+                                    <UtensilsIcon className="size-4 text-(--base-green)" />
+                                    مخلفات اختیاری
+                                  </span>
+                                  <span className="mt-1 block text-xs text-(--secondary-text)">
+                                    {hasMainFood
+                                      ? "برای غذای اصلی این روز، مخلفات دلخواهتان را انتخاب کنید."
+                                      : "برای مشاهده نوشیدنی‌ها و پیش‌غذاها کلیک کنید."}
+                                  </span>
+                                </span>
+                                <ChevronDownIcon className="size-5 shrink-0 text-(--base-green) transition-transform group-data-[state=open]:rotate-180" />
+                              </CollapsibleTrigger>
+                            }
                           >
-                            <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 p-3 text-right md:p-4">
-                              <span>
-                                <span className="flex items-center gap-2 font-bold">
-                                  <UtensilsIcon className="size-4 text-(--base-green)" />
-                                  مخلفات اختیاری
-                                </span>
-                                <span className="mt-1 block text-xs text-(--secondary-text)">
-                                  {hasMainFood
-                                    ? "برای غذای اصلی این روز، مخلفات دلخواهتان را انتخاب کنید."
-                                    : "برای مشاهده نوشیدنی‌ها و پیش‌غذاها کلیک کنید."}
-                                </span>
-                              </span>
-                              <ChevronDownIcon className="size-5 shrink-0 text-(--base-green) transition-transform group-data-[state=open]:rotate-180" />
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="px-3 pb-3 md:px-4 md:pb-4">
                               <div className="grid gap-5 border-t border-(--base-green)/15 pt-4">
                                 {sideGroups.map((group) => (
                                   <div key={group.type} className="@container/foods grid gap-3">
@@ -331,8 +360,7 @@ function FoodReserveTabs({
                                   </div>
                                 ))}
                               </div>
-                            </CollapsibleContent>
-                          </Collapsible>
+                          </ReserveSideSection>
                         ) : null}
                     </ReserveDaySection>
                   );

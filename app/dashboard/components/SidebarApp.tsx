@@ -33,6 +33,7 @@ import {
   UserCircle2Icon,
   WalletCardsIcon,
   PanelRight,
+  XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";
@@ -196,11 +197,13 @@ function SidebarApp() {
             />
           </Link>
           <Button
-            className="rounded-none h-full text-foreground"
+            className="h-full shrink-0 rounded-none px-2 text-foreground"
+            aria-label={isMobile ? "بستن منو" : open ? "جمع کردن سایدبار" : "باز کردن سایدبار"}
+            aria-expanded={isMobile || open}
             onClick={toggleSidebar}
             variant={"ghost"}
           >
-            <PanelRight width={20} height={20} className="w-5 h-5" />
+            {isMobile ? <XIcon className="size-5" /> : <PanelRight className="size-5" />}
           </Button>
         </SidebarHeader>
         <SidebarContent className="py-3 bg-background">
@@ -261,7 +264,7 @@ function SidebarApp() {
                         </AccordionTrigger>
                         <AccordionContent className="pr-2">
                           <div className="flex flex-col gap-3 pt-2">
-                            {item?.accordionLinks.map((item: any) => (
+                            {item?.accordionLinks.map((item: { href: string; text: string }) => (
                               <Link
                                 key={item.href}
                                 href={item.href}
@@ -293,6 +296,7 @@ function SidebarApp() {
                     <span className="h-full w-1 bg-(--base-green)"></span>
                   )}
                   <SidebarMenuButton
+                    tooltip={item.text}
                     onClick={() => {
                       if (isMobile) {
                         setOpenMobile(false);
@@ -303,7 +307,11 @@ function SidebarApp() {
                     className="h-full hover:bg-(--light-green)"
                     asChild
                   >
-                    <Link href={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={pathname === item.link ? "page" : undefined}
+                      className={pathname === item.link ? "[&>svg]:text-(--base-green)" : undefined}
+                    >
                       {item.icon}
                       <span>{item.text}</span>
                     </Link>
@@ -313,7 +321,7 @@ function SidebarApp() {
             )}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="border-t mb-6 bg-background">
+        <SidebarFooter className="border-t bg-background pb-[max(0.5rem,env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
           {/* Rules */}
           <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
             <SidebarMenuButton
