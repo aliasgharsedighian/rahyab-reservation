@@ -4,9 +4,11 @@ import DashboardHeader from "../components/DashboardHeader";
 import ClientNotificationsPage from "./components/ClientNotificationsPage";
 import DashboardPagination from "../components/DashboardPagination";
 
+import type { NotificationsResponse } from "./types";
+
 interface Props {
   searchParams: Promise<{
-    page: string;
+    page?: string;
   }>;
 }
 
@@ -18,7 +20,7 @@ const getNotifications = async (
     `notifications?count=${per_page}&page=${page}`,
   );
 
-  const notifications = await res.json();
+  const notifications: NotificationsResponse = await res.json();
   if (res.status === 200) {
     return notifications.data;
   }
@@ -26,7 +28,7 @@ const getNotifications = async (
 
 export default async function NotificationsPage({ searchParams }: Props) {
   const per_page = "6";
-  const { page } = await searchParams;
+  const { page = "1" } = await searchParams;
 
   const notifications = await getNotifications(per_page, page);
 
@@ -40,7 +42,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"اعلان ها"} />
       <ClientNotificationsPage
-        notificationsData={notifications.notifications}
+        notificationsData={notifications?.notifications ?? []}
         revalidateData={revalidateData}
       />
       <div className="ml-auto">

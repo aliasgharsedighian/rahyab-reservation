@@ -9,12 +9,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import NotificationDetails from "../notifications/components/NotificationDetails";
+import type { NotificationItem } from "../notifications/types";
 
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,22 +32,16 @@ function DashboardHeader({ title }: { title: string }) {
 
   const userInfoRedux: any = useSelector(userInfoAccess);
 
-  const [openProfilePop, setOpenProfilePop] = useState(false);
   const [openNotif, setOpenNotif] = useState(false);
-  const [selectedNotif, setSelectedNotif] = useState<any>(null);
+  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
   const [mounted, setMounted] = useState(false);
   //   const hiddenSidebar = useSelector(hiddenSidebarReducer);
 
-  const handleOpenNotif = (item: any) => {
+  const handleOpenNotif = async (item: NotificationItem) => {
     setSelectedNotif(item);
     setOpenNotif(true);
+    await markSeenNotification(item.id);
   };
-
-  useEffect(() => {
-    if (openNotif && selectedNotif) {
-      markSeenNotification(selectedNotif.id);
-    }
-  }, [openNotif, selectedNotif]);
 
   useEffect(() => {
     setMounted(true);
@@ -94,25 +84,7 @@ function DashboardHeader({ title }: { title: string }) {
         open={Number(userInfoRedux?.must_change_password) === 1}
         onPasswordChanged={getProfileDetail}
       />
-      <Dialog open={openNotif} onOpenChange={setOpenNotif}>
-        <DialogContent className="rtl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center">جزئیات اعلان</DialogTitle>
-          </DialogHeader>
-
-          {selectedNotif && (
-            <div className="space-y-4">
-              <p className="text-sm leading-6 text-(--base-black)">
-                {selectedNotif.body}
-              </p>
-
-              <div className="text-xs text-(--secondary-text)">
-                {selectedNotif.created_at}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <NotificationDetails notification={selectedNotif} open={openNotif} onOpenChange={setOpenNotif} />
       <div className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
         <div className="flex min-w-0 items-start gap-2 sm:gap-3">
           <SidebarTrigger className="flex md:hidden sticky top-9 " />
@@ -170,7 +142,7 @@ function DashboardHeader({ title }: { title: string }) {
                       <p className="p-2">پیام خوانده نشده ندارید</p>
                     </div>
                   ) : (
-                    notificationsData?.map((item: any) => (
+                    notificationsData?.map((item) => (
                       <div
                         key={item.id}
                         onClick={() => handleOpenNotif(item)}

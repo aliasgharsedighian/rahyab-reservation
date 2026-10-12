@@ -10,8 +10,10 @@ import {
   ReactNode,
 } from "react";
 
+import type { NotificationItem, NotificationsResponse, MarkNotificationSeenResponse } from "../notifications/types";
+
 type NotificationContextType = {
-  notificationsData: any[];
+  notificationsData: NotificationItem[];
   getNotifications: () => Promise<void>;
   markSeenNotification: (notificationId: number) => Promise<void>;
 };
@@ -21,11 +23,11 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 );
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  const [notificationsData, setNotificationsData] = useState<any[]>([]);
+  const [notificationsData, setNotificationsData] = useState<NotificationItem[]>([]);
 
   const getNotifications = async () => {
     try {
-      const { data: result, status } = await apiClient.get(
+      const { data: result, status } = await apiClient.get<NotificationsResponse>(
         "notifications?count=10&page=1&seen=false",
       );
 
@@ -39,7 +41,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   const markSeenNotification = async (notificationId: number) => {
     try {
-      const { data: result } = await apiClient.post(
+      const { data: result } = await apiClient.post<MarkNotificationSeenResponse>(
         "notifications/mark-seen",
         {
           notification_id: notificationId,
