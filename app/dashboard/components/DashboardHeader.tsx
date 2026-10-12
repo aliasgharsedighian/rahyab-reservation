@@ -26,8 +26,9 @@ import { BellIcon, MoonStar, Sun } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useTheme } from "next-themes";
 import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
+import HeaderReserveCart from "./HeaderReserveCart";
 
-function DashboardHeader({ title }: any) {
+function DashboardHeader({ title }: { title: string }) {
   const { notificationsData, markSeenNotification } = useNotifications();
   const { resolvedTheme, setTheme } = useTheme();
   //   const userInfo = useSelector(userInfoAccess);
@@ -113,12 +114,13 @@ function DashboardHeader({ title }: any) {
         </DialogContent>
       </Dialog>
       <div className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 items-start gap-2 sm:gap-3">
           <SidebarTrigger className="flex md:hidden sticky top-9 " />
 
-          <h2 className="text-xl">{title}</h2>
+          <h2 className="whitespace-nowrap text-base sm:text-xl">{title}</h2>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4 lg:gap-6">
+          <HeaderReserveCart />
           <Button
             type="button"
             variant="outline"
@@ -139,7 +141,7 @@ function DashboardHeader({ title }: any) {
 
           <Popover>
             <PopoverTrigger className="flex">
-              <div className="relative border-l border-border pl-6 cursor-pointer">
+              <div className="relative border-l border-border pl-2 sm:pl-6 cursor-pointer">
                 <BellIcon
                   className="size-5 text-(--base-green)"
                   fill={

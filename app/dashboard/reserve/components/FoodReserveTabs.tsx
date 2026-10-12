@@ -16,7 +16,8 @@ import {
   MessageCircleIcon,
   UtensilsIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import styles from "./FoodReserveTabs.module.css";
 import { useSelector } from "react-redux";
 import type {
   ReserveFoodType,
@@ -39,6 +40,32 @@ const fallbackTypeTitle: Record<ReserveFoodType, string> = {
   drink: "نوشیدنی",
   appetizer: "پیش‌غذا",
 };
+
+// Keep sparse days aligned to the start and compact; use the menu's available width for dense days.
+function foodGridClassName(count: number) {
+  const base = "grid w-full grid-cols-2 gap-2 sm:gap-3";
+  if (count === 1) return base + " xl:me-auto xl:ms-0 xl:max-w-72 xl:grid-cols-1";
+  if (count === 2) return base + " xl:me-auto xl:ms-0 xl:max-w-[36rem]";
+  if (count === 3) return base + " @min-[38rem]/foods:grid-cols-3 xl:mx-auto xl:max-w-[54rem]";
+  return base + " @min-[38rem]/foods:grid-cols-3 @min-[52rem]/foods:grid-cols-4 xl:mx-auto xl:max-w-[72rem]";
+}
+
+function ReserveDaySection({ trigger, children }: { trigger: ReactNode; children: ReactNode }) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <Collapsible open={expanded} onOpenChange={setExpanded} className="group/day overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-800">
+      {trigger}
+      <CollapsibleContent forceMount inert={!expanded} className={styles.dayPanel}>
+        <div className={styles.dayContent}>
+          <div className="min-h-0 overflow-hidden">
+            <div className="space-y-3 p-2 sm:p-3">{children}</div>
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 function FoodReserveTabs({
   reserveList,
@@ -83,7 +110,7 @@ function FoodReserveTabs({
         onClick={() => handleOpenModal(food, group, day)}
         aria-label={"مشاهده جزئیات " + food.name}
         aria-haspopup="dialog"
-        className="relative aspect-square w-full cursor-pointer overflow-hidden rounded-lg bg-zinc-100 focus-visible:outline-2 focus-visible:outline-(--base-green) dark:bg-zinc-800"
+        className="relative aspect-square w-full cursor-pointer xl:aspect-[4/3] overflow-hidden rounded-lg bg-zinc-100 focus-visible:outline-2 focus-visible:outline-(--base-green) dark:bg-zinc-800"
       >
         {food.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -229,11 +256,8 @@ function FoodReserveTabs({
                           cartItem.type === "dinner"),
                     );
                   return (
-                    <Collapsible
-                      key={day.date}
-                      defaultOpen
-                      className="group/day overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-800"
-                    >
+                    <ReserveDaySection key={day.date} trigger={
+
                       <CollapsibleTrigger className="flex w-full items-center gap-2 border-b bg-zinc-50 px-3 py-3 text-right text-sm sm:text-base dark:bg-zinc-800">
                         <span className="h-7 w-1 rounded-full bg-(--base-green)" />
                         <strong>{day.day_name}</strong>
@@ -249,20 +273,17 @@ function FoodReserveTabs({
                         </span>
                         <ChevronDownIcon className="size-4 shrink-0 text-(--base-green) transition-transform group-data-[state=open]/day:rotate-180" />
                       </CollapsibleTrigger>
-                      <CollapsibleContent
-                        forceMount
-                        className="space-y-3 p-2 data-[state=closed]:hidden sm:p-3"
-                      >
+                    }>
                         {mainGroups.length ? (
                           mainGroups.map((group) => (
-                            <div key={group.type} className="grid gap-3">
+                            <div key={group.type} className="@container/foods grid gap-3">
                               {mainGroups.length > 1 ? (
                                 <h2 className="w-fit rounded-full bg-(--light-green) px-4 py-1.5 font-bold text-(--base-green)">
                                   {group.type_fa ||
                                     fallbackTypeTitle[group.type]}
                                 </h2>
                               ) : null}
-                              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                              <div className={foodGridClassName(group.items.length)}>
                                 {group.items.map((food) =>
                                   renderFood(food, group, day),
                                 )}
@@ -297,12 +318,12 @@ function FoodReserveTabs({
                             <CollapsibleContent className="px-3 pb-3 md:px-4 md:pb-4">
                               <div className="grid gap-5 border-t border-(--base-green)/15 pt-4">
                                 {sideGroups.map((group) => (
-                                  <div key={group.type} className="grid gap-3">
+                                  <div key={group.type} className="@container/foods grid gap-3">
                                     <h3 className="text-sm font-bold text-(--base-green)">
                                       {group.type_fa ||
                                         fallbackTypeTitle[group.type]}
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    <div className={foodGridClassName(group.items.length)}>
                                       {group.items.map((food) =>
                                         renderFood(food, group, day),
                                       )}
@@ -313,8 +334,7 @@ function FoodReserveTabs({
                             </CollapsibleContent>
                           </Collapsible>
                         ) : null}
-                      </CollapsibleContent>
-                    </Collapsible>
+                    </ReserveDaySection>
                   );
                 })}
               </div>
