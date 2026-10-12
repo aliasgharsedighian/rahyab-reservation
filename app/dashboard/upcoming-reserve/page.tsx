@@ -3,6 +3,7 @@ import { serverApiFetch } from "@/lib/api/server";
 import DashboardPagination from "../components/DashboardPagination";
 import ReserveUpcomingTable from "./components/ReserveUpcomingTable";
 import DashboardHeader from "../components/DashboardHeader";
+import type { ReservationUpcomingResponse } from "./types";
 
 interface Props {
   searchParams: Promise<{
@@ -43,7 +44,7 @@ const getReserveUpcoming = async (
   const res = await serverApiFetch(
     `reservations/upcoming?${params.toString()}`,
   );
-  const reserveUpcoming = await res.json();
+  const reserveUpcoming: ReservationUpcomingResponse = await res.json();
   if (res.status === 200) {
     return reserveUpcoming.data;
   }
@@ -74,15 +75,15 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
     revalidatePath(`/dashboard/upcoming-reserve`);
   }
 
-  if (!reserveUpcoming.items) return;
+  if (!reserveUpcoming?.items) return;
 
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"رزروهای پیش رو"} />
       <div className="w-full flex flex-col gap-3">
         <div className="flex flex-col gap-4 mx-2 md:mx-6">
-          <div className="mb-6 flex flex-col gap-3">
-            <h2 className="text-2xl font-bold">رزرو‌های پیش رو</h2>
+          <div className="mb-2 flex flex-col gap-2">
+            <h2 className="text-2xl font-bold sm:text-3xl">رزرو‌های پیش رو</h2>
             <p className="text-(--secondary-text)">
               لیست غذاهای رزرو شده پیش روی شما
             </p>

@@ -83,9 +83,9 @@ export default function ReserveHistoryTable({ reserveHistory, revalidateData }: 
                   </header>
                   <div className="flex items-start gap-3">
                     <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted/50">
-                      {item.image_url ? (
+                      {item.food_image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.image_url} alt={item.food_name} className="size-full object-cover" loading="lazy" />
+                        <img src={item.food_image_url} alt={item.food_name} className="size-full object-cover" loading="lazy" />
                       ) : <UtensilsIcon className="size-6 text-(--secondary-text)" aria-hidden="true" />}
                     </div>
                     <div className="min-w-0 flex-1 space-y-2"><h3 className="break-words text-base font-bold leading-7">{item.food_name}</h3><FeedbackStatus item={item} /></div>

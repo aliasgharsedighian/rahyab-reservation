@@ -41,9 +41,7 @@ const getReserveHistory = async (
   if (status) {
     params.set("status", status);
   }
-  const res = await serverApiFetch(
-    `reservations/history?${params.toString()}`,
-  );
+  const res = await serverApiFetch(`reservations/history?${params.toString()}`);
 
   const reserveHistory: ReservationHistoryResponse = await res.json();
   if (res.status === 200) {

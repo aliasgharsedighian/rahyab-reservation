@@ -13,41 +13,41 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TriangleAlert } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import type { CancelReservationResponse, ReservationUpcomingItem } from "../types";
 
 interface CancelFoodModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   reservationId: number | null;
-  revalidateData: any;
+  revalidateData: () => void | Promise<void>;
+  reservation?: ReservationUpcomingItem;
 }
 
 function CancelReservationModal({
   open,
   setOpen,
   reservationId,
+  reservation,
   revalidateData,
 }: CancelFoodModalProps) {
-  const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCancelFood = async () => {
-    console.log(reservationId);
+    if (loading || reservationId === null) return;
 
     try {
       setLoading(true);
 
-      const { data: response } = await apiClient.post(
+      const { data: response } = await apiClient.post<CancelReservationResponse>(
         `reservations/${reservationId}/cancel`,
       );
 
       if (response.status === 200) {
         toast.success(response.message || "رزرو غذا لغو شد");
-        setReason("");
         setOpen(false);
         revalidateData();
       } else {
@@ -62,12 +62,12 @@ function CancelReservationModal({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent className="rtl max-w-md">
-        <AlertDialogHeader>
+    <AlertDialog open={open} onOpenChange={(nextOpen) => { if (!loading) setOpen(nextOpen); }}>
+      <AlertDialogContent dir="rtl" className="rtl max-h-[90dvh] overflow-y-auto rounded-2xl data-[size=default]:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-md">
+        <AlertDialogHeader className="sm:group-data-[size=default]/alert-dialog-content:place-items-center sm:group-data-[size=default]/alert-dialog-content:text-center">
           <div className="flex justify-center mb-2">
-            <div className="bg-red-100 text-red-600 p-3 rounded-full">
-              <TriangleAlert className="w-6 h-6" />
+            <div className="rounded-full bg-red-100 p-3 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+              <TriangleAlert className="size-6" aria-hidden="true" />
             </div>
           </div>
 
@@ -79,19 +79,25 @@ function CancelReservationModal({
             آیا از لغو این رزرو مطمئن هستید؟
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-row-reverse gap-2">
+        {reservation && (
+          <div className="space-y-2 rounded-xl border bg-muted/40 p-4 text-right text-sm">
+            <p className="break-words font-bold leading-7">{reservation.food_name}</p>
+            <p className="flex flex-wrap gap-x-2 text-(--secondary-text)"><span>{reservation.reserve_day_name}</span><span dir="ltr">{reservation.reserve_date_jalali}</span><span>· {reservation.quantity.toLocaleString("fa-IR")} عدد</span></p>
+          </div>
+        )}
+        <AlertDialogFooter className="grid grid-cols-2 gap-2 sm:grid">
           <AlertDialogAction asChild>
             <Button
-              onClick={handleCancelFood}
+              onClick={(event) => { event.preventDefault(); void handleCancelFood(); }}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700"
+              className="h-11 bg-red-600 text-white hover:bg-red-700"
             >
               {loading ? "در حال لغو..." : "تایید لغو"}
             </Button>
           </AlertDialogAction>
 
           <AlertDialogCancel asChild>
-            <Button variant="outline">انصراف</Button>
+            <Button variant="outline" className="h-11" disabled={loading}>انصراف</Button>
           </AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
