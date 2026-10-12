@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "سامانه رزرو غذای کارکنان",
     short_name: "رزرو غذا",
     description: "رزرو و مدیریت غذای کارکنان",

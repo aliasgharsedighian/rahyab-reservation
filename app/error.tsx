@@ -62,6 +62,10 @@ export default function ErrorPage({
             : "اتصال اینترنت را بررسی کنید؛ پس از برقراری ارتباط دوباره تلاش کنید."}
         </p>
 
+        <p className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-sm leading-7 text-foreground">
+          اگر VPN یا فیلترشکن روشن است، آن را خاموش کنید؛ اتصال به سرور فودنیکس با VPN ممکن نیست. سپس دوباره تلاش کنید.
+        </p>
+
         <div className="mt-7 grid gap-3">
           <Button type="button" size="lg" onClick={handleRetry} disabled={isRetrying || !isOnline} className="h-12 w-full rounded-xl bg-(--base-green) text-base font-bold text-white shadow-[0_10px_24px_rgba(2,193,76,0.22)] hover:bg-(--base-green)/90">
             <RefreshCwIcon className={isRetrying ? "animate-spin" : undefined} aria-hidden="true" />

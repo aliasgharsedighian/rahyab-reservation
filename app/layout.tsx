@@ -29,8 +29,6 @@ export const viewport: Viewport = {
   themeColor: "#02c14c",
   viewportFit: "cover",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -62,13 +60,13 @@ export default function RootLayout({
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
       <body className="transition-all duration-700">
-        <PwaRegistration />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          <PwaRegistration />
           <ReduxProvider>
             <Toaster
               position="top-center"
