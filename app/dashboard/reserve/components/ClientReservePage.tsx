@@ -6,7 +6,7 @@ import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import useDetectMobile from "@/app/components/hooks/DetectMobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   removeAllItemsFromReserve,
@@ -20,6 +20,8 @@ import {
   OPEN_WALLET_CHARGE_GUIDE_EVENT,
   type WalletChargeGuideCartDetail,
 } from "../../components/WalletChargeGuideModal";
+import ReservationSuccessModal from "./ReservationSuccessModal";
+import { isConfirmedReservation, removeOrphanedSides } from "../cartRules";
 import ReservationFeedbackPrompt from "./ReservationFeedbackPrompt";
 
 interface ClientReservePageProps {
@@ -43,6 +45,7 @@ function ClientReservePage({
 }: ClientReservePageProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const [reservationSucceeded, setReservationSucceeded] = useState(false);
 
   const reserveCart = useSelector(reserveSelectItems);
   const isMobile = useDetectMobile();
@@ -60,21 +63,29 @@ function ClientReservePage({
   }, [reserveList]);
 
   const activeReserveCart = useMemo(() => {
-    if (firstReservableDate === null) return reserveCart;
-
-    return reserveCart.filter((item) => {
+    // Restore metadata for baskets persisted before type/date reservation fields existed.
+    const menuItems = new Map((reserveList?.weeks ?? []).flatMap((week) =>
+      week.days.flatMap((day) => day.foods.flatMap((group) => group.items.map((food) =>
+        [String(food.weekly_menu_id), { type: group.type, type_fa: group.type_fa,
+          reserved_food_day: isConfirmedReservation(day.reserved_food_day) }] as const,
+      ))),
+    ));
+    const currentItems = reserveCart.map((item) => {
+      const metadata = menuItems.get(String(item.id));
+      return metadata ? { ...item, ...metadata } : item;
+    }).filter((item) => {
+      if (firstReservableDate === null) return true;
       const itemDate = Date.parse(item.date);
-
-      // Keep legacy/malformed items rather than deleting user data unexpectedly.
       return Number.isNaN(itemDate) || itemDate >= firstReservableDate;
     });
-  }, [firstReservableDate, reserveCart]);
+    return removeOrphanedSides(currentItems);
+  }, [firstReservableDate, reserveCart, reserveList]);
 
   useEffect(() => {
-    if (activeReserveCart.length !== reserveCart.length) {
+    if (JSON.stringify(activeReserveCart) !== JSON.stringify(reserveCart)) {
       dispatch(updateReserveCart(activeReserveCart));
     }
-  }, [activeReserveCart, dispatch, reserveCart.length]);
+  }, [activeReserveCart, dispatch, reserveCart]);
 
   const totalPrice = useMemo(
     () =>
@@ -132,6 +143,7 @@ function ClientReservePage({
       if (responseData.status === 201) {
         toast.success("پرداخت با موفقیت از کیف پول شما انجام شد");
         dispatch(removeAllItemsFromReserve([]));
+        setReservationSucceeded(true);
         router.refresh();
       }
     } catch (error) {
@@ -141,6 +153,7 @@ function ClientReservePage({
 
   return (
     <div className="flex w-full items-start gap-5 px-2 md:px-5 xl:gap-8">
+      <ReservationSuccessModal open={reservationSucceeded} onOpenChange={setReservationSucceeded} />
       <ReservationFeedbackPrompt reservations={unreviewedReservations} />
       <div className="min-w-0 flex-1">
         <FoodReserveTabs reserveList={reserveList} />

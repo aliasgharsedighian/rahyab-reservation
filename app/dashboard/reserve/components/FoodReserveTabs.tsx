@@ -17,6 +17,7 @@ import {
   UtensilsIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { hasMainFoodForDate } from "../cartRules";
 import styles from "./FoodReserveTabs.module.css";
 import { useSelector } from "react-redux";
 import type {
@@ -274,16 +275,9 @@ function FoodReserveTabs({
                   const sideGroups = day.foods.filter(
                     ({ type }) => type === "drink" || type === "appetizer",
                   );
-                  const hasMainFood =
-                    day.reserved_food_day ||
-                    reserveItems.some(
-                      (cartItem) =>
-                        cartItem.date === day.date &&
-                        (!cartItem.type ||
-                          cartItem.type === "breakfast" ||
-                          cartItem.type === "lunch" ||
-                          cartItem.type === "dinner"),
-                    );
+                  const hasMainFood = hasMainFoodForDate(
+                    reserveItems, day.date,
+                  );
                   return (
                     <ReserveDaySection key={day.date} trigger={
 

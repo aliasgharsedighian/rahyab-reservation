@@ -12,6 +12,7 @@ import {
 import { Trash2Icon } from "lucide-react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { hasMainFoodForDate, isConfirmedReservation, isSideFood } from "../cartRules";
 import type { ReserveFoodType } from "../types";
 
 interface FoodReserveInvoiceProps {
@@ -50,15 +51,8 @@ function FoodReserveInvoice({
   // مستقیم از ریداکس
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
   const reserveItems = useSelector(reserveSelectItems);
-  const isSide = type === "drink" || type === "appetizer";
-  const hasMainFoodForDay = reservedFoodDay || reserveItems.some(
-    (item) =>
-      item.date === date &&
-      (!item.type ||
-        item.type === "breakfast" ||
-        item.type === "lunch" ||
-        item.type === "dinner"),
-  );
+  const isSide = isSideFood(type);
+  const hasMainFoodForDay = hasMainFoodForDate(reserveItems, date);
 
   const itemToBasket = {
     id: weekly_menu_id,
@@ -70,7 +64,7 @@ function FoodReserveInvoice({
     date,
     type,
     type_fa,
-    reserved_food_day: reservedFoodDay,
+    reserved_food_day: isConfirmedReservation(reservedFoodDay),
   };
 
   if (MaxQuantity === 0) {
@@ -122,7 +116,7 @@ function FoodReserveInvoice({
             <Button
               variant={"ghost"}
               className="border-none! px-2 sm:px-3"
-              disabled={countInput >= MaxQuantity ? true : false}
+              disabled={countInput >= MaxQuantity || (isSide && !hasMainFoodForDay)}
               onClick={() => {
                 dispatch(incrementReserveCount(weekly_menu_id));
               }}

@@ -3,6 +3,7 @@
 import type { ReserveCartItem } from "@/app/dashboard/reserve/types";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "sonner";
+import { hasMainFoodForDate, isSideFood, removeOrphanedSides } from "@/app/dashboard/reserve/cartRules";
 
 // Optional fields support persisted carts from the earlier basket model.
 interface ReservationBasketItem extends ReserveCartItem {
@@ -29,6 +30,9 @@ export const reserveBasketSlice = createSlice({
   initialState,
   reducers: {
     addToReserveBasket: (state, action: PayloadAction<ReserveCartItem>) => {
+      if (isSideFood(action.payload.type) && !hasMainFoodForDate(
+        state.cart, action.payload.date,
+      )) return;
       const itemInCart = state.cart.find(
         (item) => item.id === action.payload.id,
       );
@@ -57,31 +61,9 @@ export const reserveBasketSlice = createSlice({
       let newBasket = [...state.cart];
 
       if (index >= 0) {
-        const removedItem = state.cart[index];
         //the item exist in the basket ... remove it
         newBasket.splice(index, 1);
-        if (
-          removedItem.type === "breakfast" ||
-          removedItem.type === "lunch" ||
-          removedItem.type === "dinner"
-        ) {
-          const hasAnotherMainFood = removedItem.reserved_food_day || newBasket.some(
-            (item) =>
-              item.date === removedItem.date &&
-              (item.reserved_food_day ||
-                !item.type ||
-                item.type === "breakfast" ||
-                item.type === "lunch" ||
-                item.type === "dinner"),
-          );
-          if (!hasAnotherMainFood) {
-            newBasket = newBasket.filter(
-              (item) =>
-                item.date !== removedItem.date ||
-                (item.type !== "drink" && item.type !== "appetizer"),
-            );
-          }
-        }
+        newBasket = removeOrphanedSides(newBasket);
         toast.success("آیتم با موفقیت از سبد شما حذف شد.");
       } else {
         console.warn(
@@ -95,6 +77,9 @@ export const reserveBasketSlice = createSlice({
       action: PayloadAction<number | string>,
     ) => {
       const item = state.cart.find((item) => item.id === action.payload)!;
+      if (!item || (isSideFood(item.type) && !hasMainFoodForDate(
+        state.cart, item.date,
+      ))) return;
       item.count++;
     },
     decrementReserveCount: (
@@ -102,11 +87,13 @@ export const reserveBasketSlice = createSlice({
       action: PayloadAction<number | string>,
     ) => {
       const item = state.cart.find((item) => item.id === action.payload)!;
+      if (!item) return;
       if (item.count === 0) {
         item.count = 0;
       } else {
         item.count--;
       }
+      state.cart = removeOrphanedSides(state.cart.filter((entry) => entry.count > 0));
     },
     updateReserveCount: (state, action: PayloadAction<{ slug: string; count_for_user: number; price: number }>) => {
       const item = state.cart.find(
@@ -124,7 +111,7 @@ export const reserveBasketSlice = createSlice({
       state.cart = [];
     },
     updateReserveCart: (state, action: PayloadAction<ReserveCartItem[]>) => {
-      state.cart = action.payload;
+      state.cart = removeOrphanedSides(action.payload);
     },
   },
 });
