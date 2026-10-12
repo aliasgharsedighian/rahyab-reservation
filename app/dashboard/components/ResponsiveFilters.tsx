@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { Filter, SlidersHorizontal, X } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -75,15 +75,47 @@ export default function ResponsiveFilters({
     </Button>
   );
 
-  if (compact && !isMobile) return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>{compactTrigger}</CollapsibleTrigger>
-      <CollapsibleContent className="mt-2 rounded-xl border bg-card p-4 sm:p-5">
-        <div className="mb-4 flex items-center justify-between gap-3"><p className="text-xs text-(--secondary-text)">{description}</p>{clearButton}</div>
-        {children}
-      </CollapsibleContent>
-    </Collapsible>
-  );
+  if (compact) {
+    const Title = isMobile ? DrawerTitle : DialogTitle;
+    const Description = isMobile ? DrawerDescription : DialogDescription;
+    const Close = isMobile ? DrawerClose : DialogClose;
+    const panel = (
+      <>
+        <header className="flex shrink-0 items-start justify-between gap-2 px-4 pt-5 pb-4 sm:px-5">
+          <div className="min-w-0 space-y-1.5 text-right">
+            <Title className="flex items-center gap-2 text-lg font-bold">
+              <Filter className="size-5 shrink-0 text-(--base-green)" aria-hidden="true" />
+              فیلتر نتایج
+            </Title>
+            <Description className="text-xs leading-6 text-(--secondary-text)">{description}</Description>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {clearButton}
+            {!isMobile && <DialogClose asChild><Button variant="ghost" size="icon-sm" aria-label="بستن فیلتر نتایج"><X className="size-4" /></Button></DialogClose>}
+          </div>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 sm:px-5">{children}</div>
+        <footer className="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+          <Close asChild>
+            <Button type="button" className="h-11 w-full rounded-lg bg-(--base-green) text-white hover:bg-(--base-green)/90 dark:text-zinc-950">
+              مشاهده نتایج{activeCount > 0 && " (" + activeCount.toLocaleString("fa-IR") + " فیلتر)"}
+            </Button>
+          </Close>
+        </footer>
+      </>
+    );
+    return isMobile ? (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{compactTrigger}</DrawerTrigger>
+        <DrawerContent dir="rtl" className="data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">{panel}</DrawerContent>
+      </Drawer>
+    ) : (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{compactTrigger}</DialogTrigger>
+        <DialogContent dir="rtl" showCloseButton={false} className="flex max-h-[88dvh] flex-col gap-0 rounded-2xl p-0 sm:max-w-lg">{panel}</DialogContent>
+      </Dialog>
+    );
+  }
 
   if (isMobile) {
     return (

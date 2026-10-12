@@ -24,7 +24,7 @@ function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: any) {
         revalidateData={revalidateData}
       />
 
-      <ReservationFilters />
+      <div className="mb-4"><ReservationFilters /></div>
 
       <div className="w-full overflow-x-auto rounded-md">
         <div className="border border-border text-sm grid grid-cols-[50px_100px_50px_180px_100px_100px_100px_50px] lg:grid-cols-12 bg-transparent text-(--secondary-text) rounded-t-md min-w-max lg:min-w-full">

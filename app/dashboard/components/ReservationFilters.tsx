@@ -4,13 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useReservationFilters } from "../hook/useReservationFilters";
 import DateFilter from "./DateFilter";
-import { useState } from "react";
+import { Search } from "lucide-react";
+import { useId, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import ResponsiveFilters from "./ResponsiveFilters";
 
 type DateFilterKey = "reserve_date_from_jalali" | "reserve_date_to_jalali";
 
-export default function ReservationFilters({ compact = false }: { compact?: boolean } = {}) {
+export default function ReservationFilters({ compact = true }: { compact?: boolean } = {}) {
+  const foodNameId = useId();
   const { searchParams, updateFilter, clearFilters } = useReservationFilters();
   const [foodName, setFoodName] = useState(searchParams.get("food_name") || "");
   const [dateError, setDateError] = useState<string | null>(null);
@@ -65,18 +67,21 @@ export default function ReservationFilters({ compact = false }: { compact?: bool
       onClear={handleClearFilters}
       description="جستجو را بر اساس نام غذا، بازه تاریخ یا وضعیت محدود کنید."
     >
-        <div className="grid grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="flex min-w-0 flex-col gap-2">
-            <label className="text-sm font-medium">نام غذا</label>
+        <div className={compact ? "grid grid-cols-2 items-end gap-3" : "grid grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4"}>
+          <div className={compact ? "relative col-span-2 min-w-0" : "flex min-w-0 flex-col gap-2"}>
+            <label htmlFor={foodNameId} className={compact ? "sr-only" : "text-sm font-medium"}>نام غذا</label>
+            {compact && <Search className="pointer-events-none absolute right-3 top-3 size-4 text-(--secondary-text)" aria-hidden="true" />}
 
             <Input
-              className="h-10 rounded-xl bg-background"
-              placeholder="نام غذا را جستجو کنید..."
+              id={foodNameId}
+              className={compact ? "h-11 rounded-lg bg-muted/50 pr-10" : "h-10 rounded-xl bg-background"}
+              placeholder={compact ? "نام غذا" : "نام غذا را جستجو کنید..."}
               value={foodName}
               onChange={(event) => handleFoodNameChange(event.target.value)}
             />
           </div>
           <DateFilter
+            compact={compact}
             label="از تاریخ"
             value={searchParams.get("reserve_date_from_jalali")}
             onChange={(value) =>
@@ -84,6 +89,7 @@ export default function ReservationFilters({ compact = false }: { compact?: bool
             }
           />
           <DateFilter
+            compact={compact}
             label="تا تاریخ"
             value={searchParams.get("reserve_date_to_jalali")}
             onChange={(value) =>
@@ -91,13 +97,14 @@ export default function ReservationFilters({ compact = false }: { compact?: bool
             }
           />
 
-          <div className="flex min-h-10 items-center justify-between rounded-xl border bg-background px-3 py-2">
+          <div className={compact ? "col-span-2 flex min-h-16 items-center justify-between gap-3 rounded-lg border px-3 py-3" : "flex min-h-10 items-center justify-between rounded-xl border bg-background px-3 py-2"}>
             <div>
-              <p className="text-sm font-medium">فقط لغوشده‌ها</p>
+              <p id={foodNameId + "-cancelled-label"} className="text-sm font-medium">فقط لغوشده‌ها</p>
               <p className="text-[11px] text-muted-foreground">نمایش رزروهای لغوشده</p>
             </div>
             <Switch
               dir="ltr"
+              aria-labelledby={foodNameId + "-cancelled-label"}
               checked={searchParams.get("status") === "cancelled"}
               onCheckedChange={(checked) =>
                 updateFilter("status", checked ? "cancelled" : null)
