@@ -187,10 +187,11 @@ function SidebarApp() {
             } ${isMobile ? "flex!" : ""}`}
           >
             <Image
-              width={300}
-              height={113}
-              src="/assets/images/logo-green.webp"
-              alt="لوگو هوبرنیکس"
+              width={2170}
+              height={725}
+              className="h-auto max-h-14 w-full object-contain"
+              src="/assets/images/foodnix-drawer-logo.png"
+              alt="لوگو فودنیکس"
               loading="eager"
             />
           </Link>

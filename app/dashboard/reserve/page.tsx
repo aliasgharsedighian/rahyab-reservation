@@ -1,7 +1,7 @@
 import ClientReservePage from "./components/ClientReservePage";
 import DashboardHeader from "../components/DashboardHeader";
 import { getWalletBalance } from "./getWalletBalance";
-import type { UnreviewedReservation } from "./types";
+import type { UnreviewedReservation, WeeklyMenuResponse } from "./types";
 import { serverApiFetch } from "@/lib/api/server";
 
 interface ReservationHistoryResponse {
@@ -28,7 +28,7 @@ const getReserveList = async () => {
   const res = await serverApiFetch("weekly-menu");
   if (!res.ok) return null;
 
-  const reserveList = await res.json();
+  const reserveList: WeeklyMenuResponse = await res.json();
   return reserveList.data ?? null;
 };
 
@@ -41,7 +41,7 @@ export default async function ReservePage() {
     ]);
 
   return (
-    <div className="flex flex-col gap-6 w-full mb-40 md:mb-10">
+    <div className="flex flex-col gap-6 w-full mb-56 md:mb-10">
       <DashboardHeader title={"رزرو غذا"} />
       <ClientReservePage
         reserveList={reserveList}

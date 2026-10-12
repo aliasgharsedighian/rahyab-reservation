@@ -1,24 +1,36 @@
 "use client";
 
-import { cartType, reserveCartType } from "@/typing";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { ReserveCartItem } from "@/app/dashboard/reserve/types";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { toast } from "sonner";
 
+// Optional fields support persisted carts from the earlier basket model.
+interface ReservationBasketItem extends ReserveCartItem {
+  slug?: string;
+  countForUser?: number;
+  count_for_user?: number;
+  item_price?: number;
+  shipping_cost?: number;
+  firstweight?: number;
+}
+
 type InitialState = {
-  cart: reserveCartType[] | any;
+  cart: ReservationBasketItem[];
 };
 
-const initialState = {
+type ReservationBasketState = { reserveBasket: InitialState };
+
+const initialState: InitialState = {
   cart: [],
-} as InitialState;
+};
 
 export const reserveBasketSlice = createSlice({
   name: "reserveBasket",
   initialState,
   reducers: {
-    addToReserveBasket: (state, action: PayloadAction<any>) => {
+    addToReserveBasket: (state, action: PayloadAction<ReserveCartItem>) => {
       const itemInCart = state.cart.find(
-        (item: cartType) => item.id === action.payload.id,
+        (item) => item.id === action.payload.id,
       );
       if (itemInCart) {
         // itemInCart.count++;
@@ -38,9 +50,9 @@ export const reserveBasketSlice = createSlice({
       }
       // state.items = [...state.items, action.payload];
     },
-    removeFromReserveBasket: (state, action: PayloadAction<any>) => {
+    removeFromReserveBasket: (state, action: PayloadAction<Pick<ReserveCartItem, "id">>) => {
       const index = state.cart.findIndex(
-        (basketItem: cartType) => basketItem.id === action.payload.id,
+        (basketItem) => basketItem.id === action.payload.id,
       );
       let newBasket = [...state.cart];
 
@@ -54,7 +66,7 @@ export const reserveBasketSlice = createSlice({
           removedItem.type === "dinner"
         ) {
           const hasAnotherMainFood = removedItem.reserved_food_day || newBasket.some(
-            (item: any) =>
+            (item) =>
               item.date === removedItem.date &&
               (item.reserved_food_day ||
                 !item.type ||
@@ -64,7 +76,7 @@ export const reserveBasketSlice = createSlice({
           );
           if (!hasAnotherMainFood) {
             newBasket = newBasket.filter(
-              (item: any) =>
+              (item) =>
                 item.date !== removedItem.date ||
                 (item.type !== "drink" && item.type !== "appetizer"),
             );
@@ -82,34 +94,36 @@ export const reserveBasketSlice = createSlice({
       state,
       action: PayloadAction<number | string>,
     ) => {
-      const item = state.cart.find((item: any) => item.id === action.payload);
+      const item = state.cart.find((item) => item.id === action.payload)!;
       item.count++;
     },
     decrementReserveCount: (
       state,
       action: PayloadAction<number | string>,
     ) => {
-      const item = state.cart.find((item: any) => item.id === action.payload);
+      const item = state.cart.find((item) => item.id === action.payload)!;
       if (item.count === 0) {
         item.count = 0;
       } else {
         item.count--;
       }
     },
-    updateReserveCount: (state, action: PayloadAction<any>) => {
+    updateReserveCount: (state, action: PayloadAction<{ slug: string; count_for_user: number; price: number }>) => {
       const item = state.cart.find(
-        (item: any) => item.slug === action.payload.slug,
-      );
+        (item) => item.slug === action.payload.slug,
+      )!;
       item.countForUser = action.payload.count_for_user;
       item.price = action.payload.price;
-      if (item.count_for_user < item.count) {
-        item.count = item.count_for_user;
+      if (item.count_for_user! < item.count) {
+        item.count = item.count_for_user!;
       }
     },
-    removeAllItemsFromReserve: (state, action: PayloadAction<any>) => {
+    // Preserve the existing empty-array action payload for callers.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    removeAllItemsFromReserve: (state, action: PayloadAction<[]>) => {
       state.cart = [];
     },
-    updateReserveCart: (state, action: PayloadAction<reserveCartType[]>) => {
+    updateReserveCart: (state, action: PayloadAction<ReserveCartItem[]>) => {
       state.cart = action.payload;
     },
   },
@@ -125,36 +139,36 @@ export const {
   updateReserveCart,
 } = reserveBasketSlice.actions;
 
-export const reserveSelectItems = (state: any) => state.reserveBasket.cart;
-export const reserveSelectTotalPrice = (state: any) =>
+export const reserveSelectItems = (state: ReservationBasketState) => state.reserveBasket.cart;
+export const reserveSelectTotalPrice = (state: ReservationBasketState) =>
   state.reserveBasket.cart.reduce(
-    (total: any, item: any) => total + item.price * item.count,
+    (total, item) => total + item.price * item.count,
     0,
   );
-export const reserveTotalFoodCount = (state: any) =>
+export const reserveTotalFoodCount = (state: ReservationBasketState) =>
   state.reserveBasket.cart.reduce(
-    (total: any, item: any) => total + item.count,
+    (total, item) => total + item.count,
     0,
   );
-export const reserveSelectTotalIetmPrice = (state: any) =>
+export const reserveSelectTotalIetmPrice = (state: ReservationBasketState) =>
   state.reserveBasket.cart.reduce(
-    (total: any, item: any) => total + item.item_price * item.count,
+    (total, item) => total + item.item_price! * item.count,
     0,
   );
-export const reserveSelectTotalShoppingCost = (state: any) =>
+export const reserveSelectTotalShoppingCost = (state: ReservationBasketState) =>
   state.reserveBasket.cart.reduce(
-    (total: any, item: any) => total + item.shipping_cost * item.count,
+    (total, item) => total + item.shipping_cost! * item.count,
     0,
   );
-export const reserveSelectTotalWeight = (state: any) =>
+export const reserveSelectTotalWeight = (state: ReservationBasketState) =>
   state.reserveBasket.cart.reduce(
-    (total: any, item: any) => total + item.firstweight * item.count,
+    (total, item) => total + item.firstweight! * item.count,
     0,
   );
 
 export const reserveSelectItemCountById =
-  (id: number | string) => (state: any) => {
-    const item = state.reserveBasket.cart.find((item: any) => item.id === id);
+  (id: number | string) => (state: ReservationBasketState) => {
+    const item = state.reserveBasket.cart.find((item) => item.id === id);
 
     return item ? item.count : 0;
   };

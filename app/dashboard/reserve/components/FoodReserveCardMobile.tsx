@@ -41,15 +41,12 @@ function FoodReserveCardMobile({
 }: FoodReserveCardMobileProps) {
   if (reserveCart.length === 0) return;
   return (
-    <div className="flex flex-col bg-background text-foreground fixed bottom-0 w-full right-0 h-30 z-20 shadow-2xl border-t border-border pt-6">
+    <div className="fixed inset-x-2 bottom-2 z-20 flex flex-col gap-3 rounded-2xl border border-(--base-green)/40 bg-background p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-foreground shadow-2xl">
       <Drawer>
-        <DrawerTrigger>
-          {" "}
-          <div className="flex items-center gap-2 w-full justify-center absolute h-16.5 -top-3.5">
-            <p className="text-[12px] text-(--base-green)">مشاهده سبد</p>
-            <ChevronUp className="size-5" />
-          </div>
-        </DrawerTrigger>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="flex flex-wrap items-center gap-1.5 text-(--secondary-text)"><WalletCardsIcon className="size-4 text-(--base-green)" aria-hidden="true" />موجودی کیف پول <strong className="text-foreground">{walletBalance === null ? "نامشخص" : walletBalance.toLocaleString("fa-IR") + " تومان"}</strong></span>
+          <DrawerTrigger className="flex items-center gap-1 py-1 text-(--base-green)">مشاهده سبد ({totalCount.toLocaleString("fa-IR")})<ChevronUp className="size-4" /></DrawerTrigger>
+        </div>
         <DrawerContent className="data-[vaul-drawer-direction=bottom]:h-[92dvh] data-[vaul-drawer-direction=bottom]:max-h-[92dvh]">
           <DrawerDescription className="sr-only">
             جزئیات غذاهای انتخاب‌شده، موجودی کیف پول و مبلغ کل رزرو
@@ -74,36 +71,7 @@ function FoodReserveCardMobile({
                 className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
               >
                 {reserveCart.length !== 0 ? (
-                  <ReserveCartItems items={sortedReserveCart} /> /*
-                  sortedReserveCart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="bg-(--light-green) p-2 rounded-full">
-                          <ForkKnife className="text-(--base-green)" />
-                        </div>
-                        <div className="flex flex-col gap-1 items-start text-sm">
-                          <p>{item.name}</p>
-                          <span>
-                            {item.day} {item.jalali_date}
-                          </span>
-                          <span>{item.count} عدد</span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        className="flex items-center gap-1 text-sm text-red-400"
-                        onClick={() =>
-                          dispatch(removeFromReserveBasket({ id: item.id }))
-                        }
-                      >
-                        <Trash2Icon className="text-red-400 size-4" />
-                        <span>حذف</span>
-                      </Button>
-                    </div>
-                  )) */
+                  <ReserveCartItems items={sortedReserveCart} />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center">
                     <ShoppingBasketIcon className="size-12 text-(--base-green)" />
@@ -132,12 +100,7 @@ function FoodReserveCardMobile({
                         : `${walletBalance.toLocaleString()} تومان`}
                     </strong>
                   </div>
-                  {/* <div className="flex items-center justify-between pt-3">
-              <p className="">جمع تعداد</p>
-              <span className="flex items-center gap-7 text-sm md:text-base">
-                {1} {"پرس"}
-              </span>
-            </div> */}
+
                   <div className="flex items-center justify-between pt-3">
                     <p className="">مبلغ کل</p>
                     <span className="flex items-center gap-7 text-sm md:text-base">
@@ -166,51 +129,8 @@ function FoodReserveCardMobile({
         </DrawerContent>
       </Drawer>
 
-      <div className="w-full flex flex-col gap-1 px-3">
-        <div className="">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-(--secondary-text)">
-              <WalletCardsIcon
-                aria-hidden="true"
-                className="size-4 text-(--base-green)"
-              />
-              موجودی کیف پول
-            </span>
-            <strong>
-              {walletBalance === null
-                ? "نامشخص"
-                : `${walletBalance.toLocaleString()} تومان`}
-            </strong>
-          </div>
-          {/* <div className="flex items-center justify-between pt-3">
-              <p className="">جمع تعداد</p>
-              <span className="flex items-center gap-7 text-sm md:text-base">
-                {1} {"پرس"}
-              </span>
-            </div> */}
-          <div className="flex items-center justify-between pt-3">
-            <p className="">مبلغ کل</p>
-            <span className="flex items-center gap-7 text-sm md:text-base">
-              {totalPrice.toLocaleString()}
-
-              {"تومان"}
-            </span>
-          </div>
-          {/* <div className="flex items-center justify-between pt-3">
-            <p className="text-[12px]">تعداد کل</p>
-            <span className="flex items-center gap-7 text-sm">
-              {totalCount} عدد
-            </span>
-          </div> */}
-        </div>
-        <Button
-          className="w-full dark:bg-(--base-green) dark:text-white"
-          size="lg"
-          onClick={sendDataToApi}
-        >
-          ثبت و نهایی کردن رزرو
-        </Button>
-      </div>
+      <div className="flex items-center justify-between text-sm"><span>مبلغ کل</span><strong>{totalPrice.toLocaleString("fa-IR")} تومان</strong></div>
+      <Button className="min-h-12 w-full dark:bg-(--base-green) dark:text-white" size="lg" onClick={sendDataToApi}>ثبت و نهایی کردن رزرو</Button>
     </div>
   );
 }

@@ -14,7 +14,7 @@ import {
   updateReserveCart,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
-import type { ReserveCartItem, UnreviewedReservation } from "../types";
+import type { UnreviewedReservation } from "../types";
 import { useRouter } from "next/navigation";
 import {
   OPEN_WALLET_CHARGE_GUIDE_EVENT,
@@ -44,7 +44,7 @@ function ClientReservePage({
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const reserveCart = useSelector(reserveSelectItems) as ReserveCartItem[];
+  const reserveCart = useSelector(reserveSelectItems);
   const isMobile = useDetectMobile();
 
   const firstReservableDate = useMemo(() => {
@@ -85,8 +85,7 @@ function ClientReservePage({
     [activeReserveCart],
   );
   const totalCount = useMemo(
-    () =>
-      activeReserveCart.reduce((total, item) => total + item.count, 0),
+    () => activeReserveCart.reduce((total, item) => total + item.count, 0),
     [activeReserveCart],
   );
   const sortedReserveCart = useMemo(() => {
@@ -141,9 +140,9 @@ function ClientReservePage({
   };
 
   return (
-    <div className="flex gap-6 w-full">
+    <div className="flex w-full items-start gap-5 px-2 md:px-5 xl:gap-8">
       <ReservationFeedbackPrompt reservations={unreviewedReservations} />
-      <div className="w-full md:basis-8/12 mx-2 md:mr-6">
+      <div className="min-w-0 flex-1">
         <FoodReserveTabs reserveList={reserveList} />
       </div>
       {isMobile ? (
@@ -156,7 +155,7 @@ function ClientReservePage({
           walletBalance={walletBalance}
         />
       ) : (
-        <div className="basis-4/12 w-full ml-6 border-r">
+        <div className="sticky top-25 w-[32%] min-w-64 max-w-sm shrink-0 self-start">
           <FoodReserveCart
             reserveCart={activeReserveCart}
             sortedReserveCart={sortedReserveCart}

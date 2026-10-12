@@ -12,7 +12,7 @@ import {
 import { Trash2Icon } from "lucide-react";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { ReserveCartItem, ReserveFoodType } from "../types";
+import type { ReserveFoodType } from "../types";
 
 interface FoodReserveInvoiceProps {
   food_id: number;
@@ -27,6 +27,7 @@ interface FoodReserveInvoiceProps {
   type: ReserveFoodType;
   type_fa: string;
   reservedFoodDay: boolean;
+  reserveLabel?: string;
 }
 
 function FoodReserveInvoice({
@@ -42,12 +43,13 @@ function FoodReserveInvoice({
   type,
   type_fa,
   reservedFoodDay,
+  reserveLabel = "رزرو",
 }: FoodReserveInvoiceProps) {
   const dispatch = useDispatch();
 
   // مستقیم از ریداکس
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
-  const reserveItems = useSelector(reserveSelectItems) as ReserveCartItem[];
+  const reserveItems = useSelector(reserveSelectItems);
   const isSide = type === "drink" || type === "appetizer";
   const hasMainFoodForDay = reservedFoodDay || reserveItems.some(
     (item) =>
@@ -74,7 +76,7 @@ function FoodReserveInvoice({
   if (MaxQuantity === 0) {
     return (
       <Button
-        className="max-w-2xs"
+        className="h-auto min-h-10 w-full whitespace-normal px-2 py-2 text-xs sm:text-sm"
         disabled={true}
         onClick={() => {
           dispatch(
@@ -93,7 +95,7 @@ function FoodReserveInvoice({
   if (countInput <= 0)
     return (
       <Button
-        className="max-w-2xs dark:bg-(--base-green) dark:text-white"
+        className="h-auto min-h-10 w-full whitespace-normal px-2 py-2 text-xs sm:text-sm dark:bg-(--base-green) dark:text-white"
         disabled={!isReserve || (isSide && !hasMainFoodForDay)}
         onClick={() => {
           dispatch(
@@ -106,7 +108,7 @@ function FoodReserveInvoice({
       >
         {isSide && !hasMainFoodForDay
           ? "ابتدا غذای اصلی این روز را انتخاب کنید"
-          : "رزرو این مورد"}
+          : reserveLabel}
       </Button>
     );
 
@@ -115,11 +117,11 @@ function FoodReserveInvoice({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-[14px] text-[var(--base-gray)]">
           <div
-            className={`border rounded-md shadow-md flex items-center justify-between gap-3`}
+            className={`min-h-10 w-full border rounded-md shadow-md flex items-center justify-between gap-1`}
           >
             <Button
               variant={"ghost"}
-              className="border-none!"
+              className="border-none! px-2 sm:px-3"
               disabled={countInput >= MaxQuantity ? true : false}
               onClick={() => {
                 dispatch(incrementReserveCount(weekly_menu_id));
@@ -147,7 +149,7 @@ function FoodReserveInvoice({
 
             <Button
               variant={"ghost"}
-              className="border-none!"
+              className="border-none! px-2 sm:px-3"
               disabled={countInput <= 0}
               onClick={() => {
                 if (countInput - 1 === 0) {

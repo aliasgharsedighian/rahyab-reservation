@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { DirectionProvider } from "@/components/ui/direction";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  ShoppingBasketIcon,
-  WalletCardsIcon,
-} from "lucide-react";
+import { ShoppingBasketIcon, WalletCardsIcon } from "lucide-react";
 import type { ReserveCartItem } from "../types";
 import ReserveCartItems from "./ReserveCartItems";
 
@@ -19,118 +14,29 @@ interface FoodReserveCartProps {
   walletBalance: number | null;
 }
 
-function FoodReserveCart({
-  reserveCart,
-  sortedReserveCart,
-  totalPrice,
-  totalCount,
-  sendDataToApi,
-  walletBalance,
-}: FoodReserveCartProps) {
+export default function FoodReserveCart({ reserveCart, sortedReserveCart, totalPrice, totalCount, sendDataToApi, walletBalance }: FoodReserveCartProps) {
   return (
-    <div className="sticky top-20">
-      <div className="p-2 rounded-t-md flex items-center gap-2">
-        <ShoppingBasketIcon className="size-6 text-(--base-green)" />
-        <p className="font-bold">سبد رزرو شما</p>
-      </div>
-      <div className="mx-3 mb-2 flex items-center justify-between rounded-xl border border-(--base-green)/20 bg-(--light-green) p-3">
-        <div className="flex items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-(--base-green)/15 text-(--base-green)">
-            <WalletCardsIcon aria-hidden="true" className="size-5" />
-          </span>
-          <span className="text-sm text-(--secondary-text)">
-            موجودی کیف پول
-          </span>
-        </div>
-        <strong className="text-sm text-foreground">
-          {walletBalance === null
-            ? "نامشخص"
-            : `${walletBalance.toLocaleString()} تومان`}
-        </strong>
-      </div>
-      <DirectionProvider dir="rtl">
-        <ScrollArea
-          style={{ maxHeight: "calc(100vh - 240px)" }}
-          className="h-auto  overflow-auto"
-        >
-          <div
-            className={`min-h-48 flex flex-col gap-3 p-3 ${reserveCart.length !== 0 ? "justify-start" : "justify-center"}`}
-          >
-            {reserveCart.length !== 0 ? (
-              <ReserveCartItems items={sortedReserveCart} /> /*
-              sortedReserveCart.map((item) => (
-                <div
-                  key={item.id}
-                  className="text-sm lg:text-base flex items-start justify-between border-b pb-2 last:border-none"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="bg-(--light-green) p-2 rounded-full">
-                      <ForkKnife className="text-(--base-green)" />
-                    </div>
-                    <div className="flex flex-col gap-1 items-start text-sm">
-                      <p>{item.name}</p>
-                      <span>
-                        {item.day} {item.jalali_date}
-                      </span>
-                      <span>{item.count} عدد</span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-1 text-sm text-red-400"
-                    onClick={() =>
-                      dispatch(removeFromReserveBasket({ id: item.id }))
-                    }
-                  >
-                    <Trash2Icon className="text-red-400 size-4" />
-                    <span>حذف</span>
-                  </Button>
-                </div>
-              )) */
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center">
-                <ShoppingBasketIcon className="size-12 text-(--base-green)" />
-                <p className="text-(--secondary-text)">سبد شما خالی است</p>
-              </div>
-            )}
+    <section aria-label="سبد رزرو شما" className="flex h-[calc(100dvh-8rem)] min-h-80 flex-col overflow-hidden rounded-2xl border border-(--base-green)/30 bg-zinc-50/70 shadow-sm dark:bg-zinc-900/50">
+      <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
+        <ShoppingBasketIcon className="size-5 text-(--base-green)" aria-hidden="true" />
+        <h2 className="text-sm font-bold">سبد رزرو شما</h2>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" tabIndex={0} aria-label="غذاهای سبد رزرو">
+        {reserveCart.length ? <ReserveCartItems items={sortedReserveCart} /> : (
+          <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 px-3 text-center text-sm text-(--secondary-text)">
+            <ShoppingBasketIcon className="size-9 text-(--base-green)" aria-hidden="true" />سبد رزرو شما خالی است.
           </div>
-        </ScrollArea>
-      </DirectionProvider>
-      {reserveCart.length !== 0 ? (
-        <div className="w-full flex flex-col gap-4 px-3">
-          <div className="border-t">
-            {/* <div className="flex items-center justify-between pt-3">
-              <p className="">جمع تعداد</p>
-              <span className="flex items-center gap-7 text-sm md:text-base">
-                {1} {"پرس"}
-              </span>
-            </div> */}
-            <div className="flex items-center justify-between pt-3">
-              <p className="">مبلغ کل</p>
-              <span className="flex items-center gap-7 text-sm md:text-base">
-                {totalPrice.toLocaleString()}
-
-                {"تومان"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between pt-3">
-              <p className="text-[12px]">تعداد کل</p>
-              <span className="flex items-center gap-7 text-sm">
-                {totalCount} عدد
-              </span>
-            </div>
-          </div>
-          <Button
-            className="w-full dark:bg-(--base-green) dark:text-white"
-            size="lg"
-            onClick={sendDataToApi}
-          >
-            ثبت و نهایی کردن رزرو
-          </Button>
+        )}
+      </div>
+      <footer className="flex shrink-0 flex-col gap-3 border-t p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-(--base-green)/20 bg-(--light-green) p-2.5 text-xs">
+          <span className="flex items-center gap-1.5 text-(--secondary-text)"><WalletCardsIcon className="size-4 text-(--base-green)" aria-hidden="true" />موجودی کیف پول</span>
+          <strong>{walletBalance === null ? "نامشخص" : walletBalance.toLocaleString("fa-IR") + " تومان"}</strong>
         </div>
-      ) : null}
-    </div>
+        <div className="flex items-center justify-between text-sm"><span>مبلغ کل</span><strong>{totalPrice.toLocaleString("fa-IR")} تومان</strong></div>
+        <div className="flex items-center justify-between text-xs"><span>تعداد کل</span><span>{totalCount.toLocaleString("fa-IR")} عدد</span></div>
+        <Button className="h-auto min-h-10 w-full whitespace-normal dark:bg-(--base-green) dark:text-white" disabled={reserveCart.length === 0} onClick={sendDataToApi}>ثبت و نهایی کردن رزرو</Button>
+      </footer>
+    </section>
   );
 }
-
-export default FoodReserveCart;
