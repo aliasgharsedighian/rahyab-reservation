@@ -4,7 +4,7 @@ import { apiClient } from "@/lib/api/client";
 
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
-import useDetectMobile from "@/app/components/hooks/DetectMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +14,7 @@ import {
   updateReserveCart,
 } from "@/redux/features/reserveBasketSlice";
 import { toast } from "sonner";
-import type { UnreviewedReservation } from "../types";
+import type { ReserveCartItem, UnreviewedReservation } from "../types";
 import { useRouter } from "next/navigation";
 import {
   OPEN_WALLET_CHARGE_GUIDE_EVENT,
@@ -48,7 +48,7 @@ function ClientReservePage({
   const [reservationSucceeded, setReservationSucceeded] = useState(false);
 
   const reserveCart = useSelector(reserveSelectItems);
-  const isMobile = useDetectMobile();
+  const isMobile = useIsMobile();
 
   const firstReservableDate = useMemo(() => {
     for (const week of reserveList?.weeks ?? []) {
@@ -62,29 +62,42 @@ function ClientReservePage({
     return null;
   }, [reserveList]);
 
+  // Build the menu index once per API response, rather than on every quantity click.
+  const menuItems = useMemo(() => {
+    const entries = new Map<string, Pick<ReserveCartItem, "type" | "type_fa" | "reserved_food_day">>();
+    for (const week of reserveList?.weeks ?? []) {
+      for (const day of week.days) {
+        const reservedMain = hasReservedMainFoodForDay(day);
+        for (const group of day.foods) {
+          for (const food of group.items) {
+            entries.set(String(food.weekly_menu_id), {
+              type: group.type, type_fa: group.type_fa, reserved_food_day: reservedMain,
+            });
+          }
+        }
+      }
+    }
+    return entries;
+  }, [reserveList]);
+
   const activeReserveCart = useMemo(() => {
-    // Restore metadata for baskets persisted before type/date reservation fields existed.
-    const menuItems = new Map((reserveList?.weeks ?? []).flatMap((week) =>
-      week.days.flatMap((day) => day.foods.flatMap((group) => group.items.map((food) =>
-        [String(food.weekly_menu_id), { type: group.type, type_fa: group.type_fa,
-          reserved_food_day: hasReservedMainFoodForDay(day) }] as const,
-      ))),
-    ));
     const currentItems = reserveCart.map((item) => {
       const metadata = menuItems.get(String(item.id));
-      return metadata ? { ...item, ...metadata } : item;
+      if (!metadata || (item.type === metadata.type && item.type_fa === metadata.type_fa &&
+        item.reserved_food_day === metadata.reserved_food_day)) return item;
+      return { ...item, ...metadata };
     }).filter((item) => {
       if (firstReservableDate === null) return true;
       const itemDate = Date.parse(item.date);
       return Number.isNaN(itemDate) || itemDate >= firstReservableDate;
     });
-    return removeOrphanedSides(currentItems);
-  }, [firstReservableDate, reserveCart, reserveList]);
+    const items = removeOrphanedSides(currentItems);
+    return items.length === reserveCart.length && items.every((item, index) => item === reserveCart[index])
+      ? reserveCart : items;
+  }, [firstReservableDate, reserveCart, menuItems]);
 
   useEffect(() => {
-    if (JSON.stringify(activeReserveCart) !== JSON.stringify(reserveCart)) {
-      dispatch(updateReserveCart(activeReserveCart));
-    }
+    if (activeReserveCart !== reserveCart) dispatch(updateReserveCart(activeReserveCart));
   }, [activeReserveCart, dispatch, reserveCart]);
 
   const totalPrice = useMemo(

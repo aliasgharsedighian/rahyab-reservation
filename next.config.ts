@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      { protocol: "https", hostname: "app.foodnix.ir", pathname: "/storage/foods/**" },
       {
         protocol: "http",
         hostname: "panel.bitnasb.ir",

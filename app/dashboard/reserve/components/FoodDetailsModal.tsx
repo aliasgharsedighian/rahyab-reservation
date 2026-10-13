@@ -12,6 +12,7 @@ import { RatingStars } from "@/components/ui/rating-stars";
 import { Spinner } from "@/components/ui/spinner";
 import type { FoodFeedbackData, SelectedReserveFood } from "../types";
 import FoodReserveInvoice from "./FoodReserveInvoice";
+import ReserveFoodImage from "./ReserveFoodImage";
 import { hasReservedMainFoodForDay } from "../cartRules";
 
 interface FoodDetailsModalProps {
@@ -56,8 +57,7 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3 sm:px-5">
       <div className="relative mb-3 flex aspect-[4/3] max-h-[45dvh] items-center justify-center overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={food.name} className="size-full object-cover" />
+          <ReserveFoodImage src={imageUrl} alt={food.name} sizes="(max-width: 767px) 100vw, 640px" />
         ) : <UtensilsIcon className="size-16 text-(--secondary-text)" aria-hidden="true" />}
         {food.reserved_count > 0 ? (
           <span className="absolute inset-x-1 top-2 flex items-center justify-center gap-1 rounded-lg border border-(--base-green)/30 bg-background/95 px-1.5 py-1.5 text-[10px] font-semibold text-(--base-green) sm:text-xs">

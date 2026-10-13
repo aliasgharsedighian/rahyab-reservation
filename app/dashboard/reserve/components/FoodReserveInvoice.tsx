@@ -10,7 +10,7 @@ import {
   reserveSelectItems,
 } from "@/redux/features/reserveBasketSlice";
 import { Trash2Icon } from "lucide-react";
-import React from "react";
+import { memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { hasMainFoodForDate, isConfirmedReservation, isSideFood } from "../cartRules";
 import type { ReserveFoodType } from "../types";
@@ -50,9 +50,9 @@ function FoodReserveInvoice({
 
   // مستقیم از ریداکس
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
-  const reserveItems = useSelector(reserveSelectItems);
   const isSide = isSideFood(type);
-  const hasMainFoodForDay = hasMainFoodForDate(reserveItems, date, hasReservedMainFood);
+  const hasMainFoodForDay = useSelector((state: Parameters<typeof reserveSelectItems>[0]) =>
+    !isSide || hasMainFoodForDate(reserveSelectItems(state), date, hasReservedMainFood));
 
   const itemToBasket = {
     id: weekly_menu_id,
@@ -179,4 +179,4 @@ function FoodReserveInvoice({
   );
 }
 
-export default FoodReserveInvoice;
+export default memo(FoodReserveInvoice);

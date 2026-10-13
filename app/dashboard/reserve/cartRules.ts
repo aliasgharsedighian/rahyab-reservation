@@ -27,6 +27,8 @@ export function hasMainFoodForDate(
 }
 
 export function removeOrphanedSides(items: ReserveCartItem[]): ReserveCartItem[] {
+  const mainDates = new Set(items.filter((item) => item.count > 0 && isMainFoodType(item.type))
+    .map((item) => item.date));
   return items.filter((item) => !isSideFood(item.type) ||
-    hasMainFoodForDate(items, item.date, item.reserved_food_day));
+    isConfirmedReservation(item.reserved_food_day) || mainDates.has(item.date));
 }
