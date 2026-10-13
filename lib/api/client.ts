@@ -2,6 +2,7 @@
 
 import getAuthTokenAction from "@/actions/getAuthTokenAction";
 import axios from "axios";
+import { getLogoutUrl, getSessionFailure, type SessionFailure } from "./session";
 
 let isRedirectingToLogin = false;
 
@@ -22,12 +23,15 @@ export function clearClientSession() {
   }
 }
 
-function redirectToLogin(): never {
+function redirectToLogin(reason: SessionFailure = "expired"): never {
   clearClientSession();
 
   if (!isRedirectingToLogin) {
     isRedirectingToLogin = true;
-    window.location.replace("/auth/logout");
+    window.location.replace(getLogoutUrl(
+      reason,
+      window.location.pathname + window.location.search + window.location.hash,
+    ));
   }
 
   throw new UnauthorizedError();
@@ -79,15 +83,17 @@ apiClient.interceptors.request.use(async (config) => {
 
 apiClient.interceptors.response.use(
   (response) => {
-    if (response.status === 401) {
-      redirectToLogin();
+    const failure = getSessionFailure(response.status, response.data);
+    if (failure) {
+      redirectToLogin(failure);
     }
 
     return response;
   },
   (error) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      redirectToLogin();
+    if (axios.isAxiosError(error) && error.response) {
+      const failure = getSessionFailure(error.response.status, error.response.data);
+      if (failure) redirectToLogin(failure);
     }
 
     return Promise.reject(error);

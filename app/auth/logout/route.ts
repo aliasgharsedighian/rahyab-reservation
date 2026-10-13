@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getLoginUrl } from "@/lib/api/session";
 
-export function GET() {
-  // Keep this location relative so deployments behind a reverse proxy do not
-  // leak the internal Next.js origin (for example localhost:3003).
+export function GET(request: NextRequest) {
+  const reason = request.nextUrl.searchParams.get("session") === "disabled"
+    ? "disabled" : "expired";
+  // Keep Location relative for deployments behind a reverse proxy.
   const response = new NextResponse(null, {
     status: 307,
     headers: {
-      Location: "/login?session=expired",
+      Location: getLoginUrl(reason, request.nextUrl.searchParams.get("redirectTo")),
+      "Cache-Control": "no-store",
     },
   });
   response.cookies.delete("user_token");
-
   return response;
 }

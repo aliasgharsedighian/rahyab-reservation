@@ -27,6 +27,7 @@ import { ShieldCheckIcon } from "lucide-react";
 import { RulesModal } from "../components/RulesModal";
 import { useRouter } from "next/navigation";
 import { clearClientSession } from "@/lib/api/client";
+import { getSafeRedirectTo } from "@/lib/api/session";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -89,7 +90,10 @@ function LoginPage() {
       dispatch(logIn(result.data.user));
       loginForm.reset();
       toast.success(result.message || "ورود با موفقیت انجام شد.", { id: toastId });
-      router.replace("/dashboard/reserve?walletGuide=1");
+      const redirectTo = getSafeRedirectTo(
+        new URLSearchParams(window.location.search).get("redirectTo"),
+      );
+      router.replace(redirectTo ?? "/dashboard/reserve?walletGuide=1");
     } catch (error) {
       console.error("Login failed", error);
       toast.error("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", { id: toastId });

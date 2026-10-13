@@ -1,38 +1,31 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { CURRENT_PAGE_HEADER, getLoginUrl, getSafeRedirectTo } from "@/lib/api/session";
 
 export function proxy(req: NextRequest) {
-  const token = req.cookies.get("user_token")?.value || "";
+  const token = req.cookies.get("user_token")?.value;
   const { pathname } = req.nextUrl;
 
-  // console.log(Boolean(token));
-
-  if (!token) {
-    // If the token is invalid and user already on the sign-in page,
-    // redirect to /sign-in
-    if (pathname.startsWith("/dashboard")) {
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = "/login";
-      loginUrl.search = "";
-      return NextResponse.redirect(loginUrl);
-    }
-  } else {
-    // If token is valid and trying to access sign-in, redirect to dashboard
-    if (pathname === "/login") {
-      const dashboardUrl = req.nextUrl.clone();
-      dashboardUrl.pathname = "/dashboard/reserve";
-      dashboardUrl.search = "";
-      return NextResponse.redirect(dashboardUrl);
-    }
+  if (!token && pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL(
+      getLoginUrl("expired", pathname + req.nextUrl.search),
+      req.url,
+    ));
   }
 
-  return NextResponse.next();
+  if (token && pathname === "/login") {
+    return NextResponse.redirect(new URL(
+      getSafeRedirectTo(req.nextUrl.searchParams.get("redirectTo")) ?? "/dashboard/reserve",
+      req.url,
+    ));
+  }
+
+  // Overwrite any client-supplied value before forwarding to Server Components.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set(CURRENT_PAGE_HEADER, pathname + req.nextUrl.search);
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*", // Protect dashboard route and sub-routes
-    "/login/:path*", //protect login route and sub-routes
-    // Add more routes to protect
-  ],
+  matcher: ["/dashboard/:path*", "/login/:path*"],
 };
