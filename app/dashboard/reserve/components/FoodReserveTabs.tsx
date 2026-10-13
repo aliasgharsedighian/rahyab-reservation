@@ -173,7 +173,7 @@ const FoodDay = memo(function FoodDay({ day, onOpenFood, initial }: {
         <span className="h-7 w-1 rounded-full bg-(--base-green)" />
         <strong>{day.day_name}</strong><span>{day.jalali_date}</span>
         <span className="mr-auto rounded-lg bg-zinc-100 px-2 py-1 text-[11px] dark:bg-zinc-700">{count.toLocaleString("fa-IR")} غذا</span>
-        <ChevronDownIcon className="size-4 shrink-0 text-(--base-green) transition-transform group-data-[state=open]/day:rotate-180" />
+        <ChevronDownIcon className="size-4 shrink-0 text-(--base-green) group-data-[state=open]/day:rotate-180" />
       </CollapsibleTrigger>
     }>
     {mainGroups.length ? mainGroups.map((group, index) => <div key={group.type} className="@container/foods grid gap-3">
@@ -186,7 +186,7 @@ const FoodDay = memo(function FoodDay({ day, onOpenFood, initial }: {
         <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 p-3 text-right md:p-4">
           <span><span className="flex items-center gap-2 font-bold"><UtensilsIcon className="size-4 text-(--base-green)" />مخلفات اختیاری</span>
           <span className="mt-1 block text-xs text-(--secondary-text)">{hasMainFood ? "برای غذای اصلی این روز، مخلفات دلخواهتان را انتخاب کنید." : "برای مشاهده نوشیدنی‌ها و پیش‌غذاها کلیک کنید."}</span></span>
-          <ChevronDownIcon className="size-5 shrink-0 text-(--base-green) transition-transform group-data-[state=open]:rotate-180" />
+          <ChevronDownIcon className="size-5 shrink-0 text-(--base-green) group-data-[state=open]:rotate-180" />
         </CollapsibleTrigger>
       }>
       <div className="grid gap-5 border-t border-(--base-green)/15 pt-4">
