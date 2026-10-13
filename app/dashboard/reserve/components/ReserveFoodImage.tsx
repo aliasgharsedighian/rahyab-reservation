@@ -11,15 +11,12 @@ interface ReserveFoodImageProps {
 
 function ReserveFoodImage({ src, alt, sizes }: ReserveFoodImageProps) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
-  let canOptimize = src.startsWith("/") && !src.startsWith("//");
-  try {
-    const url = new URL(src);
-    canOptimize = url.protocol === "https:" && url.hostname === "app.foodnix.ir" &&
-      url.pathname.startsWith("/storage/foods/");
-  } catch { /* Relative images are served by this application. */ }
+  // The API host can resolve to a private address on the deployment network.
+  // Load remote images directly; never probe the optimizer and then retry them.
+  const canOptimize = src.startsWith("/") && !src.startsWith("//");
 
   if (!canOptimize || failedSource === src) return (
-    // Keep API images usable if an external host or the image optimizer is unavailable.
+    // The browser reuses the original URL and its normal HTTP image cache.
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} loading="lazy" decoding="async" className="size-full object-cover" />
   );
