@@ -7,8 +7,8 @@ import WalletChargeGuideModal from "./components/WalletChargeGuideModal";
 import { Suspense } from "react";
 
 export const metadata = {
-  title: " رزرو غذا - پیشخوان",
-  description: "پیشخوان ",
+  title: "پیشخوان | فودنیکس",
+  description: "پیشخوان فودنیکس؛ رزرو و مدیریت غذای کارکنان",
 };
 export default async function RootLayout({
   children,

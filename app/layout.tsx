@@ -32,14 +32,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "رزرو غذای کارمندان",
-  applicationName: "سامانه رزرو غذای کارکنان",
-  description: "رزرو و مدیریت غذای کارکنان",
+  title: "فودنیکس",
+  applicationName: "فودنیکس",
+  description: "فودنیکس؛ رزرو و مدیریت غذای کارکنان",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "رزرو غذا",
+    title: "فودنیکس",
   },
   formatDetection: {
     telephone: false,

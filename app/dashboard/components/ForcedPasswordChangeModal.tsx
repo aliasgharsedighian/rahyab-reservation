@@ -119,7 +119,7 @@ export default function ForcedPasswordChangeModal({
               تغییر رمز عبور الزامی است
             </DialogTitle>
             <DialogDescription className="leading-7 text-(--secondary-text)">
-              به‌دلیل مسائل امنیتی، برای ادامه استفاده از سامانه باید رمز عبور
+              به‌دلیل مسائل امنیتی، برای ادامه استفاده از فودنیکس باید رمز عبور
               خود را تغییر دهید. تا زمان ثبت رمز جدید امکان بستن این پنجره وجود
               ندارد.
             </DialogDescription>

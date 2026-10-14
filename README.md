@@ -1,3 +1,7 @@
+# فودنیکس (foodnix)
+
+فودنیکس، سامانه رزرو و مدیریت غذای کارکنان است.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

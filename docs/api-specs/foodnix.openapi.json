@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Food Reservation API",
-    "description": "API documentation for Food Reservation project",
+    "title": "foodnix API",
+    "description": "API documentation for foodnix",
     "version": "1.0.0"
   },
   "paths": {

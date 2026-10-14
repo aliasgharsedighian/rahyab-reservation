@@ -1,6 +1,6 @@
 export type SessionFailure = "expired" | "disabled";
 
-export const CURRENT_PAGE_HEADER = "x-rahyab-current-page";
+export const CURRENT_PAGE_HEADER = "x-foodnix-current-page";
 
 /** Shared by Axios and server fetch, including APIs using HTTP 200 envelopes. */
 export function getSessionFailure(httpStatus: number, data: unknown): SessionFailure | null {
@@ -25,9 +25,9 @@ export function getSafeRedirectTo(value: string | null | undefined): string | nu
   }
 
   try {
-    const url = new URL(value, "https://rahyab.invalid");
+    const url = new URL(value, "https://foodnix.invalid");
     if (
-      url.origin !== "https://rahyab.invalid" ||
+      url.origin !== "https://foodnix.invalid" ||
       !(url.pathname === "/dashboard" || url.pathname.startsWith("/dashboard/"))
     ) return null;
 

@@ -53,8 +53,8 @@ const rules = [
   },
   {
     icon: AlertTriangleIcon,
-    title: "استفاده از سامانه",
-    description: "هرگونه استفاده غیرمجاز از سامانه، پیگرد قانونی خواهد داشت.",
+    title: "استفاده از فودنیکس",
+    description: "هرگونه استفاده غیرمجاز از فودنیکس، پیگرد قانونی خواهد داشت.",
   },
 ];
 
@@ -72,14 +72,14 @@ export function RulesModal({ open, onOpenChange }: RulesModalProps) {
           </DialogHeader>
 
           <p className="mt-3 text-center text-sm leading-6 text-white/90">
-            لطفاً پیش از استفاده از سامانه، قوانین زیر را مطالعه کنید.
+            لطفاً پیش از استفاده از فودنیکس، قوانین زیر را مطالعه کنید.
           </p>
         </div>
 
         {/* Body */}
         <div className="p-4 md:p-6">
           <div className="mb-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-7 text-emerald-800 dark:bg-(--light-green) dark:text-emerald-300">
-            استفاده از سامانه رزرو غذا به منزله پذیرش کامل قوانین و مقررات است.
+            استفاده از فودنیکس به منزله پذیرش کامل قوانین و مقررات است.
           </div>
 
           <div className="max-h-75 lg:max-h-95 space-y-3 overflow-y-auto pr-1">

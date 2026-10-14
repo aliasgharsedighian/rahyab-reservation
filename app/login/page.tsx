@@ -117,7 +117,7 @@ function LoginPage() {
           />
 
           <h1 className="text-2xl font-bold text-foreground mb-3">
-            سیستم رزرو غذای سازمانی
+            فودنیکس
           </h1>
 
           <p className="text-(--secondary-text) leading-7">
@@ -132,7 +132,7 @@ function LoginPage() {
           <Card className="shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-0 rounded-2xl">
             <CardHeader className="text-center space-y-2 pb-6">
               <CardTitle className="text-xl font-bold text-foreground">
-                ورود به حساب کاربری
+                ورود به فودنیکس
               </CardTitle>
               <p className="text-sm text-(--secondary-text)">
                 برای ادامه وارد حساب خود شوید
@@ -168,7 +168,7 @@ function LoginPage() {
                       </strong>
                     </p>
                     <p className="text-(--secondary-text)">
-                      پس از ورود به حساب کاربری، لطفاً برای افزایش امنیت، رمز
+                      پس از ورود به فودنیکس، لطفاً برای افزایش امنیت، رمز
                       عبور خود را تغییر دهید.
                     </p>
                   </div>
@@ -269,7 +269,7 @@ function LoginPage() {
                     disabled={isPendingLogin}
                     className="w-full h-12 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition"
                   >
-                    {isPendingLogin ? "در حال ورود..." : "ورود به سیستم"}
+                    {isPendingLogin ? "در حال ورود..." : "ورود به فودنیکس"}
                   </Button>
                 </form>
               </Form>

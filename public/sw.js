@@ -1,4 +1,6 @@
-const CACHE_PREFIX = "rahyab-pwa-assets-";
+const CACHE_PREFIX = "foodnix-pwa-assets-";
+// Remove caches created before the project was named foodnix.
+const LEGACY_CACHE_PREFIX = "rahyab-pwa-assets-";
 const CACHE_NAME = CACHE_PREFIX + "v2";
 const OFFLINE_URL = "/offline.html";
 const APP_ASSETS = [
@@ -23,7 +25,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+    await Promise.all(keys.filter((key) => (key.startsWith(CACHE_PREFIX) || key.startsWith(LEGACY_CACHE_PREFIX)) && key !== CACHE_NAME)
       .map((key) => caches.delete(key)));
     await self.clients.claim();
   })());
