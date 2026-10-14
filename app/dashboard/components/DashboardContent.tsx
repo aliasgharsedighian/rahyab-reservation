@@ -1,6 +1,7 @@
 "use client";
 
 import { useSidebar } from "@/components/ui/sidebar";
+import PwaPullToRefresh from "./PwaPullToRefresh";
 
 export default function DashboardContent({
   children,
@@ -20,7 +21,7 @@ export default function DashboardContent({
             : "calc(100% - var(--sidebar-width-icon))",
       }}
     >
-      {children}
+      <PwaPullToRefresh>{children}</PwaPullToRefresh>
     </div>
   );
 }

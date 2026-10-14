@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api/client";
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -14,7 +15,7 @@ import type { NotificationItem, NotificationsResponse, MarkNotificationSeenRespo
 
 type NotificationContextType = {
   notificationsData: NotificationItem[];
-  getNotifications: () => Promise<void>;
+  getNotifications: (reportError?: boolean) => Promise<void>;
   markSeenNotification: (notificationId: number) => Promise<void>;
 };
 
@@ -25,19 +26,23 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notificationsData, setNotificationsData] = useState<NotificationItem[]>([]);
 
-  const getNotifications = async () => {
+  const getNotifications = useCallback(async (reportError = false) => {
     try {
       const { data: result, status } = await apiClient.get<NotificationsResponse>(
         "notifications?count=10&page=1&seen=false",
+        { timeout: 15000 },
       );
 
       if (status === 200 && result.status === 200) {
         setNotificationsData(result.data.notifications);
+      } else if (reportError) {
+        throw new Error("Notifications refresh failed");
       }
     } catch (error) {
       console.error(error);
+      if (reportError) throw error;
     }
-  };
+  }, []);
 
   const markSeenNotification = async (notificationId: number) => {
     try {
@@ -57,8 +62,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    getNotifications();
-  }, []);
+    // The state update happens after the awaited API request, never synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void getNotifications();
+  }, [getNotifications]);
 
   return (
     <NotificationContext.Provider
