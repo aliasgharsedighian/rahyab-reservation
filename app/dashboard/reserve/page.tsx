@@ -1,7 +1,4 @@
-import { Suspense } from "react";
-import ReservePageSkeleton from "./components/ReservePageSkeleton";
 import ClientReservePage from "./components/ClientReservePage";
-import DashboardHeader from "../components/DashboardHeader";
 import { getWalletBalance } from "./getWalletBalance";
 import type { UnreviewedReservation, WeeklyMenuResponse } from "./types";
 import { serverApiFetch } from "@/lib/api/server";
@@ -34,7 +31,7 @@ const getReserveList = async () => {
   return reserveList.data ?? null;
 };
 
-async function ReserveMenuContent() {
+export default async function ReservePage() {
   const [reserveList, walletBalance, unreviewedReservations] =
     await Promise.all([
       getReserveList(),
@@ -44,11 +41,4 @@ async function ReserveMenuContent() {
 
   return <ClientReservePage reserveList={reserveList} walletBalance={walletBalance}
     unreviewedReservations={unreviewedReservations} />;
-}
-
-export default function ReservePage() {
-  return <div className="mb-56 flex w-full flex-col gap-6 md:mb-10">
-    <DashboardHeader title="رزرو غذا" stickyHeightVariable="--reserve-header-height" />
-    <Suspense fallback={<ReservePageSkeleton />}><ReserveMenuContent /></Suspense>
-  </div>;
 }
