@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import ReservationListEmpty from "../../components/ReservationListEmpty";
 import { UtensilsIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CancelReservationModal from "./CancelReservationModal";
@@ -13,6 +15,8 @@ interface ReserveUpcomingTableProps {
 }
 
 export default function ReserveUpcomingTable({ reserveUpcoming, revalidateData }: ReserveUpcomingTableProps) {
+  const searchParams = useSearchParams();
+  const hasFilters = ["food_name", "reserve_date_from_jalali", "reserve_date_to_jalali", "status"].some(key => Boolean(searchParams.get(key)));
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const handleOpenModal = (id: number) => { setSelectedId(id); setOpen(true); };
@@ -29,7 +33,7 @@ export default function ReserveUpcomingTable({ reserveUpcoming, revalidateData }
         reservation={reserveUpcoming.find(item => item.id === selectedId)} revalidateData={revalidateData} />
       <ReservationFilters compact />
       {reserveUpcoming.length === 0 ? (
-        <div className="rounded-xl border bg-card p-8 text-center text-sm text-(--secondary-text)">موردی یافت نشد</div>
+        <ReservationListEmpty variant="upcoming" filtered={hasFilters} />
       ) : (
         <>
           <div className="hidden overflow-hidden rounded-xl border @min-[52rem]/upcoming:block">

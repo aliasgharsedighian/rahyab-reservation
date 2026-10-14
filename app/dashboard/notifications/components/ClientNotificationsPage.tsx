@@ -5,6 +5,7 @@ import { BellIcon, BellOff } from "lucide-react";
 import { useNotifications } from "../../context/NotificationContext";
 import NotificationDetails from "./NotificationDetails";
 import type { NotificationItem } from "../types";
+import DashboardEmptyState from "../../components/DashboardEmptyState";
 
 interface Props {
   notificationsData: NotificationItem[];
@@ -30,10 +31,11 @@ export default function ClientNotificationsPage({ notificationsData, revalidateD
         <p className="text-sm text-(--secondary-text)">لیست همه‌ی اعلان‌های شما</p>
       </div>
       {notificationsData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-14 text-(--secondary-text)">
-          <span className="flex size-14 items-center justify-center rounded-full bg-(--light-green) text-(--base-green)"><BellOff className="size-6" /></span>
-          <p className="text-sm">پیامی ندارید</p>
-        </div>
+        <DashboardEmptyState
+          icon={BellOff}
+          title="هنوز اعلانی ندارید"
+          description="اطلاع‌رسانی‌ها و پیام‌های جدید شما در این بخش نمایش داده می‌شوند. هر زمان پیامی دریافت کنید، می‌توانید جزئیات آن را همین‌جا بخوانید."
+        />
       ) : (
         <ul aria-label="فهرست اعلان‌ها" className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
           {notificationsData.map((item) => (

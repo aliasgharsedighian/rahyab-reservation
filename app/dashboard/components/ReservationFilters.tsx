@@ -14,7 +14,15 @@ type DateFilterKey = "reserve_date_from_jalali" | "reserve_date_to_jalali";
 export default function ReservationFilters({ compact = true }: { compact?: boolean } = {}) {
   const foodNameId = useId();
   const { searchParams, updateFilter, clearFilters } = useReservationFilters();
-  const [foodName, setFoodName] = useState(searchParams.get("food_name") || "");
+  const foodNameQuery = searchParams.get("food_name") || "";
+  const [foodName, setFoodName] = useState(foodNameQuery);
+  const [previousFoodNameQuery, setPreviousFoodNameQuery] = useState(foodNameQuery);
+
+  // Keep the search draft in sync when filters are cleared outside the dialog.
+  if (previousFoodNameQuery !== foodNameQuery) {
+    setPreviousFoodNameQuery(foodNameQuery);
+    setFoodName(foodNameQuery);
+  }
   const [dateError, setDateError] = useState<string | null>(null);
   const activeCount = [
     "food_name",

@@ -45,7 +45,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
         notificationsData={notifications?.notifications ?? []}
         revalidateData={revalidateData}
       />
-      <div className="ml-auto">
+      {Boolean(notifications?.notifications.length) && <div className="ml-auto">
         <div className="mr-4">
           <DashboardPagination
             per_page={per_page}
@@ -53,7 +53,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
             posts={notifications?.pagination.total || per_page}
           />
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

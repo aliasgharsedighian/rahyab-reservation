@@ -92,11 +92,11 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
             reserveUpcoming={reserveUpcoming?.items}
             revalidateData={revalidateData}
           />
-          <DashboardPagination
+          {reserveUpcoming.items.length > 0 && <DashboardPagination
             per_page={per_page}
             page={page}
             posts={reserveUpcoming?.pagination.total || per_page}
-          />
+          />}
         </div>
       </div>
     </div>

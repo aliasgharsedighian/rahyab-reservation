@@ -30,6 +30,7 @@ import FoodReserveInvoice from "./FoodReserveInvoice";
 import ReserveFoodImage from "./ReserveFoodImage";
 import ReserveMenuWindow from "./ReserveMenuWindow";
 import ReserveAnimatedPanel from "./ReserveAnimatedPanel";
+import DashboardEmptyState from "../../components/DashboardEmptyState";
 
 export type { FoodReserveList } from "../types";
 
@@ -244,13 +245,13 @@ const FoodDay = memo(function FoodDay({
 }) {
   const { mainGroups, sideGroups, reservedMain, count } = useMemo(() => {
     const mainGroups = day.foods.filter(
-      ({ type }) =>
-        type === "breakfast" || type === "lunch" || type === "dinner",
+      ({ type, items }) =>
+        items.length > 0 && (type === "breakfast" || type === "lunch" || type === "dinner"),
     );
     return {
       mainGroups,
       sideGroups: day.foods.filter(
-        ({ type }) => type === "drink" || type === "appetizer",
+        ({ type, items }) => items.length > 0 && (type === "drink" || type === "appetizer"),
       ),
       reservedMain: hasReservedMainFoodForDay(day),
       count: mainGroups.reduce((total, group) => total + group.items.length, 0),
@@ -301,9 +302,12 @@ const FoodDay = memo(function FoodDay({
           </div>
         ))
       ) : (
-        <div className="rounded-xl bg-zinc-50 p-5 text-center text-sm text-(--secondary-text)">
-          غذای اصلی برای این روز وجود ندارد
-        </div>
+        <DashboardEmptyState
+          compact
+          icon={UtensilsIcon}
+          title="غذای اصلی برای این روز ثبت نشده"
+          description="در حال حاضر غذای اصلی برای این روز در منو نیست. می‌توانید منوی روزهای دیگر را بررسی کنید."
+        />
       )}
       {sideGroups.length ? (
         <ReserveAnimatedPanel
@@ -374,6 +378,16 @@ function FoodReserveTabs({
     setOpen(true);
   }, []);
 
+  if (!reserveList?.weeks.length) {
+    return (
+      <DashboardEmptyState
+        icon={UtensilsIcon}
+        title="منوی غذا در دسترس نیست"
+        description="در حال حاضر منویی برای نمایش وجود ندارد. پس از انتشار برنامه غذایی، می‌توانید غذاهای هر روز را در همین بخش انتخاب و رزرو کنید."
+      />
+    );
+  }
+
   return (
     <>
       {selection ? (
@@ -414,14 +428,20 @@ function FoodReserveTabs({
                 </div>
               ) : null}
               <div className="flex flex-col gap-4 md:gap-6">
-                {week.days.map((day, index) => (
+                {week.days.some(day => day.foods.some(group => group.items.length > 0)) ? week.days.map((day, index) => (
                   <FoodDay
                     key={day.date}
                     day={day}
                     onOpenFood={onOpenFood}
                     initial={index === 0}
                   />
-                ))}
+                )) : (
+                  <DashboardEmptyState
+                    icon={CalendarDaysIcon}
+                    title="برای این هفته غذایی ثبت نشده"
+                    description="هنوز غذایی در منوی این هفته قرار نگرفته است. می‌توانید هفته‌های دیگر را بررسی کنید یا بعداً دوباره به این بخش سر بزنید."
+                  />
+                )}
               </div>
             </TabsContent>
           ) : null}

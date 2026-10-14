@@ -92,11 +92,11 @@ export default async function HistoryReservePage({ searchParams }: Props) {
             reserveHistory={reserveHistory?.items}
             revalidateData={revalidateData}
           />
-          <DashboardPagination
+          {reserveHistory.items.length > 0 && <DashboardPagination
             per_page={per_page}
             page={page}
             posts={reserveHistory?.pagination.total || per_page}
-          />
+          />}
         </div>
       </div>
     </div>
