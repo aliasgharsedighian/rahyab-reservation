@@ -144,8 +144,8 @@ export default function ResponsiveFilters({
           </Button>}
         </DrawerTrigger>
 
-        <DrawerContent className="max-h-[88vh] rounded-t-3xl" dir="rtl">
-          <DrawerHeader className="border-b px-5 pb-4 pt-3 text-right">
+        <DrawerContent className="max-h-[88dvh] rounded-t-3xl" dir="rtl">
+          <DrawerHeader className="shrink-0 border-b px-5 pb-4 pt-3 text-right">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <DrawerTitle className="flex items-center gap-2 text-lg font-bold">
@@ -160,9 +160,9 @@ export default function ResponsiveFilters({
             </div>
           </DrawerHeader>
 
-          <div className="overflow-y-auto px-5 py-5">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">{children}</div>
 
-          <DrawerFooter className="border-t bg-background/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <DrawerFooter className="shrink-0 border-t bg-background/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
             <DrawerClose asChild>
               <Button type="button" className="h-11 w-full rounded-xl">
                 مشاهده نتایج

@@ -7,12 +7,17 @@ import { cn } from "@/lib/utils"
 
 function Drawer({
   handleOnly = true,
+  noBodyStyles = true,
+  disablePreventScroll = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
+  // Radix owns the modal scroll lock; Vaul must not fix/offset the body and scroll to zero.
   return (
     <DrawerPrimitive.Root
       data-slot="drawer"
       handleOnly={handleOnly}
+      noBodyStyles={noBodyStyles}
+      disablePreventScroll={disablePreventScroll}
       {...props}
     />
   )
@@ -66,13 +71,15 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "group/drawer-content fixed z-50 flex h-auto flex-col bg-popover text-sm text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-xl data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-xl data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
+          "group/drawer-content fixed z-50 flex h-auto min-h-0 flex-col overflow-hidden touch-pan-y! bg-popover text-sm text-popover-foreground data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80dvh] data-[vaul-drawer-direction=bottom]:rounded-t-xl data-[vaul-drawer-direction=bottom]:border-t data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:rounded-r-xl data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:rounded-l-xl data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80dvh] data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:border-b data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
           className
         )}
         {...props}
       >
         {showHandle && (
-          <DrawerPrimitive.Handle className="mt-3 shrink-0 touch-none cursor-grab active:cursor-grabbing" />
+          <DrawerPrimitive.Handle
+            className="relative mx-auto my-0 h-11! w-36! shrink-0 touch-none! cursor-grab bg-transparent! opacity-100! active:cursor-grabbing after:pointer-events-none after:absolute after:left-1/2 after:top-1/2 after:h-1.5 after:w-12 after:-translate-x-1/2 after:-translate-y-1/2 after:rounded-full after:bg-muted-foreground/50 [&>[data-vaul-handle-hitarea]]:h-full! [&>[data-vaul-handle-hitarea]]:w-full!"
+          />
         )}
         {children}
       </DrawerPrimitive.Content>
