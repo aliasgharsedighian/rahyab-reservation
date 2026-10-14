@@ -1,0 +1,46 @@
+.calendar {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+}
+
+.calendar :global(.rmdp-wrapper) {
+  max-width: 100%;
+  background: var(--popover) !important;
+  color: var(--popover-foreground);
+  box-shadow: none;
+}
+
+.calendar :global(.rmdp-header-values),
+.calendar :global(.rmdp-day) {
+  color: var(--popover-foreground);
+}
+
+.calendar :global(.rmdp-week-day) {
+  color: var(--base-green);
+}
+
+.calendar :global(.rmdp-day.rmdp-deactive) {
+  color: var(--secondary-text);
+}
+
+.calendar :global(.rmdp-day.rmdp-selected span:not(.highlight)) {
+  background: var(--base-green);
+  color: white;
+  box-shadow: none;
+}
+
+.calendar :global(.rmdp-day:not(.rmdp-day-hidden) span:hover),
+.calendar :global(.rmdp-day.rmdp-today span) {
+  background: var(--light-green);
+  color: var(--base-green);
+}
+
+.calendar :global(.rmdp-arrow) {
+  border-color: var(--base-green);
+}
+
+.calendar :global(.rmdp-arrow-container:hover) {
+  background: var(--light-green);
+  box-shadow: none;
+}
