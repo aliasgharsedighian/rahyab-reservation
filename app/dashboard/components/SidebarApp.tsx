@@ -195,7 +195,7 @@ function SidebarApp() {
         variant="sidebar"
         collapsible="icon"
       >
-        <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21 bg-background">
+        <SidebarHeader className="p-2 gap-0 flex flex-row w-full h-21 shrink-0 bg-background">
           <Link
             href="/dashboard/reserve"
             className={` bg-background w-full py-3 items-center ${
@@ -221,8 +221,8 @@ function SidebarApp() {
             {isMobile ? <XIcon className="size-5" /> : <PanelRight className="size-5" />}
           </Button>
         </SidebarHeader>
-        <SidebarContent className="py-3 bg-background">
-          <SidebarMenu className="w-full flex items-center justify-center">
+        <SidebarContent className="bg-background overflow-x-hidden overflow-y-auto overscroll-y-contain group-data-[collapsible=icon]:overflow-y-auto">
+          <SidebarMenu className="w-full shrink-0 flex items-center justify-center py-3">
             {dashboardList.map((item) =>
               item.accordion ? (
                 !open && !isMobile ? (
@@ -335,81 +335,81 @@ function SidebarApp() {
               ),
             )}
           </SidebarMenu>
+          <SidebarFooter className="mt-auto shrink-0 border-t bg-background pb-[calc(1rem+env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
+            {/* Rules */}
+            <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
+              <SidebarMenuButton
+                className="h-full hover:bg-(--light-green)"
+                asChild
+              >
+                <Button
+                  className="p-3 items-start justify-start gap-4 h-full"
+                  variant="ghost"
+                  onClick={() => setOpenRulesModal(true)}
+                >
+                  <ShieldCheckIcon className="size-5 text-emerald-600" />
+                  <p>قوانین و مقررات</p>
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {/* Contact */}
+            <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
+              <SidebarMenuButton
+                className="h-full hover:bg-(--light-green)"
+                asChild
+              >
+                <Button
+                  className="p-3 items-start justify-start gap-4 h-full"
+                  variant="ghost"
+                  onClick={() => setOpenContactModal(true)}
+                >
+                  <PhoneCallIcon className="size-5 text-sky-600" />
+                  <p>تماس با ما</p>
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {/* Wallet charge guide */}
+            <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
+              <SidebarMenuButton
+                className="h-full hover:bg-(--light-green)"
+                asChild
+              >
+                <Button
+                  className="p-3 items-start justify-start gap-4 h-full"
+                  variant="ghost"
+                  onClick={handleOpenWalletChargeGuide}
+                >
+                  <WalletCardsIcon className="size-5 text-emerald-600" />
+                  <p>راهنمای شارژ کیف پول</p>
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem
+              className={`w-full h-10 hover:text-(--base-green) flex items-center justify-center rounded-md`}
+            >
+              <SidebarMenuButton
+                onClick={() => {
+                  if (isMobile) {
+                    setOpenMobile(false);
+                  } else {
+                    // setOpen(false);
+                  }
+                }}
+                className="h-full hover:bg-(--light-green)"
+                asChild
+              >
+                <Button
+                  className="p-3 items-start justify-start gap-4 h-full text-red-500"
+                  variant="ghost"
+                  onClick={() => setOpenLogoutConfirm(true)}
+                >
+                  <LogOutIcon className="size-5 text-red-500" />
+                  <p>خروج از حساب کاربری</p>
+                </Button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarFooter>
         </SidebarContent>
-        <SidebarFooter className="border-t bg-background pb-[calc(1rem+env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
-          {/* Rules */}
-          <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
-            <SidebarMenuButton
-              className="h-full hover:bg-(--light-green)"
-              asChild
-            >
-              <Button
-                className="p-3 items-start justify-start gap-4 h-full"
-                variant="ghost"
-                onClick={() => setOpenRulesModal(true)}
-              >
-                <ShieldCheckIcon className="size-5 text-emerald-600" />
-                <p>قوانین و مقررات</p>
-              </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          {/* Contact */}
-          <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
-            <SidebarMenuButton
-              className="h-full hover:bg-(--light-green)"
-              asChild
-            >
-              <Button
-                className="p-3 items-start justify-start gap-4 h-full"
-                variant="ghost"
-                onClick={() => setOpenContactModal(true)}
-              >
-                <PhoneCallIcon className="size-5 text-sky-600" />
-                <p>تماس با ما</p>
-              </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          {/* Wallet charge guide */}
-          <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
-            <SidebarMenuButton
-              className="h-full hover:bg-(--light-green)"
-              asChild
-            >
-              <Button
-                className="p-3 items-start justify-start gap-4 h-full"
-                variant="ghost"
-                onClick={handleOpenWalletChargeGuide}
-              >
-                <WalletCardsIcon className="size-5 text-emerald-600" />
-                <p>راهنمای شارژ کیف پول</p>
-              </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem
-            className={`w-full h-10 hover:text-(--base-green) flex items-center justify-center rounded-md`}
-          >
-            <SidebarMenuButton
-              onClick={() => {
-                if (isMobile) {
-                  setOpenMobile(false);
-                } else {
-                  // setOpen(false);
-                }
-              }}
-              className="h-full hover:bg-(--light-green)"
-              asChild
-            >
-              <Button
-                className="p-3 items-start justify-start gap-4 h-full text-red-500"
-                variant="ghost"
-                onClick={() => setOpenLogoutConfirm(true)}
-              >
-                <LogOutIcon className="size-5 text-red-500" />
-                <p>خروج از حساب کاربری</p>
-              </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarFooter>
       </Sidebar>
     </>
   );

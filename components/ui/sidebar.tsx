@@ -189,7 +189,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="touch-pan-y! max-w-[calc(100vw-2rem)] bg-background p-0 text-sidebar-foreground data-[vaul-drawer-direction=right]:w-(--sidebar-width) data-[vaul-drawer-direction=left]:w-(--sidebar-width) data-[vaul-drawer-direction=right]:rounded-none data-[vaul-drawer-direction=left]:rounded-none"
+          className="h-dvh max-h-dvh overflow-hidden touch-pan-y! max-w-[calc(100vw-2rem)] bg-background p-0 text-sidebar-foreground data-[vaul-drawer-direction=right]:w-(--sidebar-width) data-[vaul-drawer-direction=left]:w-(--sidebar-width) data-[vaul-drawer-direction=right]:rounded-none data-[vaul-drawer-direction=left]:rounded-none"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -200,7 +200,7 @@ function Sidebar({
             <DrawerTitle>منوی اصلی</DrawerTitle>
             <DrawerDescription>دسترسی به صفحات حساب کاربری</DrawerDescription>
           </div>
-          <div className="flex h-full min-h-0 w-full flex-col">{children}</div>
+          <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">{children}</div>
         </DrawerContent>
       </Drawer>
     );
