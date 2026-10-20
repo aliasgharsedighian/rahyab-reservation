@@ -28,6 +28,7 @@ import { RulesModal } from "../components/RulesModal";
 import { useRouter } from "next/navigation";
 import { clearClientSession } from "@/lib/api/client";
 import { getSafeRedirectTo } from "@/lib/api/session";
+import { ForgetPasswordModal } from "../components/ForgetPasswordModal";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
 
@@ -36,7 +37,8 @@ const signinFormSchema = z.object({
     .string("شماره موبایل خود را وارد کنید.")
     .transform((value) => toEnglishDigits(value).trim())
     .pipe(
-      z.string()
+      z
+        .string()
         .regex(phoneRegex, "شماره وارد شده صحیح نیست.")
         .min(1, { message: "شماره موبایل خود را وارد کنید." }),
     ),
@@ -48,6 +50,7 @@ function LoginPage() {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
+  const [openForgetPasswordModal, setOpenForgetPasswordModal] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isPendingLogin, setIsPendingLogin] = useState(false);
 
@@ -89,14 +92,18 @@ function LoginPage() {
       dispatch(setToken(result.data.token));
       dispatch(logIn(result.data.user));
       loginForm.reset();
-      toast.success(result.message || "ورود با موفقیت انجام شد.", { id: toastId });
+      toast.success(result.message || "ورود با موفقیت انجام شد.", {
+        id: toastId,
+      });
       const redirectTo = getSafeRedirectTo(
         new URLSearchParams(window.location.search).get("redirectTo"),
       );
       router.replace(redirectTo ?? "/dashboard/reserve?walletGuide=1");
     } catch (error) {
       console.error("Login failed", error);
-      toast.error("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", { id: toastId });
+      toast.error("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", {
+        id: toastId,
+      });
     } finally {
       setIsPendingLogin(false);
     }
@@ -116,9 +123,7 @@ function LoginPage() {
             loading="eager"
           />
 
-          <h1 className="text-2xl font-bold text-foreground mb-3">
-            فودنیکس
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground mb-3">فودنیکس</h1>
 
           <p className="text-(--secondary-text) leading-7">
             ساده، سریع و بدون دردسر غذای خود را رزرو کنید
@@ -168,8 +173,8 @@ function LoginPage() {
                       </strong>
                     </p>
                     <p className="text-(--secondary-text)">
-                      پس از ورود به فودنیکس، لطفاً برای افزایش امنیت، رمز
-                      عبور خود را تغییر دهید.
+                      پس از ورود به فودنیکس، لطفاً برای افزایش امنیت، رمز عبور
+                      خود را تغییر دهید.
                     </p>
                   </div>
                 </div>
@@ -196,7 +201,11 @@ function LoginPage() {
                             {...field}
                             inputMode="tel"
                             autoComplete="tel"
-                            onChange={(event) => field.onChange(toEnglishDigits(event.target.value))}
+                            onChange={(event) =>
+                              field.onChange(
+                                toEnglishDigits(event.target.value),
+                              )
+                            }
                             className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                           />
                         </FormControl>
@@ -228,14 +237,27 @@ function LoginPage() {
 
                   {/* Options */}
                   <div className="flex justify-between text-sm text-(--secondary-text)">
-                    <span className="cursor-pointer hover:text-green-600 transition">
-                      فراموشی رمز؟
-                    </span>
+                    {/* Modal */}
+                    <ForgetPasswordModal
+                      open={openForgetPasswordModal}
+                      onOpenChange={setOpenForgetPasswordModal}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setOpenForgetPasswordModal(true)}
+                      className="text-(--base-green) transition"
+                    >
+                      <span className="cursor-pointer hover:text-green-600 transition">
+                        فراموشی رمز؟
+                      </span>
+                    </button>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={rememberMe}
-                        onChange={(event) => setRememberMe(event.target.checked)}
+                        onChange={(event) =>
+                          setRememberMe(event.target.checked)
+                        }
                       />
                       مرا به خاطر بسپار
                     </label>

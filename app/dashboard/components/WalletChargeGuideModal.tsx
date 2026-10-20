@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { userInfoAccess } from "@/redux/features/auth-slice";
 
-const BALE_PHONE_NUMBER = "09122159062";
+export const BALE_PHONE_NUMBER = "09122159062";
 const GUIDE_QUERY_KEY = "walletGuide";
 export const OPEN_WALLET_CHARGE_GUIDE_EVENT = "open-wallet-charge-guide";
 
@@ -36,9 +36,10 @@ export interface WalletChargeGuideWalletDetail {
 
 type CopyTarget = "card" | "phone";
 
-interface ProfileCardInfo {
+export interface ProfileCardInfo {
   card_name?: string | null;
   card_number?: string | number | null;
+  suport_number?: string | null;
 }
 
 function formatCardNumber(value: string) {
@@ -47,12 +48,8 @@ function formatCardNumber(value: string) {
 
 function normalizeCardNumber(value: string | number | null | undefined) {
   return String(value ?? "")
-    .replace(/[۰-۹]/g, (digit) =>
-      "۰۱۲۳۴۵۶۷۸۹".indexOf(digit).toString(),
-    )
-    .replace(/[٠-٩]/g, (digit) =>
-      "٠١٢٣٤٥٦٧٨٩".indexOf(digit).toString(),
-    )
+    .replace(/[۰-۹]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹".indexOf(digit).toString())
+    .replace(/[٠-٩]/g, (digit) => "٠١٢٣٤٥٦٧٨٩".indexOf(digit).toString())
     .replace(/\D/g, "");
 }
 
@@ -71,7 +68,9 @@ function isCartDetail(value: unknown): value is WalletChargeGuideCartDetail {
   );
 }
 
-function isWalletDetail(value: unknown): value is WalletChargeGuideWalletDetail {
+function isWalletDetail(
+  value: unknown,
+): value is WalletChargeGuideWalletDetail {
   return (
     Boolean(value) &&
     typeof value === "object" &&
@@ -112,6 +111,7 @@ export default function WalletChargeGuideModal() {
   const requiredCharge = Math.max(totalPrice - walletBalance, 0);
   const cardNumber = normalizeCardNumber(profile.card_number);
   const displayCardNumber = formatCardNumber(cardNumber);
+  const supportNumber = profile.suport_number || BALE_PHONE_NUMBER;
   const cardName = profile.card_name?.trim() || "";
 
   useEffect(() => {
@@ -193,56 +193,56 @@ export default function WalletChargeGuideModal() {
               aria-labelledby="wallet-example-title"
               className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10"
             >
-            <h3
-              id="wallet-example-title"
-              className="mb-3 text-sm font-bold text-amber-900 dark:text-amber-200"
-            >
-              {cartDetail
-                ? "مبلغ موردنیاز برای تکمیل این سبد"
-                : "مثال محاسبه مبلغ موردنیاز"}
-            </h3>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
-                <span className="block text-xs text-muted-foreground">
-                  مبلغ سبد
-                </span>
-                <strong className="mt-1 block text-sm">
-                  {totalPrice.toLocaleString("fa-IR")} تومان
-                </strong>
-              </div>
-              <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
-                <span className="block text-xs text-muted-foreground">
-                  موجودی کیف پول
-                </span>
-                <strong className="mt-1 block text-sm">
-                  {walletBalance.toLocaleString("fa-IR")} تومان
-                </strong>
-              </div>
-              <div className="rounded-xl bg-amber-200/70 p-2 dark:bg-amber-400/15">
-                <span className="block text-xs text-amber-900 dark:text-amber-200">
-                  مبلغ کسری
-                </span>
-                <strong className="mt-1 block text-sm text-amber-950 dark:text-amber-100">
-                  {requiredCharge.toLocaleString("fa-IR")} تومان
-                </strong>
-              </div>
-            </div>
-            <p className="mt-3 text-xs leading-6 text-amber-900 dark:text-amber-200">
-              {cartDetail ? (
-                <>
-                  برای نهایی‌کردن این سبد باید{" "}
-                  <strong>
+              <h3
+                id="wallet-example-title"
+                className="mb-3 text-sm font-bold text-amber-900 dark:text-amber-200"
+              >
+                {cartDetail
+                  ? "مبلغ موردنیاز برای تکمیل این سبد"
+                  : "مثال محاسبه مبلغ موردنیاز"}
+              </h3>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
+                  <span className="block text-xs text-muted-foreground">
+                    مبلغ سبد
+                  </span>
+                  <strong className="mt-1 block text-sm">
+                    {totalPrice.toLocaleString("fa-IR")} تومان
+                  </strong>
+                </div>
+                <div className="rounded-xl bg-white/80 p-2 dark:bg-background/50">
+                  <span className="block text-xs text-muted-foreground">
+                    موجودی کیف پول
+                  </span>
+                  <strong className="mt-1 block text-sm">
+                    {walletBalance.toLocaleString("fa-IR")} تومان
+                  </strong>
+                </div>
+                <div className="rounded-xl bg-amber-200/70 p-2 dark:bg-amber-400/15">
+                  <span className="block text-xs text-amber-900 dark:text-amber-200">
+                    مبلغ کسری
+                  </span>
+                  <strong className="mt-1 block text-sm text-amber-950 dark:text-amber-100">
                     {requiredCharge.toLocaleString("fa-IR")} تومان
-                  </strong>{" "}
-                  به کیف پول خود واریز کنید.
-                </>
-              ) : (
-                <>
-                  در این مثال، برای نهایی‌کردن سفارش فقط باید مبلغ کسری، یعنی
-                  ۲۰۰ هزار تومان، به کیف پول اضافه شود.
-                </>
-              )}
-            </p>
+                  </strong>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-6 text-amber-900 dark:text-amber-200">
+                {cartDetail ? (
+                  <>
+                    برای نهایی‌کردن این سبد باید{" "}
+                    <strong>
+                      {requiredCharge.toLocaleString("fa-IR")} تومان
+                    </strong>{" "}
+                    به کیف پول خود واریز کنید.
+                  </>
+                ) : (
+                  <>
+                    در این مثال، برای نهایی‌کردن سفارش فقط باید مبلغ کسری، یعنی
+                    ۲۰۰ هزار تومان، به کیف پول اضافه شود.
+                  </>
+                )}
+              </p>
             </section>
           )}
 
@@ -279,9 +279,7 @@ export default function WalletChargeGuideModal() {
                 </strong>
                 <span className="mt-1 block text-xs text-muted-foreground">
                   {cardName ? (
-                    <>
-                      به نام: {cardName}
-                    </>
+                    <>به نام: {cardName}</>
                   ) : (
                     "نام صاحب حساب در دسترس نیست"
                   )}
@@ -315,12 +313,12 @@ export default function WalletChargeGuideModal() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => handleCopy(BALE_PHONE_NUMBER, "phone")}
+                  onClick={() => handleCopy(supportNumber, "phone")}
                   aria-label="کپی شماره بله"
                   className="flex w-full items-center justify-between rounded-xl border border-(--base-green)/20 bg-background/80 px-3 py-2.5 transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-(--base-green)"
                 >
                   <strong dir="ltr" className="tracking-wider">
-                    {BALE_PHONE_NUMBER}
+                    {supportNumber}
                   </strong>
                   <span className="flex items-center gap-1.5 text-xs text-(--base-green)">
                     {copiedTarget === "phone" ? (

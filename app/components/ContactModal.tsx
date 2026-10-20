@@ -8,8 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { userInfoAccess } from "@/redux/features/auth-slice";
 
 import { MailIcon, PhoneCallIcon, ShieldCheckIcon } from "lucide-react";
+import { useSelector } from "react-redux";
+import {
+  BALE_PHONE_NUMBER,
+  ProfileCardInfo,
+} from "../dashboard/components/WalletChargeGuideModal";
 
 interface RulesModalProps {
   open: boolean;
@@ -17,6 +23,7 @@ interface RulesModalProps {
 }
 
 export function ContactModal({ open, onOpenChange }: RulesModalProps) {
+  const profile = (useSelector(userInfoAccess) ?? {}) as ProfileCardInfo;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden">
@@ -41,7 +48,9 @@ export function ContactModal({ open, onOpenChange }: RulesModalProps) {
 
             <div className="flex flex-col">
               <span className="text-sm text-muted-foreground">شماره تماس</span>
-              <span className="font-bold tracking-wide">09122159062</span>
+              <span className="font-bold tracking-wide">
+                {profile.suport_number || BALE_PHONE_NUMBER}
+              </span>
             </div>
           </div>
 
