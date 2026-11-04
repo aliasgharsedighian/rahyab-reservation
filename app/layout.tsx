@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import PwaRegistration from "./components/PwaRegistration";
+import BaasAnalytics from "./components/BaasAnalytics";
 
 const mainFont = localFont({
   src: "./components/iransanswebfanum.ttf",
@@ -62,6 +63,7 @@ export default function RootLayout({
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
       <body className="transition-all duration-700">
+        <BaasAnalytics />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

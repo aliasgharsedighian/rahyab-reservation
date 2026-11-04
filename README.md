@@ -2,6 +2,19 @@
 
 فودنیکس، سامانه رزرو و مدیریت غذای کارکنان است.
 
+## Analytics configuration
+
+Set these variables in `.env.local` and in the deployment environment:
+
+- `NEXT_PUBLIC_BAAS_API_KEY`: browser API key for the BaaS SDK; required at build time.
+- `BAAS_SERVER_KEY`: server-only key, reserved for server integrations; never sent to the browser.
+
+The root layout loads CoreSDK followed by AnalyticsSDK. Opening food details records
+`product_view` with the food ID (`P-{food_id}`), its displayed price in toman,
+`category: "food"`, and `in_stock: true`. Views wait for SDK loading; analytics
+failures do not block the reservation interface. Restart the dev server or rebuild
+after changing the public API key.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

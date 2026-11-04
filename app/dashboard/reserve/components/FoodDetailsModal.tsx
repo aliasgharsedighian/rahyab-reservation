@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import { logFoodProductView } from "@/lib/analytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -124,6 +125,21 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
 
 export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetailsModalProps) {
   const isMobile = useIsMobile();
+  const viewedFoodId = useRef<number | null>(null);
+  const foodId = selection?.food.food_id;
+  const foodPrice = selection?.food.price;
+
+  useEffect(() => {
+    if (!open || foodId === undefined || foodPrice === undefined) {
+      viewedFoodId.current = null;
+      return;
+    }
+    if (viewedFoodId.current === foodId) return;
+
+    viewedFoodId.current = foodId;
+    logFoodProductView(foodId, foodPrice);
+  }, [open, foodId, foodPrice]);
+
   const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id} selection={selection} isMobile={isMobile} /> : null;
   if (isMobile) return (
     <Drawer open={open} onOpenChange={setOpen}>
