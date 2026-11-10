@@ -30,7 +30,7 @@ export const getSiteSettings = cache(async (): Promise<SiteSetting[]> => {
 
     const body = await response.json();
     const settings: unknown = Array.isArray(body) ? body : body?.data;
-    console.log(Array.isArray(settings) ? settings.filter(isSiteSetting) : []);
+    // console.log(Array.isArray(settings) ? settings.filter(isSiteSetting) : []);
     return Array.isArray(settings) ? settings.filter(isSiteSetting) : [];
   } catch (error) {
     console.error("Could not load site settings", error);

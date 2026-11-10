@@ -11,6 +11,21 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { normalizeOtpDigits, otpCodePattern, otpMobilePattern } from "@/lib/otp-login";
 
 const resendDelay = 60;
+const mobileLength = 11;
+
+async function readSmsCode(signal: AbortSignal) {
+  try {
+    const options: CredentialRequestOptions & { otp: { transport: ["sms"] } } = {
+      otp: { transport: ["sms"] },
+      signal,
+    };
+    const credential = await navigator.credentials.get(options);
+    return credential && "code" in credential ? normalizeOtpDigits(credential.code) : "";
+  } catch {
+    // Manual entry stays available if the browser denies or cancels WebOTP.
+    return "";
+  }
+}
 
 export function OtpLoginForm({
   onLogin,
@@ -34,6 +49,9 @@ export function OtpLoginForm({
   const mobileOnCooldown = useRef("");
   const mobileInput = useRef<HTMLInputElement>(null);
   const codeInput = useRef<HTMLInputElement>(null);
+  const smsRequest = useRef<AbortController | null>(null);
+
+  useEffect(() => () => smsRequest.current?.abort(), []);
 
   useEffect(() => {
     if (sentTo) codeInput.current?.focus();
@@ -49,22 +67,27 @@ export function OtpLoginForm({
   }, [secondsLeft]);
 
   function changeMobile() {
+    smsRequest.current?.abort();
     setSentTo("");
     setCode("");
     setError("");
   }
 
-  async function submit(resend = false) {
+  async function submit({
+    resend = false,
+    recipient = sentTo,
+    enteredCode = code,
+  } = {}) {
     if (busy.current) return;
 
-    const verify = Boolean(sentTo) && !resend;
-    const phone = sentTo || normalizeOtpDigits(mobile);
+    const verify = Boolean(recipient) && !resend;
+    const phone = recipient || normalizeOtpDigits(mobile);
     if (!otpMobilePattern.test(phone)) {
       setError("شماره موبایل را با فرمت ۰۹۱۲۳۴۵۶۷۸۹ وارد کنید.");
       mobileInput.current?.focus();
       return;
     }
-    if (verify && !otpCodePattern.test(code)) {
+    if (verify && !otpCodePattern.test(enteredCode)) {
       setError("کد تأیید باید ۴ رقم باشد.");
       codeInput.current?.focus();
       return;
@@ -77,6 +100,7 @@ export function OtpLoginForm({
       return;
     }
 
+    smsRequest.current?.abort();
     busy.current = true;
     setError("");
     setPending(verify ? "verify" : "send");
@@ -84,7 +108,7 @@ export function OtpLoginForm({
 
     try {
       if (verify) {
-        const result = await verifyLoginOtp(phone, code);
+        const result = await verifyLoginOtp(phone, enteredCode);
         if (result.success) {
           onLogin(result.data, result.message, toastId);
           return;
@@ -92,8 +116,13 @@ export function OtpLoginForm({
         setError(result.message);
         toast.error(result.message, { id: toastId });
       } else {
+        const controller = "OTPCredential" in window ? new AbortController() : null;
+        smsRequest.current = controller;
+        // Start listening before the request so a fast SMS can be picked up.
+        const smsCode = controller ? readSmsCode(controller.signal) : null;
         const result = await requestLoginOtp(phone);
         if (!result.success) {
+          controller?.abort();
           setError(result.message);
           toast.error(result.message, { id: toastId });
           return;
@@ -104,14 +133,29 @@ export function OtpLoginForm({
         setSentTo(phone);
         setCode("");
         toast.success(result.message || "کد تأیید ارسال شد.", { id: toastId });
+        void smsCode?.then((value) => {
+          if (controller && !controller.signal.aborted && otpCodePattern.test(value)) {
+            fillCode(value, phone);
+          }
+        });
       }
     } catch {
+      smsRequest.current?.abort();
       const message = "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
       setError(message);
       toast.error(message, { id: toastId });
     } finally {
       busy.current = false;
       setPending(null);
+    }
+  }
+
+  function fillCode(value: string, recipient: string) {
+    const normalized = normalizeOtpDigits(value);
+    setCode(normalized);
+    setError("");
+    if (otpCodePattern.test(normalized)) {
+      void submit({ recipient, enteredCode: normalized });
     }
   }
 
@@ -153,10 +197,7 @@ export function OtpLoginForm({
                 id="login-otp"
                 name="code"
                 value={code}
-                onChange={(value) => {
-                  setCode(normalizeOtpDigits(value));
-                  setError("");
-                }}
+                onChange={(value) => fillCode(value, sentTo)}
                 pasteTransformer={normalizeOtpDigits}
                 pattern="^[0-9۰-۹٠-٩]+$"
                 inputMode="numeric"
@@ -189,8 +230,9 @@ export function OtpLoginForm({
             autoComplete="tel"
             placeholder="09123456789"
             value={mobile}
+            maxLength={mobileLength}
             onChange={(event) => {
-              setMobile(normalizeOtpDigits(event.target.value));
+              setMobile(normalizeOtpDigits(event.target.value).replace(/[^0-9]/g, "").slice(0, mobileLength));
               setError("");
             }}
             disabled={pending !== null}
@@ -210,7 +252,7 @@ export function OtpLoginForm({
 
       <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
         {sentTo && (
-          <Button type="button" variant="ghost" size="sm" disabled={secondsLeft > 0 || pending !== null} onClick={() => void submit(true)} className="text-(--base-green)">
+          <Button type="button" variant="ghost" size="sm" disabled={secondsLeft > 0 || pending !== null} onClick={() => void submit({ resend: true })} className="text-(--base-green)">
             {secondsLeft > 0 ? `ارسال مجدد تا ${secondsLeft.toLocaleString("fa-IR")} ثانیه` : "ارسال دوبارهٔ کد"}
           </Button>
         )}
