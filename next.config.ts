@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 
-const nextConfig: NextConfig = {
+const nextConfig = (phase: string): NextConfig => ({
+  typescript: {
+    tsconfigPath: phase === PHASE_PRODUCTION_BUILD ? "tsconfig.build.json" : "tsconfig.json",
+  },
   async headers() {
     return [{
       source: "/sw.js",
@@ -21,6 +25,6 @@ const nextConfig: NextConfig = {
     ],
   },
   allowedDevOrigins: ["http://localhost:3003", "192.168.63.30"],
-};
+});
 
 export default nextConfig;

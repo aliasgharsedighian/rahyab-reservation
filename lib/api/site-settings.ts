@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { connection } from "next/server";
 import { getApiUrl } from "./url";
 
 export type SiteSetting = {
@@ -20,6 +21,8 @@ function isSiteSetting(value: unknown): value is SiteSetting {
 }
 
 export const getSiteSettings = cache(async (): Promise<SiteSetting[]> => {
+  await connection();
+
   try {
     const response = await fetch(getApiUrl("site-settings"), {
       headers: { Accept: "application/json" },
