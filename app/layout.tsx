@@ -7,6 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import PwaRegistration from "./components/PwaRegistration";
 import BaasAnalytics from "./components/BaasAnalytics";
+import { SiteSettingsProvider } from "./components/SiteSettingsProvider";
+import { getSiteSettings } from "@/lib/api/site-settings";
 
 const mainFont = localFont({
   src: "./components/iransanswebfanum.ttf",
@@ -49,11 +51,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getSiteSettings();
+
   return (
     <html
       lang="fa"
@@ -86,7 +90,9 @@ export default function RootLayout({
                 },
               }}
             />
-            {children}
+            <SiteSettingsProvider settings={settings}>
+              {children}
+            </SiteSettingsProvider>
           </ReduxProvider>
         </ThemeProvider>
       </body>
