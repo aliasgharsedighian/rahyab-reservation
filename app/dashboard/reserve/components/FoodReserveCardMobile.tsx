@@ -20,6 +20,7 @@ import {
 import { DirectionProvider } from "@/components/ui/direction";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ReserveCartItem } from "../types";
+import ReserveCheckoutButton from "./ReserveCheckoutButton";
 import ReserveCartItems from "./ReserveCartItems";
 
 interface FoodReserveCardMobileProps {
@@ -28,6 +29,7 @@ interface FoodReserveCardMobileProps {
   totalPrice: number;
   totalCount: number;
   sendDataToApi: () => Promise<void>;
+  isOnlineCheckoutPending: boolean;
   walletBalance: number | null;
 }
 
@@ -37,6 +39,7 @@ function FoodReserveCardMobile({
   totalPrice,
   totalCount,
   sendDataToApi,
+  isOnlineCheckoutPending,
   walletBalance,
 }: FoodReserveCardMobileProps) {
   if (reserveCart.length === 0) return;
@@ -116,13 +119,12 @@ function FoodReserveCardMobile({
                     </span>
                   </div>
                 </div>
-                <Button
+                <ReserveCheckoutButton
                   className="w-full dark:bg-(--base-green) dark:text-white"
                   size="lg"
                   onClick={sendDataToApi}
-                >
-                  ثبت و نهایی کردن رزرو
-                </Button>
+                  isOnlineCheckoutPending={isOnlineCheckoutPending}
+                />
               </div>
             ) : null}
           </DrawerFooter>
@@ -130,7 +132,12 @@ function FoodReserveCardMobile({
       </Drawer>
 
       <div className="flex items-center justify-between text-sm"><span>مبلغ کل</span><strong>{totalPrice.toLocaleString("fa-IR")} تومان</strong></div>
-      <Button className="min-h-12 w-full dark:bg-(--base-green) dark:text-white" size="lg" onClick={sendDataToApi}>ثبت و نهایی کردن رزرو</Button>
+      <ReserveCheckoutButton
+        className="min-h-12 w-full dark:bg-(--base-green) dark:text-white"
+        size="lg"
+        onClick={sendDataToApi}
+        isOnlineCheckoutPending={isOnlineCheckoutPending}
+      />
     </div>
   );
 }

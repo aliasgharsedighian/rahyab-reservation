@@ -1,12 +1,13 @@
 "use client";
 
-import { apiClient } from "@/lib/api/client";
+import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
+import { apiClient, UnauthorizedError } from "@/lib/api/client";
 
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FoodReserveCardMobile from "./FoodReserveCardMobile";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   removeAllItemsFromReserve,
@@ -33,9 +34,11 @@ interface ClientReservePageProps {
 interface ReservationResponse {
   status: number;
   message: string;
-  data: {
-    payment_url?: string;
-  };
+}
+
+interface OnlineReservationResponse extends ReservationResponse {
+  success: boolean;
+  data?: { payment_url?: string } | null;
 }
 
 function ClientReservePage({
@@ -45,6 +48,10 @@ function ClientReservePage({
 }: ClientReservePageProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const settings = useSiteSettings();
+  const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
+  const [isOnlineCheckoutPending, setIsOnlineCheckoutPending] = useState(false);
+  const onlineCheckoutToast = useRef<string | number | null>(null);
   const [reservationSucceeded, setReservationSucceeded] = useState(false);
 
   const reserveCart = useSelector(reserveSelectItems);
@@ -100,6 +107,19 @@ function ClientReservePage({
     if (activeReserveCart !== reserveCart) dispatch(updateReserveCart(activeReserveCart));
   }, [activeReserveCart, dispatch, reserveCart]);
 
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (!event.persisted || onlineCheckoutToast.current === null) return;
+
+      toast.dismiss(onlineCheckoutToast.current);
+      onlineCheckoutToast.current = null;
+      setIsOnlineCheckoutPending(false);
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   const totalPrice = useMemo(
     () =>
       activeReserveCart.reduce(
@@ -118,11 +138,61 @@ function ClientReservePage({
     );
   }, [activeReserveCart]);
 
+  const completeReservation = (toastId?: string | number) => {
+    toast.success("پرداخت با موفقیت از کیف پول شما انجام شد", { id: toastId });
+    dispatch(removeAllItemsFromReserve([]));
+    setReservationSucceeded(true);
+    router.refresh();
+  };
+
   const sendDataToApi = async () => {
     const items = activeReserveCart.map((item) => ({
       weekly_menu_id: item.id,
       quantity: item.count,
     }));
+
+    if (onlinePayment) {
+      if (onlineCheckoutToast.current !== null || items.length === 0) return;
+      const toastId = toast.loading("در حال اتصال به درگاه پرداخت…");
+      onlineCheckoutToast.current = toastId;
+      setIsOnlineCheckoutPending(true);
+      const paymentError = "ثبت رزرو یا اتصال به درگاه پرداخت ممکن نشد.";
+      let isRedirecting = false;
+
+      try {
+        const { data, status } = await apiClient.post<OnlineReservationResponse>(
+          "online-payments/order",
+          { source: "web", items },
+          { timeout: 15_000 },
+        );
+
+        if (status < 200 || status >= 300 || data?.success !== true) {
+          toast.error(data?.message || paymentError, { id: toastId });
+        } else if (data.status === 201) {
+          completeReservation(toastId);
+        } else if (data.status === 202) {
+          const paymentUrl = new URL(data.data?.payment_url ?? "");
+          if (paymentUrl.protocol !== "https:") throw new Error("Invalid payment URL");
+
+          window.location.assign(paymentUrl.href);
+          isRedirecting = true;
+        } else {
+          toast.error(paymentError, { id: toastId });
+        }
+      } catch (error) {
+        if (error instanceof UnauthorizedError) {
+          toast.dismiss(toastId);
+        } else {
+          toast.error(paymentError, { id: toastId });
+        }
+      } finally {
+        if (!isRedirecting) {
+          onlineCheckoutToast.current = null;
+          setIsOnlineCheckoutPending(false);
+        }
+      }
+      return;
+    }
 
     try {
       const { data: responseData } = await apiClient.post<ReservationResponse>(
@@ -149,16 +219,7 @@ function ClientReservePage({
         return;
       }
 
-      // if (responseData.data.payment_url) {
-      //   return;
-      // }
-
-      if (responseData.status === 201) {
-        toast.success("پرداخت با موفقیت از کیف پول شما انجام شد");
-        dispatch(removeAllItemsFromReserve([]));
-        setReservationSucceeded(true);
-        router.refresh();
-      }
+      completeReservation();
     } catch (error) {
       console.error("Error sending data:", error);
     }
@@ -178,6 +239,7 @@ function ClientReservePage({
           totalPrice={totalPrice}
           totalCount={totalCount}
           sendDataToApi={sendDataToApi}
+          isOnlineCheckoutPending={isOnlineCheckoutPending}
           walletBalance={walletBalance}
         />
       ) : (
@@ -188,6 +250,7 @@ function ClientReservePage({
             totalPrice={totalPrice}
             totalCount={totalCount}
             sendDataToApi={sendDataToApi}
+            isOnlineCheckoutPending={isOnlineCheckoutPending}
             walletBalance={walletBalance}
           />
         </div>

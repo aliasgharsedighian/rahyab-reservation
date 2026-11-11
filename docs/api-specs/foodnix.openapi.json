@@ -714,18 +714,36 @@
     "/api/v1/online-payments/order": {
       "post": {
         "tags": ["Online Payments"],
-        "summary": "Start online payment for the last pending order via Charsooq gateway",
+        "summary": "Checkout reservations: pay from wallet or start Charsooq payment for the deficit",
         "operationId": "e1256b32211c73fbaa9421da3ccfd3f5",
         "requestBody": {
-          "required": false,
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
+                "required": ["items"],
                 "properties": {
                   "source": {
                     "type": "string",
                     "example": "app",
                     "enum": ["web", "app"]
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "required": ["weekly_menu_id", "quantity"],
+                      "properties": {
+                        "weekly_menu_id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "example": 2
+                        }
+                      },
+                      "type": "object"
+                    }
                   }
                 },
                 "type": "object"
@@ -734,11 +752,14 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Payment URL created"
+          "201": {
+            "description": "OK — wallet paid"
+          },
+          "202": {
+            "description": "OK — gateway required"
           },
           "422": {
-            "description": "No pending order or gateway error"
+            "description": "Validation or gateway error"
           }
         },
         "security": [

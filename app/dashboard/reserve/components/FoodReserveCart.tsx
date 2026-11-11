@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ShoppingCartIcon, WalletCardsIcon } from "lucide-react";
 import type { ReserveCartItem } from "../types";
+import ReserveCheckoutButton from "./ReserveCheckoutButton";
 import ReserveCartItems from "./ReserveCartItems";
 
 interface FoodReserveCartProps {
@@ -11,10 +11,11 @@ interface FoodReserveCartProps {
   totalPrice: number;
   totalCount: number;
   sendDataToApi: () => Promise<void>;
+  isOnlineCheckoutPending: boolean;
   walletBalance: number | null;
 }
 
-export default function FoodReserveCart({ reserveCart, sortedReserveCart, totalPrice, totalCount, sendDataToApi, walletBalance }: FoodReserveCartProps) {
+export default function FoodReserveCart({ reserveCart, sortedReserveCart, totalPrice, totalCount, sendDataToApi, isOnlineCheckoutPending, walletBalance }: FoodReserveCartProps) {
   return (
     <section aria-label="سبد رزرو شما" className="flex h-[calc(100dvh-8rem)] min-h-80 flex-col overflow-hidden rounded-2xl border border-(--base-green)/30 bg-zinc-50/70 shadow-sm dark:bg-zinc-900/50">
       <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
@@ -35,7 +36,12 @@ export default function FoodReserveCart({ reserveCart, sortedReserveCart, totalP
         </div>
         <div className="flex items-center justify-between text-sm"><span>مبلغ کل</span><strong>{totalPrice.toLocaleString("fa-IR")} تومان</strong></div>
         <div className="flex items-center justify-between text-xs"><span>تعداد کل</span><span>{totalCount.toLocaleString("fa-IR")} عدد</span></div>
-        <Button className="h-auto min-h-10 w-full whitespace-normal dark:bg-(--base-green) dark:text-white" disabled={reserveCart.length === 0} onClick={sendDataToApi}>ثبت و نهایی کردن رزرو</Button>
+        <ReserveCheckoutButton
+          className="h-auto min-h-10 w-full whitespace-normal dark:bg-(--base-green) dark:text-white"
+          disabled={reserveCart.length === 0}
+          onClick={sendDataToApi}
+          isOnlineCheckoutPending={isOnlineCheckoutPending}
+        />
       </footer>
     </section>
   );
