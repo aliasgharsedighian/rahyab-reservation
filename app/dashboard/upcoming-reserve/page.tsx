@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
 import DashboardPagination from "../components/DashboardPagination";
+import ClearPaidReservationCart from "./components/ClearPaidReservationCart";
 import ReserveUpcomingTable from "./components/ReserveUpcomingTable";
 import DashboardHeader from "../components/DashboardHeader";
 import type { ReservationUpcomingResponse } from "./types";
@@ -75,10 +76,11 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
     revalidatePath(`/dashboard/upcoming-reserve`);
   }
 
-  if (!reserveUpcoming?.items) return;
+  if (!reserveUpcoming?.items) return <ClearPaidReservationCart />;
 
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
+      <ClearPaidReservationCart />
       <DashboardHeader title={"رزروهای پیش رو"} />
       <div className="w-full flex flex-col gap-3">
         <div className="flex flex-col gap-4 mx-2 md:mx-6">
