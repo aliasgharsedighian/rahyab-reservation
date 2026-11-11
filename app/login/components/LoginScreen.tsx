@@ -2,6 +2,7 @@
 
 import { toEnglishDigits } from "@/lib/digits";
 import loginAction from "@/actions/loginAction";
+import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -49,6 +50,8 @@ const signinFormSchema = z.object({
 function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const settings = useSiteSettings();
+  const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
 
   const [open, setOpen] = useState(false);
   const [openForgetPasswordModal, setOpenForgetPasswordModal] = useState(false);
@@ -88,7 +91,10 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
     const redirectTo = getSafeRedirectTo(
       new URLSearchParams(window.location.search).get("redirectTo"),
     );
-    router.replace(redirectTo ?? "/dashboard/reserve?walletGuide=1");
+    const defaultRedirect = onlinePayment
+      ? "/dashboard/reserve"
+      : "/dashboard/reserve?walletGuide=1";
+    router.replace(redirectTo ?? defaultRedirect);
   };
 
   const handleLoginSubmit = async (

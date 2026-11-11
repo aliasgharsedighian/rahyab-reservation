@@ -43,6 +43,7 @@ import logoutCookiesAction from "@/actions/logoutCookiesAction";
 import { toast } from "sonner";
 import { RulesModal } from "@/app/components/RulesModal";
 import { ContactModal } from "@/app/components/ContactModal";
+import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
 import { OPEN_WALLET_CHARGE_GUIDE_EVENT } from "./WalletChargeGuideModal";
 
 const dashboardList = [
@@ -131,6 +132,8 @@ const dashboardList = [
 
 function SidebarApp() {
   const pathname = usePathname();
+  const settings = useSiteSettings();
+  const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
   const dispatch = useDispatch();
   const [isLoggingOut, startTransition] = useTransition();
   const { push } = useRouter();
@@ -368,22 +371,23 @@ function SidebarApp() {
                 </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Wallet charge guide */}
-            <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
-              <SidebarMenuButton
-                className="h-full hover:bg-(--light-green)"
-                asChild
-              >
-                <Button
-                  className="p-3 items-start justify-start gap-4 h-full"
-                  variant="ghost"
-                  onClick={handleOpenWalletChargeGuide}
+            {!onlinePayment && (
+              <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
+                <SidebarMenuButton
+                  className="h-full hover:bg-(--light-green)"
+                  asChild
                 >
-                  <WalletCardsIcon className="size-5 text-emerald-600" />
-                  <p>راهنمای شارژ کیف پول</p>
-                </Button>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+                  <Button
+                    className="p-3 items-start justify-start gap-4 h-full"
+                    variant="ghost"
+                    onClick={handleOpenWalletChargeGuide}
+                  >
+                    <WalletCardsIcon className="size-5 text-emerald-600" />
+                    <p>راهنمای شارژ کیف پول</p>
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem
               className={`w-full h-10 hover:text-(--base-green) flex items-center justify-center rounded-md`}
             >
