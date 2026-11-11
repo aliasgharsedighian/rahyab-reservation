@@ -669,6 +669,85 @@
         ]
       }
     },
+    "/api/v1/online-payments/wallet": {
+      "post": {
+        "tags": ["Online Payments"],
+        "summary": "Start online wallet charge via Charsooq gateway",
+        "operationId": "fe7a6e16f17d199a9f23646499b0bf81",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["amount"],
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "example": 100000
+                  },
+                  "source": {
+                    "type": "string",
+                    "example": "web",
+                    "enum": ["web", "app"]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment URL created"
+          },
+          "422": {
+            "description": "Gateway or validation error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/online-payments/order": {
+      "post": {
+        "tags": ["Online Payments"],
+        "summary": "Start online payment for the last pending order via Charsooq gateway",
+        "operationId": "e1256b32211c73fbaa9421da3ccfd3f5",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "example": "app",
+                    "enum": ["web", "app"]
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment URL created"
+          },
+          "422": {
+            "description": "No pending order or gateway error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/reservations/history": {
       "get": {
         "tags": ["Reservations"],
@@ -1302,6 +1381,10 @@
     {
       "name": "Wallet",
       "description": "Wallet"
+    },
+    {
+      "name": "Online Payments",
+      "description": "Online Payments"
     },
     {
       "name": "Reservations",

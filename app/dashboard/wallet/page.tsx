@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
+import { getSiteSettings } from "@/lib/api/site-settings";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardPagination from "../components/DashboardPagination";
 import WalletTable from "./components/WalletTable";
@@ -49,13 +50,11 @@ export default async function WalletPage({ searchParams }: Props) {
   const { page, created_at_from_jalali, created_at_to_jalali, status } =
     await searchParams;
 
-  const wallet = await getWalletDetail(
-    per_page,
-    page,
-    created_at_from_jalali,
-    created_at_to_jalali,
-    status,
-  );
+  const [wallet, settings] = await Promise.all([
+    getWalletDetail(per_page, page, created_at_from_jalali, created_at_to_jalali, status),
+    getSiteSettings(),
+  ]);
+  const paymentType = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value;
 
   async function revalidateData() {
     "use server";
@@ -68,7 +67,11 @@ export default async function WalletPage({ searchParams }: Props) {
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
       <DashboardHeader title={"کیف پول"} />
-      <div className="mx-2 md:mx-6"><div className="mx-auto w-full max-w-5xl"><WalletSummary wallet={wallet} /></div></div>
+      <div className="mx-2 md:mx-6">
+        <div className="mx-auto w-full max-w-5xl">
+          <WalletSummary wallet={wallet} onlinePayment={paymentType === "online"} />
+        </div>
+      </div>
 
       <div className="w-full flex flex-col gap-3">
         <div className="mx-2 flex min-w-0 flex-col gap-4 md:mx-6">
