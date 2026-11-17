@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { PencilIcon, ShieldCheckIcon, SmartphoneIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestLoginOtp, verifyLoginOtp } from "@/actions/otpLoginAction";
@@ -28,9 +28,13 @@ async function readSmsCode(signal: AbortSignal) {
 }
 
 export function OtpLoginForm({
+  active,
+  onPendingChange,
   onLogin,
   onShowRules,
 }: {
+  active: boolean;
+  onPendingChange: (pending: boolean) => void;
   onLogin: (
     data: { token: string; user: unknown },
     message?: string,
@@ -51,11 +55,12 @@ export function OtpLoginForm({
   const codeInput = useRef<HTMLInputElement>(null);
   const smsRequest = useRef<AbortController | null>(null);
 
-  useEffect(() => () => smsRequest.current?.abort(), []);
+  useEffect(() => {
+    if (active) return () => smsRequest.current?.abort();
+  }, [active]);
 
   useEffect(() => {
     if (sentTo) codeInput.current?.focus();
-    else mobileInput.current?.focus();
   }, [sentTo]);
 
   useEffect(() => {
@@ -71,6 +76,7 @@ export function OtpLoginForm({
     setSentTo("");
     setCode("");
     setError("");
+    requestAnimationFrame(() => mobileInput.current?.focus());
   }
 
   async function submit({
@@ -78,7 +84,7 @@ export function OtpLoginForm({
     recipient = sentTo,
     enteredCode = code,
   } = {}) {
-    if (busy.current) return;
+    if (!active || busy.current) return;
 
     const verify = Boolean(recipient) && !resend;
     const phone = recipient || normalizeOtpDigits(mobile);
@@ -104,6 +110,7 @@ export function OtpLoginForm({
     busy.current = true;
     setError("");
     setPending(verify ? "verify" : "send");
+    onPendingChange(true);
     const toastId = toast.loading(verify ? "در حال بررسی کد..." : "در حال ارسال کد...");
 
     try {
@@ -147,6 +154,7 @@ export function OtpLoginForm({
     } finally {
       busy.current = false;
       setPending(null);
+      onPendingChange(false);
     }
   }
 
@@ -165,21 +173,9 @@ export function OtpLoginForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={pending !== null}>
-      <div className="flex items-center gap-3 rounded-xl border border-(--base-green)/25 bg-(--light-green) p-4">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-(--base-green)/15 text-(--base-green)">
-          {sentTo ? <ShieldCheckIcon aria-hidden="true" className="size-5" /> : <SmartphoneIcon aria-hidden="true" className="size-5" />}
-        </div>
-        <div className="space-y-1">
-          <p className="text-sm text-(--secondary-text)">
-            {sentTo ? "مرحلهٔ ۲ از ۲" : "مرحلهٔ ۱ از ۲"}
-          </p>
-          <h2 className="text-sm font-bold">{sentTo ? "تأیید کد پیامکی" : "ورود با کد یک‌بارمصرف"}</h2>
-        </div>
-      </div>
-
+    <form onSubmit={handleSubmit} noValidate className="space-y-3" aria-busy={pending !== null}>
       {sentTo ? (
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-sm">
             <p id="otp-phone-description" className="text-(--secondary-text)">
               کد به <bdi dir="ltr" className="font-bold text-foreground">{sentTo}</bdi> ارسال شد.
@@ -238,7 +234,7 @@ export function OtpLoginForm({
             disabled={pending !== null}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "otp-mobile-hint otp-login-error" : "otp-mobile-hint"}
-            className="h-12 rounded-lg bg-background text-left focus-visible:ring-(--base-green)/25"
+            className="h-11 rounded-lg bg-background text-left focus-visible:ring-(--base-green)/25"
           />
           <p id="otp-mobile-hint" className="text-xs text-(--secondary-text)">کد ورود به این شماره پیامک می‌شود.</p>
         </div>
@@ -246,7 +242,7 @@ export function OtpLoginForm({
 
       {error && <p id="otp-login-error" role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
 
-      <Button type="submit" disabled={pending !== null} className="h-12 w-full rounded-lg bg-green-500 font-bold text-white hover:bg-green-600">
+      <Button type="submit" disabled={pending !== null} className="h-11 w-full rounded-lg bg-green-500 font-bold text-white hover:bg-green-600">
         {pending === "verify" ? "در حال تأیید..." : pending === "send" ? "در حال ارسال..." : sentTo ? "تأیید و ورود" : "دریافت کد ورود"}
       </Button>
 

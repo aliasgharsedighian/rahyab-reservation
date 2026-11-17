@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { logIn, logOut, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
@@ -24,7 +26,7 @@ import { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { ShieldCheckIcon } from "lucide-react";
+import { KeyRoundIcon, ShieldCheckIcon, SmartphoneIcon } from "lucide-react";
 import { RulesModal } from "../../components/RulesModal";
 import { useRouter } from "next/navigation";
 import { clearClientSession } from "@/lib/api/client";
@@ -47,16 +49,23 @@ const signinFormSchema = z.object({
   password: z.string().min(8, "حداقل ۸ کاراکتر وارد کنید"),
 });
 
-function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
+function LoginScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
   const settings = useSiteSettings();
   const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
+  const configuredLoginType = settings.find(({ key }) => key === "LOGIN_TYPE")?.value;
+  const [loginType, setLoginType] = useState(
+    configuredLoginType === "online" || configuredLoginType === "otp" ? "otp" : "password",
+  );
+  const otpTab = useRef<HTMLButtonElement>(null);
+  const forgotPasswordButton = useRef<HTMLButtonElement>(null);
 
   const [open, setOpen] = useState(false);
   const [openForgetPasswordModal, setOpenForgetPasswordModal] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isPendingLogin, setIsPendingLogin] = useState(false);
+  const [isPendingOtp, setIsPendingOtp] = useState(false);
 
   useEffect(() => {
     // This also completes cleanup after a 401 detected during server rendering.
@@ -125,7 +134,7 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-background text-foreground">
+    <div className="flex min-h-dvh w-full bg-background text-foreground">
       {/* LEFT */}
       <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
         <div className="max-w-md text-center px-8">
@@ -134,7 +143,7 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
             alt="login"
             width={400}
             height={300}
-            className="mx-auto mb-6 rounded-xl"
+            className="mx-auto mb-6 max-h-[45dvh] w-auto rounded-xl object-contain"
             loading="eager"
           />
 
@@ -147,75 +156,49 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
       </div>
 
       {/* RIGHT */}
-      <div className="flex w-full md:w-1/2 items-center justify-center px-3 md:px-6">
+      <div className="flex w-full items-center justify-center px-3 py-3 md:w-1/2 md:px-6">
         <div className="w-full max-w-md">
-          <Card className="shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-0 rounded-2xl">
-            <CardHeader className="text-center space-y-2 pb-6">
+          <Card className="gap-3 rounded-2xl border-0 shadow-[0_10px_30px_rgba(0,0,0,0.05)] md:gap-5">
+            <CardHeader className="text-center">
               <CardTitle className="text-xl font-bold text-foreground">
                 ورود به فودنیکس
               </CardTitle>
-              <p className="text-sm text-(--secondary-text)">
-                برای ادامه وارد حساب خود شوید
-              </p>
             </CardHeader>
 
-            <CardContent className="space-y-5">
-              {loginType === "otp" ? (
-                <OtpLoginForm
-                  onLogin={finishLogin}
-                  onShowRules={() => setOpen(true)}
-                />
-              ) : (
-                <>
-                  <aside
-                    aria-labelledby="initial-login-notice-title"
-                    className="relative overflow-hidden rounded-xl border border-(--base-green)/25 bg-(--light-green) p-4"
-                  >
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-y-0 right-0 w-1 bg-(--base-green)"
-                    />
+            <CardContent>
+              <Tabs dir="rtl" value={loginType} onValueChange={setLoginType} className="gap-3 md:gap-5">
+                <TabsList aria-label="روش ورود" className="grid w-full grid-cols-2">
+                  <TabsTrigger ref={otpTab} value="otp" disabled={isPendingLogin} className="whitespace-normal leading-tight">
+                    <SmartphoneIcon aria-hidden="true" />
+                    ورود با کد یکبار مصرف
+                  </TabsTrigger>
+                  <TabsTrigger value="password" disabled={isPendingOtp} className="whitespace-normal leading-tight">
+                    <KeyRoundIcon aria-hidden="true" />
+                    ورود با رمز عبور
+                  </TabsTrigger>
+                </TabsList>
 
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-(--base-green)/15 text-(--base-green)">
-                        <ShieldCheckIcon
-                          aria-hidden="true"
-                          className="size-5"
-                        />
-                      </div>
+                <TabsContent value="otp" forceMount hidden={loginType !== "otp"}>
+                  <OtpLoginForm
+                    active={loginType === "otp"}
+                    onPendingChange={setIsPendingOtp}
+                    onLogin={finishLogin}
+                    onShowRules={() => setOpen(true)}
+                  />
+                </TabsContent>
 
-                      <div className="space-y-2 text-sm leading-6">
-                        <p
-                          id="initial-login-notice-title"
-                          className="font-bold text-foreground"
-                        >
-                          راهنمای ورود اولیه
-                        </p>
-                        <p className="text-(--secondary-text)">
-                          <strong className="font-bold text-foreground">
-                            نام کاربری و رمز عبور اولیه شما، همان شماره تلفن
-                            همراهتان است.
-                          </strong>
-                        </p>
-                        <p className="text-(--secondary-text)">
-                          پس از ورود به فودنیکس، لطفاً برای افزایش امنیت، رمز
-                          عبور خود را تغییر دهید.
-                        </p>
-                      </div>
-                    </div>
-                  </aside>
-
+                <TabsContent value="password">
                   <Form {...loginForm}>
                     <form
                       onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
-                      className="flex flex-col gap-5"
+                      className="flex flex-col gap-3"
                     >
                       {/* Mobile */}
                       <FormField
                         control={loginForm.control}
                         name="mobile"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="gap-1.5">
                             <FormLabel className="text-foreground">
                               شماره موبایل
                             </FormLabel>
@@ -231,7 +214,7 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
                                     toEnglishDigits(event.target.value),
                                   )
                                 }
-                                className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
+                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                               />
                             </FormControl>
                             <FormMessage />
@@ -244,15 +227,34 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
                         control={loginForm.control}
                         name="password"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground">
-                              رمز عبور
-                            </FormLabel>
+                          <FormItem className="gap-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <FormLabel className="text-foreground">رمز عبور</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button type="button" variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-(--base-green)">
+                                    <ShieldCheckIcon aria-hidden="true" />
+                                    راهنمای ورود اولیه
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  dir="rtl"
+                                  align="end"
+                                  sideOffset={6}
+                                  aria-labelledby="initial-login-guide-title"
+                                  className="max-w-[calc(100vw-2rem)] p-3 leading-6"
+                                >
+                                  <p id="initial-login-guide-title" className="font-bold">راهنمای ورود اولیه</p>
+                                  <p>برای اولین ورود، شماره موبایلتان را در هر دو فیلد وارد کنید.</p>
+                                  <p className="text-muted-foreground">پس از ورود، برای امنیت حساب رمز عبورتان را تغییر دهید.</p>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                             <FormControl>
                               <PasswordInput
                                 placeholder="رمز عبور"
                                 {...field}
-                                className="h-12 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
+                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
                               />
                             </FormControl>
                             <FormMessage />
@@ -262,15 +264,12 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
 
                       {/* Options */}
                       <div className="flex justify-between text-sm text-(--secondary-text)">
-                        {/* Modal */}
-                        <ForgetPasswordModal
-                          open={openForgetPasswordModal}
-                          onOpenChange={setOpenForgetPasswordModal}
-                        />
                         <button
+                          ref={forgotPasswordButton}
                           type="button"
+                          disabled={isPendingLogin}
                           onClick={() => setOpenForgetPasswordModal(true)}
-                          className="text-(--base-green) transition"
+                          className="text-(--base-green) transition disabled:opacity-50"
                         >
                           <span className="cursor-pointer hover:text-green-600 transition">
                             فراموشی رمز؟
@@ -288,40 +287,24 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
                         </label>
                       </div>
 
-                      {/* Register */}
-                      <div className="text-sm text-(--secondary-text) text-center">
-                        حساب کاربری ندارید؟{" "}
-                        <div
-                          // href="/register"
-                          className="text-green-600 font-medium hover:text-green-700 transition"
-                        >
-                          ثبت نام از طریق سازمان امکان پذیر است.
-                        </div>
-                      </div>
-
-                      {/* Terms */}
-                      <div className="text-center text-sm">
-                        <button
-                          type="button"
-                          onClick={() => setOpen(true)}
-                          className="text-(--base-green) transition"
-                        >
-                          مشاهده قوانین و مقررات
-                        </button>
-                      </div>
-
                       {/* Submit */}
                       <Button
                         type="submit"
                         disabled={isPendingLogin}
-                        className="w-full h-12 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold transition"
+                        className="h-11 w-full rounded-lg bg-green-500 font-bold text-white transition hover:bg-green-600"
                       >
                         {isPendingLogin ? "در حال ورود..." : "ورود به فودنیکس"}
                       </Button>
                     </form>
                   </Form>
-                </>
-              )}
+                  <div className="mt-2 text-center text-xs text-(--secondary-text)">
+                    <p>ثبت‌نام از طریق سازمان امکان‌پذیر است.</p>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(true)} className="h-8 text-xs text-(--base-green)">
+                      قوانین و مقررات
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
@@ -329,6 +312,18 @@ function LoginScreen({ loginType }: { loginType: "otp" | "password" }) {
 
       {/* Modal */}
       <RulesModal open={open} onOpenChange={setOpen} />
+      <ForgetPasswordModal
+        open={openForgetPasswordModal}
+        onOpenChange={setOpenForgetPasswordModal}
+        onSelectOtp={() => {
+          setLoginType("otp");
+          setOpenForgetPasswordModal(false);
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          (loginType === "otp" ? otpTab : forgotPasswordButton).current?.focus();
+        }}
+      />
     </div>
   );
 }
