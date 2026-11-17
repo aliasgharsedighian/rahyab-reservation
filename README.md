@@ -18,6 +18,12 @@ Opening food details records
 failures do not block the reservation interface. Restart the dev server or rebuild
 after changing the public API key.
 
+Important events and events explicitly selected by the user must flush the SDK
+queue in the background after logging. Add their names to `immediateEvents` in
+`lib/analytics.ts` and update the list and acceptance criteria in
+[the Analytics documentation](docs/analytics.md). Upload failures must remain
+isolated from the application flow.
+
 Browser notifications are enabled from the dashboard Notifications page on HTTPS
 or localhost. The existing `/sw.js` imports the BaaS worker and must be active
 before Push starts. The current BaaS SDK receives messages over a WebSocket while

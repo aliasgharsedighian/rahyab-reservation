@@ -53,6 +53,7 @@ type PendingEvent = [name: "product_view", parameters: ProductView]
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
+  flush(): Promise<unknown>;
   setAutomaticCollection(enabled: boolean): void;
 }
 
@@ -67,6 +68,31 @@ let unavailable = false;
 const pendingEvents: PendingEvent[] = [];
 const reportedErrorIds = new Set<string>();
 let sessionId: string | undefined;
+const immediateEvents = new Set<PendingEvent[0]>([
+  "login_started", "login_completed", "login_failed", "session_started", "session_ended",
+  "order_error", "payment_error", "menu_load_failed", "api_error",
+]);
+let flushRequested = false;
+let flushing = false;
+
+async function flushImportantEvents() {
+  flushRequested = true;
+  if (flushing) return;
+  flushing = true;
+  try {
+    // Events queued during an upload need another flush after that upload finishes.
+    while (flushRequested && !unavailable) {
+      flushRequested = false;
+      try {
+        await analytics?.flush();
+      } catch {
+        console.warn("Analytics queue could not be flushed.");
+      }
+    }
+  } finally {
+    flushing = false;
+  }
+}
 
 function getSessionId() {
   if (sessionId) return sessionId;
@@ -92,7 +118,9 @@ export function disableAnalytics() {
 async function sendEvent(event: PendingEvent) {
   if (event[0] !== "product_view") await Promise.resolve();
   try {
-    if (!unavailable) await analytics?.logEvent(...event);
+    if (unavailable || !analytics) return;
+    await analytics.logEvent(...event);
+    if (immediateEvents.has(event[0]) && !unavailable) void flushImportantEvents();
   } catch {
     // Analytics failures must not interrupt reservations.
     console.warn(`Analytics ${event[0]} could not be recorded.`);
