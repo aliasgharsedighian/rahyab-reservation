@@ -5,6 +5,7 @@ import ApiLoadFailure from "@/app/components/ApiLoadFailure";
 import type { ErrorOccurrence } from "@/lib/analytics-errors";
 import DashboardHeader from "../components/DashboardHeader";
 import ClientNotificationsPage from "./components/ClientNotificationsPage";
+import PushNotificationControl from "./components/PushNotificationControl";
 import DashboardPagination from "../components/DashboardPagination";
 
 import type { NotificationsResponse } from "./types";
@@ -49,6 +50,7 @@ export default async function NotificationsPage({ searchParams }: Props) {
     <div className="flex flex-col gap-6 w-full mb-10">
       <AnalyticsErrorEvents events={errorEvents} />
       <DashboardHeader title={"اعلان ها"} />
+      <PushNotificationControl />
       {!notifications && errorEvents.length > 0 ? <ApiLoadFailure /> : <ClientNotificationsPage
         notificationsData={notifications?.notifications ?? []}
         revalidateData={revalidateData}

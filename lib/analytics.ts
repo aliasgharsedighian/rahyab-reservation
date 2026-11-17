@@ -6,6 +6,7 @@ import {
   type ErrorEventName,
   type ErrorOccurrence,
 } from "./analytics-errors";
+import { initializeBaasCore, type BaasCore } from "./baas-core";
 
 type ProductView = {
   product_id: string;
@@ -20,14 +21,13 @@ type ErrorParameters = {
   event_id: string;
   event_name: ErrorEventName;
   event_time: string;
-  user_id: null;
-  session_id: string | null;
+  session_id?: string;
   source: "frontend";
   platform: "web";
   app_version: string;
-  properties: { operation: string; error_code?: ErrorCode };
-  order_id: number | null;
-  correlation_id: null;
+  operation: string;
+  error_code?: ErrorCode;
+  order_id?: number;
 };
 
 type PendingEvent = [name: "product_view", parameters: ProductView]
@@ -35,16 +35,12 @@ type PendingEvent = [name: "product_view", parameters: ProductView]
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
-}
-
-interface CoreClient {
-  readonly SDK_VERSION: string;
+  setAutomaticCollection(enabled: boolean): void;
 }
 
 declare global {
   interface Window {
-    CoreSDK?: new (config: { apiKey: string }) => CoreClient;
-    AnalyticsSDK?: new (core: CoreClient, config: { appVersion: string }) => AnalyticsClient;
+    AnalyticsSDK?: new (core: BaasCore, config: { appVersion: string }) => AnalyticsClient;
   }
 }
 
@@ -89,14 +85,15 @@ export function initializeAnalytics() {
   if (analytics || unavailable || typeof window === "undefined") return;
 
   const apiKey = process.env.NEXT_PUBLIC_BAAS_API_KEY;
-  if (!apiKey || !window.CoreSDK || !window.AnalyticsSDK) {
+  if (!apiKey || !window.AnalyticsSDK) {
     disableAnalytics();
     return;
   }
 
   try {
-    const core = new window.CoreSDK({ apiKey });
-    analytics = new window.AnalyticsSDK(core, { appVersion });
+    const client = new window.AnalyticsSDK(initializeBaasCore(), { appVersion });
+    client.setAutomaticCollection(false);
+    analytics = client;
     for (const event of pendingEvents.splice(0)) {
       void sendEvent(event);
     }
@@ -160,16 +157,12 @@ export function logErrorOccurrence(occurrence: ErrorOccurrence) {
     event_id: occurrence.eventId,
     event_name: occurrence.eventName,
     event_time: occurrence.eventTime,
-    user_id: null,
-    session_id: session,
+    ...(session ? { session_id: session } : {}),
     source: "frontend",
     platform: "web",
     app_version: appVersion,
-    properties: {
-      operation: occurrence.operation,
-      ...(occurrence.errorCode ? { error_code: occurrence.errorCode } : {}),
-    },
-    order_id: occurrence.orderId ?? null,
-    correlation_id: null,
+    operation: occurrence.operation,
+    ...(occurrence.errorCode ? { error_code: occurrence.errorCode } : {}),
+    ...(occurrence.orderId == null ? {} : { order_id: occurrence.orderId }),
   }]);
 }

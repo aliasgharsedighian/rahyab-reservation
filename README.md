@@ -2,18 +2,28 @@
 
 فودنیکس، سامانه رزرو و مدیریت غذای کارکنان است.
 
-## Analytics configuration
+## BaaS web configuration
 
 Set these variables in `.env.local` and in the deployment environment:
 
 - `NEXT_PUBLIC_BAAS_API_KEY`: browser API key for the BaaS SDK; required at build time.
 - `BAAS_SERVER_KEY`: server-only key, reserved for server integrations; never sent to the browser.
 
-The root layout loads CoreSDK followed by AnalyticsSDK. Opening food details records
+The root layout initializes one CoreSDK instance and shares it with AnalyticsSDK,
+AuthSDK, and PushSDK. Foodnix sign-in continues to use its own backend.
+Opening food details records
 `product_view` with the food ID (`P-{food_id}`), its displayed price in toman,
 `category: "food"`, and `in_stock: true`. Views wait for SDK loading; analytics
 failures do not block the reservation interface. Restart the dev server or rebuild
 after changing the public API key.
+
+Browser notifications are enabled from the dashboard Notifications page on HTTPS
+or localhost. The existing `/sw.js` imports the BaaS worker and must be active
+before Push starts. The current BaaS SDK receives messages over a WebSocket while
+a dashboard tab is open and reports notification clicks and dismissals through
+the worker. Closing all dashboard tabs stops the WebSocket. To verify delivery,
+grant permission in the browser and send a test notification to that installation
+from the BaaS test environment.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

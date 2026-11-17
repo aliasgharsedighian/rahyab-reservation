@@ -61,3 +61,16 @@ self.addEventListener("fetch", (event) => {
       .then((cached) => cached ?? fetch(request)));
   }
 });
+
+let baasPushReady = false;
+try {
+  importScripts("https://nexus.baas.gov.ir/repository/SDK_Raw/web/cdn/latest/sdk-sw.js");
+  baasPushReady = true;
+} catch {
+  // Keep the offline worker available if the Push CDN is unreachable.
+  console.warn("BaaS Push could not be loaded in the Service Worker.");
+}
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "FOODNIX_BAAS_PUSH_STATUS") event.ports[0]?.postMessage(baasPushReady);
+});

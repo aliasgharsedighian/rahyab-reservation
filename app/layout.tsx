@@ -68,7 +68,6 @@ export default async function RootLayout({
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
       <body className="transition-all duration-700">
-        <BaasAnalytics />
         <AnalyticsErrorEvents events={events} />
         <ThemeProvider
           attribute="class"
@@ -97,6 +96,7 @@ export default async function RootLayout({
             </SiteSettingsProvider>
           </ReduxProvider>
         </ThemeProvider>
+        <BaasAnalytics />
       </body>
     </html>
   );
