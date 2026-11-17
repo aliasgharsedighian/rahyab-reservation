@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
+import { getAnalyticsUserId } from "@/lib/analytics-identity";
 import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
 import ApiLoadFailure from "@/app/components/ApiLoadFailure";
 import type { ErrorOccurrence } from "@/lib/analytics-errors";
@@ -59,6 +60,7 @@ export default async function ProfilePage({ searchParams }: Props) {
       <DashboardHeader title={"پروفایل کاربری"} />
       <ClientProfilePage
         profile={profile}
+        analyticsUserId={getAnalyticsUserId(profile)}
         foodPreferences={foodPreferences}
         revalidateData={revalidateData}
       />

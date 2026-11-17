@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { requestLoginOtp, verifyLoginOtp } from "@/actions/otpLoginAction";
 import { logAnalyticsError } from "@/lib/analytics";
+import { beginLoginAttempt, failLoginAttempt, type LoginAttempt } from "@/lib/auth-analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -40,6 +41,8 @@ export function OtpLoginForm({
     data: { token: string; user: unknown },
     message?: string,
     toastId?: string | number,
+    attempt?: LoginAttempt | null,
+    analyticsUserId?: string | null,
   ) => void;
   onShowRules: () => void;
 }) {
@@ -50,6 +53,10 @@ export function OtpLoginForm({
   const [pending, setPending] = useState<"send" | "verify" | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const busy = useRef(false);
+  const attempt = useRef<LoginAttempt | null>(null);
+  const attemptPhone = useRef("");
+  const attemptHasCode = useRef(false);
+  const challengeAttempt = useRef<LoginAttempt | null>(null);
   const resendAt = useRef(0);
   const mobileOnCooldown = useRef("");
   const mobileInput = useRef<HTMLInputElement>(null);
@@ -101,6 +108,9 @@ export function OtpLoginForm({
     }
     if (!verify && Date.now() < resendAt.current && phone === mobileOnCooldown.current) {
       if (!sentTo) {
+        attempt.current = challengeAttempt.current;
+        attemptPhone.current = phone;
+        attemptHasCode.current = true;
         setSentTo(phone);
         setError("");
       }
@@ -109,6 +119,11 @@ export function OtpLoginForm({
 
     smsRequest.current?.abort();
     busy.current = true;
+    if (!verify && (!attempt.current || attemptPhone.current !== phone)) {
+      attempt.current = beginLoginAttempt("otp");
+      attemptPhone.current = phone;
+      attemptHasCode.current = false;
+    }
     setError("");
     setPending(verify ? "verify" : "send");
     onPendingChange(true);
@@ -118,8 +133,18 @@ export function OtpLoginForm({
       if (verify) {
         const result = await verifyLoginOtp(phone, enteredCode);
         if (result.success) {
-          onLogin(result.data, result.message, toastId);
+          onLogin(result.data, result.message, toastId, attempt.current, result.analyticsUserId);
           return;
+        }
+        if ("terminal" in result && result.terminal) {
+          failLoginAttempt(attempt.current);
+          attempt.current = null;
+          attemptHasCode.current = false;
+          challengeAttempt.current = null;
+          mobileOnCooldown.current = "";
+          resendAt.current = 0;
+          setSecondsLeft(0);
+          changeMobile();
         }
         if ("errorCode" in result && result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "verify_login_otp" }, result.errorCode);
         setError(result.message);
@@ -131,12 +156,18 @@ export function OtpLoginForm({
         const smsCode = controller ? readSmsCode(controller.signal) : null;
         const result = await requestLoginOtp(phone);
         if (!result.success) {
+          if (!attemptHasCode.current) {
+            failLoginAttempt(attempt.current);
+            attempt.current = null;
+          }
           if (result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "request_login_otp" }, result.errorCode);
           controller?.abort();
           setError(result.message);
           toast.error(result.message, { id: toastId });
           return;
         }
+        attemptHasCode.current = true;
+        challengeAttempt.current = attempt.current;
         mobileOnCooldown.current = phone;
         resendAt.current = Date.now() + resendDelay * 1000;
         setSecondsLeft(resendDelay);
@@ -150,6 +181,10 @@ export function OtpLoginForm({
         });
       }
     } catch {
+      if (!verify && !attemptHasCode.current) {
+        failLoginAttempt(attempt.current);
+        attempt.current = null;
+      }
       smsRequest.current?.abort();
       const message = "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.";
       setError(message);

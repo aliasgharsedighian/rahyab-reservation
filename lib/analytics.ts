@@ -30,8 +30,26 @@ type ErrorParameters = {
   order_id?: number;
 };
 
+type AuthEventName = "login_started" | "login_completed" | "login_failed" | "session_started" | "session_ended" | "profile_viewed";
+type AuthProperties = {
+  user_id?: string;
+  session_id?: string;
+  correlation_id?: string;
+  login_method?: "otp" | "password";
+  reason?: "logout" | "expired" | "disabled";
+};
+type AuthParameters = AuthProperties & {
+  event_id: string;
+  event_name: AuthEventName;
+  event_time: string;
+  source: "frontend";
+  platform: "web";
+  app_version: string;
+};
+
 type PendingEvent = [name: "product_view", parameters: ProductView]
-  | [name: ErrorEventName, parameters: ErrorParameters];
+  | [name: ErrorEventName, parameters: ErrorParameters]
+  | [name: AuthEventName, parameters: AuthParameters];
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
@@ -125,6 +143,28 @@ export function logFoodProductView(foodId: number, price: number) {
     in_stock: true,
     price,
   }]);
+}
+
+export function logAuthEvent(name: AuthEventName, properties: AuthProperties, eventId?: string) {
+  if (!canTrack()) return;
+  try {
+    const params: AuthParameters = {
+      event_id: eventId ?? createAnalyticsId(),
+      event_name: name,
+      event_time: new Date().toISOString(),
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+    };
+    if (properties.user_id) params.user_id = properties.user_id;
+    if (properties.session_id) params.session_id = properties.session_id;
+    if (properties.correlation_id) params.correlation_id = properties.correlation_id;
+    if (properties.login_method) params.login_method = properties.login_method;
+    if (properties.reason) params.reason = properties.reason;
+    enqueueEvent([name, params]);
+  } catch {
+    console.warn("Analytics could not record the authentication event.");
+  }
 }
 
 export function logAnalyticsError(context: ErrorEventContext, errorCode?: ErrorCode) {

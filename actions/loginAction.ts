@@ -1,6 +1,7 @@
 "use server";
 
 import { toEnglishDigits } from "@/lib/digits";
+import { getAnalyticsUserId } from "@/lib/analytics-identity";
 import { getFetchErrorCode, getTechnicalErrorCode, type ErrorCode } from "@/lib/analytics-errors";
 import loginCookiesAction from "./loginCookiesAction";
 
@@ -13,6 +14,7 @@ type LoginResponse =
   | {
       success: true;
       message: string;
+      analyticsUserId: string | null;
       data: {
         token: string;
         user: unknown;
@@ -57,6 +59,7 @@ export default async function loginAction(
       return {
         success: true,
         message: result.message,
+        analyticsUserId: getAnalyticsUserId(result.data.user),
         data: result.data,
       };
     }

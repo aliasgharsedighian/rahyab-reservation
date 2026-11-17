@@ -8,6 +8,7 @@ Set these variables in `.env.local` and in the deployment environment:
 
 - `NEXT_PUBLIC_BAAS_API_KEY`: browser API key for the BaaS SDK; required at build time.
 - `BAAS_SERVER_KEY`: server-only key, reserved for server integrations; never sent to the browser.
+- `FOODNIX_ANALYTICS_IDENTITY_KEY`: stable server-only HMAC secret for pseudonymous employee IDs. Configure the same secret and algorithm in the server issuing IDs for web and native apps.
 
 The root layout initializes one CoreSDK instance and shares it with AnalyticsSDK,
 AuthSDK, and PushSDK. Foodnix sign-in continues to use its own backend.
