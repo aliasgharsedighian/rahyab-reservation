@@ -1,6 +1,9 @@
 import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
-import { getSiteSettings } from "@/lib/api/site-settings";
+import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
+import ApiLoadFailure from "@/app/components/ApiLoadFailure";
+import type { ErrorOccurrence } from "@/lib/analytics-errors";
+import { loadSiteSettings } from "@/lib/api/site-settings";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardPagination from "../components/DashboardPagination";
 import WalletTable from "./components/WalletTable";
@@ -17,6 +20,7 @@ interface Props {
 }
 
 const getWalletDetail = async (
+  errorEvents: ErrorOccurrence[],
   per_page: string = "10",
   page: string = "1",
   created_at_from_jalali: string,
@@ -37,10 +41,10 @@ const getWalletDetail = async (
   if (status) {
     params.set("status", status);
   }
-  const res = await serverApiFetch(`wallet?${params.toString()}`);
+  const res = await serverApiFetch(`wallet?${params.toString()}`, {}, errorEvents);
 
-  const wallet: WalletResponse = await res.json();
   if (res.status === 200) {
+    const wallet: WalletResponse = await res.json();
     return wallet.data;
   }
 };
@@ -50,10 +54,12 @@ export default async function WalletPage({ searchParams }: Props) {
   const { page, created_at_from_jalali, created_at_to_jalali, status } =
     await searchParams;
 
-  const [wallet, settings] = await Promise.all([
-    getWalletDetail(per_page, page, created_at_from_jalali, created_at_to_jalali, status),
-    getSiteSettings(),
+  const errorEvents: ErrorOccurrence[] = [];
+  const [wallet, { settings, events }] = await Promise.all([
+    getWalletDetail(errorEvents, per_page, page, created_at_from_jalali, created_at_to_jalali, status),
+    loadSiteSettings(),
   ]);
+  errorEvents.push(...events);
   const paymentType = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value;
 
   async function revalidateData() {
@@ -62,10 +68,18 @@ export default async function WalletPage({ searchParams }: Props) {
     revalidatePath(`/dashboard/wallet`);
   }
 
-  if (!wallet) return;
+  if (!wallet) {
+    return (
+      <>
+        <AnalyticsErrorEvents events={errorEvents} />
+        {errorEvents.some(({ operation }) => operation === "load_wallet") && <ApiLoadFailure />}
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
+      <AnalyticsErrorEvents events={errorEvents} />
       <DashboardHeader title={"کیف پول"} />
       <div className="mx-2 md:mx-6">
         <div className="mx-auto w-full max-w-5xl">

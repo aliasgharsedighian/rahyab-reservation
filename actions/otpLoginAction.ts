@@ -1,6 +1,7 @@
 "use server";
 
 import { getApiUrl } from "@/lib/api/url";
+import { getFetchErrorCode, getTechnicalErrorCode, type ErrorCode } from "@/lib/analytics-errors";
 import { normalizeOtpDigits, otpCodePattern, otpMobilePattern } from "@/lib/otp-login";
 import loginCookiesAction from "./loginCookiesAction";
 
@@ -18,13 +19,16 @@ async function postOtp(path: "auth/otp" | "auth/otp/verify", payload: { mobile: 
     body: JSON.stringify(payload),
   });
   const body: OtpResponse | null = await response.json().catch(() => null);
+  const errorCode = getTechnicalErrorCode(response.status, body);
   return {
-    ok: response.ok && (body?.status === undefined || body.status === 200),
+    ok: !errorCode && response.ok && body !== null && (body.status === undefined || body.status === 200),
     body,
+    errorCode: errorCode ?? (response.ok && body === null ? "invalid_response" as const : undefined),
   };
 }
 
-const invalidMobile = { success: false, message: "شماره موبایل را با فرمت ۰۹۱۲۳۴۵۶۷۸۹ وارد کنید." } as const;
+type OtpFailure = { success: false; message: string; errorCode?: ErrorCode };
+const invalidMobile: OtpFailure = { success: false, message: "شماره موبایل را با فرمت ۰۹۱۲۳۴۵۶۷۸۹ وارد کنید." };
 const connectionError = { success: false, message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید." } as const;
 
 export async function requestLoginOtp(mobile: string) {
@@ -32,17 +36,18 @@ export async function requestLoginOtp(mobile: string) {
   if (!otpMobilePattern.test(mobile)) return invalidMobile;
 
   try {
-    const { ok, body } = await postOtp("auth/otp", { mobile });
+    const { ok, body, errorCode } = await postOtp("auth/otp", { mobile });
     if (!ok) {
       return {
         success: false as const,
         message: body?.errors?.mobile?.[0] || body?.message || "ارسال کد ناموفق بود.",
+        errorCode,
       };
     }
 
     return { success: true as const, message: body?.message };
-  } catch {
-    return connectionError;
+  } catch (error) {
+    return { ...connectionError, errorCode: getFetchErrorCode(error) };
   }
 }
 
@@ -55,13 +60,14 @@ export async function verifyLoginOtp(mobile: string, code: string) {
   }
 
   try {
-    const { ok, body } = await postOtp("auth/otp/verify", { mobile, code });
+    const { ok, body, errorCode } = await postOtp("auth/otp/verify", { mobile, code });
     const token = body?.data?.token;
     if (!ok || typeof token !== "string" || !token) {
       return {
         success: false as const,
         message: body?.errors?.code?.[0] || body?.errors?.mobile?.[0] ||
           body?.message || "تأیید کد ناموفق بود.",
+        errorCode: errorCode ?? (ok ? "invalid_response" as const : undefined),
       };
     }
 
@@ -71,7 +77,7 @@ export async function verifyLoginOtp(mobile: string, code: string) {
       message: body?.message,
       data: { token, user: body?.data?.user },
     };
-  } catch {
-    return connectionError;
+  } catch (error) {
+    return { ...connectionError, errorCode: getFetchErrorCode(error) };
   }
 }

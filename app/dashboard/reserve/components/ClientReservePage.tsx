@@ -1,7 +1,11 @@
 "use client";
 
 import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
+import ApiLoadFailure from "@/app/components/ApiLoadFailure";
 import { apiClient, UnauthorizedError } from "@/lib/api/client";
+import { logAnalyticsError } from "@/lib/analytics";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
+import { getPaymentGatewayUrl } from "@/lib/payment-gateway";
 
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
@@ -27,6 +31,7 @@ import ReservationFeedbackPrompt from "./ReservationFeedbackPrompt";
 
 interface ClientReservePageProps {
   reserveList: FoodReserveList | null;
+  menuLoadFailed: boolean;
   walletBalance: number | null;
   unreviewedReservations: UnreviewedReservation[];
 }
@@ -43,6 +48,7 @@ interface OnlineReservationResponse extends ReservationResponse {
 
 function ClientReservePage({
   reserveList,
+  menuLoadFailed,
   walletBalance,
   unreviewedReservations,
 }: ClientReservePageProps) {
@@ -157,26 +163,25 @@ function ClientReservePage({
       onlineCheckoutToast.current = toastId;
       setIsOnlineCheckoutPending(true);
       const paymentError = "ثبت رزرو یا اتصال به درگاه پرداخت ممکن نشد.";
+      const errorAnalytics = { eventName: "payment_error", operation: "start_order_payment" } as const;
       let isRedirecting = false;
 
       try {
         const { data, status } = await apiClient.post<OnlineReservationResponse>(
           "online-payments/order",
           { source: "web", items },
-          { timeout: 15_000 },
+          { timeout: 15_000, errorAnalytics },
         );
 
-        if (status < 200 || status >= 300 || data?.success !== true) {
+        if (getTechnicalErrorCode(status, data) || status < 200 || status >= 300 || data?.success !== true) {
           toast.error(data?.message || paymentError, { id: toastId });
         } else if (data.status === 201) {
           completeReservation(toastId);
         } else if (data.status === 202) {
-          const paymentUrl = new URL(data.data?.payment_url ?? "");
-          if (paymentUrl.protocol !== "https:") throw new Error("Invalid payment URL");
-
-          window.location.assign(paymentUrl.href);
+          window.location.assign(getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics));
           isRedirecting = true;
         } else {
+          logAnalyticsError(errorAnalytics, "invalid_response");
           toast.error(paymentError, { id: toastId });
         }
       } catch (error) {
@@ -194,14 +199,25 @@ function ClientReservePage({
       return;
     }
 
+    const errorAnalytics = { eventName: "order_error", operation: "create_order" } as const;
     try {
-      const { data: responseData } = await apiClient.post<ReservationResponse>(
+      const { data: responseData, status } = await apiClient.post<ReservationResponse>(
         "reservations",
         {
           items,
         },
+        { errorAnalytics },
       );
-      if (responseData.status !== 201) {
+      if (getTechnicalErrorCode(status, responseData)) {
+        toast.error("ثبت رزرو ممکن نشد. دوباره تلاش کنید.");
+        return;
+      }
+      if (status >= 200 && status < 300 && typeof responseData?.status !== "number") {
+        logAnalyticsError(errorAnalytics, "invalid_response");
+        toast.error("ثبت رزرو ممکن نشد. دوباره تلاش کنید.");
+        return;
+      }
+      if (responseData?.status !== 201) {
         toast.error("موجودی کیف پول کافی نیست.");
         const detail: WalletChargeGuideCartDetail | null =
           walletBalance === null
@@ -221,7 +237,9 @@ function ClientReservePage({
 
       completeReservation();
     } catch (error) {
+      if (error instanceof UnauthorizedError) return;
       console.error("Error sending data:", error);
+      toast.error("ثبت رزرو ممکن نشد. دوباره تلاش کنید.");
     }
   };
 
@@ -230,7 +248,7 @@ function ClientReservePage({
       <ReservationSuccessModal open={reservationSucceeded} onOpenChange={setReservationSucceeded} />
       <ReservationFeedbackPrompt reservations={unreviewedReservations} />
       <div className="min-w-0 flex-1">
-        <FoodReserveTabs reserveList={reserveList} />
+        {menuLoadFailed ? <ApiLoadFailure message="بارگذاری منو ممکن نشد." /> : <FoodReserveTabs reserveList={reserveList} />}
       </div>
       {isMobile ? (
         <FoodReserveCardMobile

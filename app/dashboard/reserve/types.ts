@@ -79,6 +79,8 @@ export interface FoodReserveList {
 
 export interface WeeklyMenuResponse {
   data?: FoodReserveList | null;
+  success?: boolean;
+  status?: number;
 }
 
 export interface SelectedReserveFood {

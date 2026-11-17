@@ -1,10 +1,18 @@
 "use client";
 
 import getAuthTokenAction from "@/actions/getAuthTokenAction";
-import axios from "axios";
+import { logAnalyticsError } from "@/lib/analytics";
+import { getApiErrorContext, getTechnicalErrorCode, type ErrorCode, type ErrorEventContext } from "@/lib/analytics-errors";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { getLogoutUrl, getSessionFailure, type SessionFailure } from "./session";
 
 let isRedirectingToLogin = false;
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    errorAnalytics?: ErrorEventContext;
+  }
+}
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -81,6 +89,18 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+function reportApiError(config: AxiosRequestConfig, errorCode: ErrorCode, response?: AxiosResponse) {
+  const { errorAnalytics, url, method } = config;
+  const context = errorAnalytics ?? getApiErrorContext(url ?? "", method);
+  const orderId: unknown = response?.data?.data?.order_id ?? response?.data?.order_id;
+  if (context.eventName === "order_error" && context.orderId == null
+    && typeof orderId === "number" && Number.isSafeInteger(orderId) && orderId > 0) {
+    logAnalyticsError({ ...context, orderId }, errorCode);
+    return;
+  }
+  logAnalyticsError(context, errorCode);
+}
+
 apiClient.interceptors.response.use(
   (response) => {
     const failure = getSessionFailure(response.status, response.data);
@@ -88,12 +108,24 @@ apiClient.interceptors.response.use(
       redirectToLogin(failure);
     }
 
+    const errorCode = getTechnicalErrorCode(response.status, response.data);
+    if (errorCode) reportApiError(response.config, errorCode, response);
+
     return response;
   },
   (error) => {
-    if (axios.isAxiosError(error) && error.response) {
-      const failure = getSessionFailure(error.response.status, error.response.data);
+    if (axios.isAxiosError(error) && error.config && error.code !== "ERR_CANCELED") {
+      const response = error.response;
+      const failure = response && getSessionFailure(response.status, response.data);
       if (failure) redirectToLogin(failure);
+
+      const errorCode = response
+        ? getTechnicalErrorCode(response.status, response.data)
+        : error.code === "ECONNABORTED" || error.code === "ETIMEDOUT"
+          ? "request_timeout"
+          : error.request ? "network_error" : undefined;
+
+      if (errorCode) reportApiError(error.config, errorCode, response);
     }
 
     return Promise.reject(error);

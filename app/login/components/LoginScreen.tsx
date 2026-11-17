@@ -1,5 +1,7 @@
 "use client";
 
+import { logAnalyticsError } from "@/lib/analytics";
+
 import { toEnglishDigits } from "@/lib/digits";
 import loginAction from "@/actions/loginAction";
 import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
@@ -117,6 +119,7 @@ function LoginScreen() {
     try {
       const result = await loginAction(values, rememberMe);
       if (!result.success) {
+        if (result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "login_with_password" }, result.errorCode);
         toast.error(result.message, { id: toastId });
         return;
       }

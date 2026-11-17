@@ -23,6 +23,9 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiClient, UnauthorizedError } from "@/lib/api/client";
+import { getPaymentGatewayUrl } from "@/lib/payment-gateway";
+import { logAnalyticsError } from "@/lib/analytics";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 
 const rialsPerToman = 10;
 const minimumRials = 10_000;
@@ -91,22 +94,23 @@ export default function WalletOnlineCharge() {
     if (isPending || !canPay) return;
     setIsPending(true);
     setError("");
+    const errorAnalytics = { eventName: "payment_error", operation: "start_wallet_payment" } as const;
 
     try {
       const { data, status } = await apiClient.post<WalletChargeResponse>(
         "online-payments/wallet",
         { amount: amountRials, source: "web" },
-        { timeout: 15_000 },
+        { timeout: 15_000, errorAnalytics },
       );
 
-      if (status !== 200 || data?.success !== true) {
+      const technicalError = getTechnicalErrorCode(status, data);
+      if (technicalError || status !== 200 || data?.success !== true) {
+        if (status === 200 && typeof data?.success !== "boolean" && !technicalError) {
+          logAnalyticsError(errorAnalytics, "invalid_response");
+        }
         setError(data?.message || paymentError);
       } else {
-        const paymentUrl = new URL(data.data?.payment_url ?? "");
-        if (paymentUrl.protocol !== "https:")
-          throw new Error("Invalid payment URL");
-
-        window.location.assign(paymentUrl.href);
+        window.location.assign(getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics));
         return;
       }
     } catch (error) {

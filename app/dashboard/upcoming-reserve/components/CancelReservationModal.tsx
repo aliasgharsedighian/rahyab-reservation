@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TriangleAlert } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import { logAnalyticsError } from "@/lib/analytics";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import type { CancelReservationResponse, ReservationUpcomingItem } from "../types";
 
 interface CancelFoodModalProps {
@@ -38,20 +40,28 @@ function CancelReservationModal({
 
   const handleCancelFood = async () => {
     if (loading || reservationId === null) return;
+    const errorAnalytics = { eventName: "order_error", operation: "cancel_order", orderId: reservationId } as const;
 
     try {
       setLoading(true);
 
-      const { data: response } = await apiClient.post<CancelReservationResponse>(
+      const { data: response, status } = await apiClient.post<CancelReservationResponse>(
         `reservations/${reservationId}/cancel`,
+        undefined,
+        { errorAnalytics },
       );
 
-      if (response.status === 200) {
+      if (getTechnicalErrorCode(status, response)) {
+        toast.error("لغو رزرو ممکن نشد. دوباره تلاش کنید.");
+      } else if (response?.status === 200) {
         toast.success(response.message || "رزرو غذا لغو شد");
         setOpen(false);
         revalidateData();
       } else {
-        toast.error(response.message || "خطا در لغو رزرو");
+        if (status >= 200 && status < 300 && typeof response?.status !== "number") {
+          logAnalyticsError(errorAnalytics, "invalid_response");
+        }
+        toast.error(response?.message || "خطا در لغو رزرو");
       }
     } catch (err) {
       console.error(err);

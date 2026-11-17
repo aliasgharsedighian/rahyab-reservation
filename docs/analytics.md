@@ -11,8 +11,8 @@
 ## وضعیت فعلی پروژه
 
 - [BaasAnalytics.tsx](../app/components/BaasAnalytics.tsx) در [layout اصلی](../app/layout.tsx) قرار دارد. در صورت وجود `NEXT_PUBLIC_BAAS_API_KEY`، ابتدا Core SDK و سپس Analytics SDK مرورگر را بارگذاری می‌کند.
-- [analytics.ts](../lib/analytics.ts) SDK وب را با نسخه ثابت `1.0.0` راه‌اندازی می‌کند و فقط `product_view` را می‌فرستد. پیش از آماده شدن SDK تا ۱۰۰ مشاهده را در حافظه نگه می‌دارد. خطای بارگذاری SDK صف را خالی می‌کند و خطای ارسال با هشدار ثبت می‌شود.
-- [FoodDetailsModal.tsx](../app/dashboard/reserve/components/FoodDetailsModal.tsx) هنگام باز شدن جزئیات غذا `logFoodProductView` را صدا می‌زند. این مسیر برای نمایش دسکتاپ و موبایل وب مشترک است. پیاده‌سازی قرارداد مشترک و ارسال رویدادهای Backend در این دو فایل وجود ندارد.
+- [analytics.ts](../lib/analytics.ts) SDK وب را با نسخه ثابت `1.0.0` راه‌اندازی می‌کند و `product_view` و چهار رویداد خطای وب را می‌فرستد. پیش از آماده شدن SDK تا ۱۰۰ رویداد را در حافظه نگه می‌دارد. خطای بارگذاری SDK صف را خالی می‌کند و خطای ارسال با هشدار ثبت می‌شود.
+- [FoodDetailsModal.tsx](../app/dashboard/reserve/components/FoodDetailsModal.tsx) هنگام باز شدن جزئیات غذا `logFoodProductView` را صدا می‌زند. این مسیر برای نمایش دسکتاپ و موبایل وب مشترک است و پارامترهای قبلی `product_view` را می‌فرستد.
 
 ## الگوی آزموده‌شده ارسال رویدادهای وب
 
@@ -73,13 +73,22 @@
 
 | مرحله و دامنه | رویدادهای پیشنهادی و نقطه ثبت | ویژگی‌های نمونه |
 | --- | --- | --- |
-| ۱. خطا | `app_error_occurred` هنگام بروز خطای قابل پایش در فرانت‌اند یا Backend | `error_code`، `operation`، `route_template` |
+| ۱. خطا در وب | `order_error`، `payment_error`، `menu_load_failed` و `api_error` در پایان تلاش ناموفق | `operation`، `error_code` در صورت دسترسی و `order_id` در صورت ارتباط |
 | ۲. ورود | `login_submitted` در ارسال فرم معتبر. `login_succeeded` پس از ایجاد نشست و `login_failed` پس از رد معتبر تلاش در Backend | `login_method`، `reason_code` برای شکست |
 | ۳. منو و غذا در وب و اپ موبایل | `menu_viewed` هنگام نمایش منو، `menu_searched` پس از اعمال جست‌وجو در صورت وجود قابلیت و `product_view` هنگام نمایش جزئیات غذا با حفظ نام فعلی | `menu_date`، `meal_type`، `result_count` یا `product_id` بر اساس رویداد |
 | ۴. سفارش در وب و اپ موبایل | `cart_item_added` پس از افزودن به سبد و `checkout_started` هنگام آغاز فرایند خرید. `order_confirmed`، `order_cancelled` و `order_delivered` پس از ثبت وضعیت متناظر در Backend | `product_id`، `quantity` یا شناسه سفارش در `order_id` |
 | ۵. پرداخت و کیف پول در وب | `wallet_viewed` هنگام نمایش کیف پول و `payment_started` هنگام آغاز تلاش پرداخت. `payment_succeeded` و `payment_failed` پس از تعیین نتیجه معتبر و `wallet_top_up_completed` پس از ثبت اعتبار در Backend | `payment_id`، `wallet_transaction_id`، `amount`، `currency` یا `reason_code` بر اساس رویداد |
 | ۶. نظرات و بازخورد در وب | `feedback_form_opened` هنگام نمایش فرم و `feedback_submitted` پس از ذخیره موفق در Backend | `product_id`، `feedback_id`، `rating` |
 | ۷. اعلان و پیام درون‌برنامه‌ای در وب | `notification_opened` هنگام باز کردن اعلان، `in_app_message_viewed` هنگام نمایش پیام و `in_app_message_action_clicked` هنگام انتخاب اقدام پیام | `notification_id`، `message_id`، `action_id` بر اساس رویداد |
+
+## ثبت خطا در وب
+
+- `order_error` شکست فنی ایجاد یا لغو رزرو را ثبت می‌کند. در لغو، شناسه رزرو به‌عنوان `order_id` منتقل می‌شود. در ایجاد، در صورت دریافت شناسه عددی سفارش از API ثبت می‌شود. در حال حاضر مسیر مستقلی برای ویرایش سفارش در وب وجود ندارد.
+- `payment_error` برای شکست فنی شروع پرداخت سفارش یا شارژ کیف پول و پاسخ حاوی نشانی نامعتبر درگاه ثبت می‌شود. فراخوانی `online-payments/order` زیر عملیات `start_order_payment` ثبت می‌شود. نتیجه قطعی تراکنش در تسک پرداخت با `payment_failed` پوشش داده می‌شود. پاسخ مبهم `422` تنها با کد فنی صریح قابل طبقه‌بندی است.
+- `menu_load_failed` در پایان بارگذاری ناموفق `weekly-menu` ثبت می‌شود. نمایش خطا و دکمه تلاش مجدد مستقل از ارسال رویداد هستند. منوی خالی موفق، رویداد خطا تولید نمی‌کند. تلاش دوباره کاربر، در صورت شکست، یک وقوع تازه است.
+- `api_error` برای سایر خطاهای فنی API با نام عملیات از فهرست ثابت ثبت می‌شود. در مسیر Axios هر درخواست یک دسته می‌گیرد و عملیات اختصاصی سفارش و پرداخت جایگزین `api_error` می‌شوند. درخواست لغوشده و خطای خود Analytics از این مسیر ثبت نمی‌شوند.
+- خطاهای دریافت داده در سرور Next.js با زمان وقوع و شناسه ثابت به مرورگر تحویل داده می‌شوند تا از همان SDK وب ارسال شوند. `source` برای این رویدادهای تجربه وب `frontend` و `platform` همیشه `web` است. نشست Analytics در مرورگر ساخته می‌شود و تا تعریف روش مستعارسازی، `user_id` مقدار `null` دارد.
+- فرانت‌اند ثبت تکراری شناسه‌های اخیر را در حافظه مهار می‌کند. ارسال خودکار مجدد در برنامه فعال نیست. حذف تکرار در گزارش BaaS هنگام دریافت چندباره یک `event_id` باید در محیط دارای کلید از سمت مقصد تأیید شود.
 
 ## قواعد ثبت و معیار پذیرش
 

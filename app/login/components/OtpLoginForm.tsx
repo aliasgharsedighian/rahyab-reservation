@@ -5,6 +5,7 @@ import { PencilIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestLoginOtp, verifyLoginOtp } from "@/actions/otpLoginAction";
+import { logAnalyticsError } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -120,6 +121,7 @@ export function OtpLoginForm({
           onLogin(result.data, result.message, toastId);
           return;
         }
+        if ("errorCode" in result && result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "verify_login_otp" }, result.errorCode);
         setError(result.message);
         toast.error(result.message, { id: toastId });
       } else {
@@ -129,6 +131,7 @@ export function OtpLoginForm({
         const smsCode = controller ? readSmsCode(controller.signal) : null;
         const result = await requestLoginOtp(phone);
         if (!result.success) {
+          if (result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "request_login_otp" }, result.errorCode);
           controller?.abort();
           setError(result.message);
           toast.error(result.message, { id: toastId });

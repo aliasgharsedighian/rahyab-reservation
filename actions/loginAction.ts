@@ -1,6 +1,7 @@
 "use server";
 
 import { toEnglishDigits } from "@/lib/digits";
+import { getFetchErrorCode, getTechnicalErrorCode, type ErrorCode } from "@/lib/analytics-errors";
 import loginCookiesAction from "./loginCookiesAction";
 
 interface LoginCredentials {
@@ -20,6 +21,7 @@ type LoginResponse =
   | {
       success: false;
       message: string;
+      errorCode?: ErrorCode;
     };
 
 export default async function loginAction(
@@ -41,7 +43,15 @@ export default async function loginAction(
         credentials: "include",
       },
     );
-    const result = await response.json();
+    const result = await response.json().catch(() => null);
+    const errorCode = getTechnicalErrorCode(response.status, result);
+    if (errorCode || !result) {
+      return {
+        success: false,
+        message: result?.message || "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.",
+        errorCode: errorCode ?? "invalid_response",
+      };
+    }
     if (response.ok && result.status === 200 && result.data?.token) {
       await loginCookiesAction(result.data.token, rememberMe);
       return {
@@ -59,6 +69,7 @@ export default async function loginAction(
     return {
       success: false,
       message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.",
+      errorCode: getFetchErrorCode(error),
     };
   }
 }
