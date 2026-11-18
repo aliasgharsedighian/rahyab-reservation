@@ -37,6 +37,7 @@ export interface UnreviewedReservation {
 }
 
 export interface ReserveFood {
+  food_category?: string;
   food_id: number;
   weekly_menu_id: number;
   name: string;

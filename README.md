@@ -20,9 +20,11 @@ dynamic imports from `baas-web-sdk/core`, `baas-web-sdk/analytics`,
 without contacting Nexus. Other dependencies still use their configured registry.
 To upgrade the SDK, obtain and verify the intended release, replace the versioned
 vendor archive and update the dependency and lockfile together.
-Opening food details records
-`product_view` with the food ID (`P-{food_id}`), its displayed price in toman,
-`category: "food"`, and `in_stock: true`. Views wait for SDK loading; analytics
+Opening food details records `menu_item_viewed` with the food ID (`food_{food_id}`),
+menu date, its displayed price in toman, availability and available category/meal
+metadata. This replaces the earlier test event `product_view`. Visible daily menus
+record `menu_viewed`; successfully adding a food to the cart records `food_selected`.
+Views wait for SDK loading; analytics
 failures do not block the reservation interface. Restart the dev server or rebuild
 after changing the public API key.
 

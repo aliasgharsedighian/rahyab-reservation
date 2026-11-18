@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { logFoodProductView } from "@/lib/analytics";
+import { getFoodEventProperties, useMenuAnalytics } from "./MenuAnalyticsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -27,10 +27,17 @@ type FeedbackState =
   | { status: "error" }
   | { status: "success"; data: FoodFeedbackData };
 
-function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserveFood; isMobile: boolean }) {
+function FoodDetailsContent({ selection, isMobile, onViewed }: {
+  selection: SelectedReserveFood;
+  isMobile: boolean;
+  onViewed: (selection: SelectedReserveFood) => void;
+}) {
   const { food, group, day } = selection;
   const [feedback, setFeedback] = useState<FeedbackState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    onViewed(selection);
+  }, [onViewed, selection]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -125,22 +132,21 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
 
 export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetailsModalProps) {
   const isMobile = useIsMobile();
-  const viewedFoodId = useRef<number | null>(null);
-  const foodId = selection?.food.food_id;
-  const foodPrice = selection?.food.price;
+  const viewedFoodId = useRef<string | null>(null);
+  const logEvent = useMenuAnalytics();
+  const onViewed = useCallback(({ food, group, day }: SelectedReserveFood) => {
+    const key = `${day.date}:${group.type}:${food.weekly_menu_id}`;
+    if (viewedFoodId.current === key) return;
+    viewedFoodId.current = key;
+    logEvent("menu_item_viewed", getFoodEventProperties(food, day.date, group.type));
+  }, [logEvent]);
 
   useEffect(() => {
-    if (!open || foodId === undefined || foodPrice === undefined) {
-      viewedFoodId.current = null;
-      return;
-    }
-    if (viewedFoodId.current === foodId) return;
+    if (!open) viewedFoodId.current = null;
+  }, [open]);
 
-    viewedFoodId.current = foodId;
-    logFoodProductView(foodId, foodPrice);
-  }, [open, foodId, foodPrice]);
-
-  const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id} selection={selection} isMobile={isMobile} /> : null;
+  const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id}
+    selection={selection} isMobile={isMobile} onViewed={onViewed} /> : null;
   if (isMobile) return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerContent dir="rtl" className="border border-(--base-green)/30 bg-white dark:bg-zinc-800 data-[vaul-drawer-direction=bottom]:h-[88dvh] data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">

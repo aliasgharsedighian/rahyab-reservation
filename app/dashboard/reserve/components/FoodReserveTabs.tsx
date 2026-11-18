@@ -12,7 +12,8 @@ import {
   MessageCircleIcon,
   UtensilsIcon,
 } from "lucide-react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMenuAnalytics } from "./MenuAnalyticsContext";
 import dynamic from "next/dynamic";
 import { useSelector } from "react-redux";
 import { hasMainFoodForDate, hasReservedMainFoodForDay } from "../cartRules";
@@ -237,12 +238,40 @@ const FoodGroup = memo(function FoodGroup({
 const FoodDay = memo(function FoodDay({
   day,
   onOpenFood,
+  onMenuViewed,
   initial,
 }: {
   day: ReserveDay;
   onOpenFood: OpenFood;
+  onMenuViewed: (day: ReserveDay) => void;
   initial: boolean;
 }) {
+  const header = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const node = header.current;
+    if (!node || !day.foods.some(group => group.items.length > 0)) return;
+    let visible = false;
+    const record = () => {
+      if (visible && document.visibilityState === "visible") onMenuViewed(day);
+    };
+    if (!("IntersectionObserver" in window)) {
+      visible = true;
+      record();
+      document.addEventListener("visibilitychange", record);
+      return () => document.removeEventListener("visibilitychange", record);
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      record();
+    });
+    observer.observe(node);
+    document.addEventListener("visibilitychange", record);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", record);
+    };
+  }, [day, onMenuViewed]);
+
   const { mainGroups, sideGroups, reservedMain, count } = useMemo(() => {
     const mainGroups = day.foods.filter(
       ({ type, items }) =>
@@ -269,6 +298,7 @@ const FoodDay = memo(function FoodDay({
       contentClassName="space-y-3 p-2 sm:p-3"
       trigger={
         <CollapsibleTrigger
+          ref={header}
           className={
             styles.dayHeader +
             " flex w-full items-center gap-2 rounded-t-xl border-b bg-zinc-50 px-3 py-3 text-right text-sm shadow-sm sm:text-base dark:bg-zinc-800"
@@ -364,6 +394,19 @@ function FoodReserveTabs({
   const [selectedWeek, setSelectedWeek] = useState(
     reserveList?.weeks[0]?.range,
   );
+  const logEvent = useMenuAnalytics();
+  const viewedDates = useRef(new Set<string>());
+  const onMenuViewed = useCallback((day: ReserveDay) => {
+    if (viewedDates.current.has(day.date)) return;
+    viewedDates.current.add(day.date);
+    const mealTypes = day.foods.filter(group => group.items.length > 0
+      && (group.type === "breakfast" || group.type === "lunch" || group.type === "dinner"));
+    const type = mealTypes.length === 1 ? mealTypes[0].type : undefined;
+    logEvent("menu_viewed", {
+      menu_date: day.date,
+      ...(type === "breakfast" || type === "lunch" || type === "dinner" ? { meal_type: type } : {}),
+    });
+  }, [logEvent]);
   const week =
     reserveList?.weeks.find((item) => item.range === selectedWeek) ??
     reserveList?.weeks[0];
@@ -433,6 +476,7 @@ function FoodReserveTabs({
                     key={day.date}
                     day={day}
                     onOpenFood={onOpenFood}
+                    onMenuViewed={onMenuViewed}
                     initial={index === 0}
                   />
                 )) : (

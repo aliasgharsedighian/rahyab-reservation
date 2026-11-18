@@ -107,6 +107,14 @@ export function getAnalyticsSessionId() {
   return readSession()?.sessionId;
 }
 
+export function getAnalyticsIdentity(userId: string | null) {
+  const session = readSession();
+  return {
+    user_id: userId ?? session?.userId ?? undefined,
+    session_id: userId && session?.userId && userId !== session.userId ? undefined : session?.sessionId,
+  };
+}
+
 export function logProfileViewed(userId: string | null) {
   const session = readSession();
   if (userId && session && !session.userId) writeSession({ ...session, userId });

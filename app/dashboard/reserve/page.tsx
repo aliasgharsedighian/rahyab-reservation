@@ -4,6 +4,8 @@ import type { UnreviewedReservation, WeeklyMenuResponse } from "./types";
 import { serverApiFetch } from "@/lib/api/server";
 import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
 import { collectErrorOccurrence, type ErrorOccurrence } from "@/lib/analytics-errors";
+import { getAnalyticsUserId } from "@/lib/analytics-identity";
+import { MenuAnalyticsProvider } from "./components/MenuAnalyticsContext";
 
 interface ReservationHistoryResponse {
   data?: {
@@ -52,18 +54,23 @@ const getReserveList = async (errorEvents: ErrorOccurrence[]) => {
 
 export default async function ReservePage() {
   const errorEvents: ErrorOccurrence[] = [];
-  const [{ menu, failed }, walletBalance, unreviewedReservations] =
+  const [{ menu, failed }, walletBalance, unreviewedReservations, profileResponse] =
     await Promise.all([
       getReserveList(errorEvents),
       getWalletBalance(errorEvents),
       getUnreviewedReservations(errorEvents),
+      serverApiFetch("profile", {}, errorEvents),
     ]);
+  const profile = profileResponse.ok ? await profileResponse.json().catch(() => null) : null;
+  const analyticsUserId = getAnalyticsUserId(profile?.data);
 
   return (
     <>
       <AnalyticsErrorEvents events={errorEvents} />
-      <ClientReservePage reserveList={menu} walletBalance={walletBalance}
-        menuLoadFailed={failed} unreviewedReservations={unreviewedReservations} />
+      <MenuAnalyticsProvider userId={analyticsUserId}>
+        <ClientReservePage reserveList={menu} walletBalance={walletBalance}
+          menuLoadFailed={failed} unreviewedReservations={unreviewedReservations} />
+      </MenuAnalyticsProvider>
     </>
   );
 }

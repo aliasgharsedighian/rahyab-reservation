@@ -8,13 +8,6 @@ import {
 } from "./analytics-errors";
 import { initializeBaasCore } from "./baas-core";
 
-type ProductView = {
-  product_id: string;
-  category: "food";
-  in_stock: true;
-  price: number;
-};
-
 const appVersion = "1.0.0";
 
 type ErrorParameters = {
@@ -47,7 +40,18 @@ type AuthParameters = AuthProperties & {
   app_version: string;
 };
 
-type PendingEvent = [name: "product_view", parameters: ProductView]
+export type MenuEventName = "menu_viewed" | "menu_item_viewed" | "food_selected";
+export type MenuProperties = {
+  menu_date: string;
+  meal_type?: "breakfast" | "lunch" | "dinner";
+  food_id?: string;
+  food_category?: string;
+  food_price?: number;
+  availability?: "available" | "unavailable";
+};
+type MenuParameters = Omit<AuthParameters, "event_name"> & MenuProperties & { event_name: MenuEventName };
+
+type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: ErrorEventName, parameters: ErrorParameters]
   | [name: AuthEventName, parameters: AuthParameters];
 
@@ -111,7 +115,7 @@ export function disableAnalytics() {
 }
 
 async function sendEvent(event: PendingEvent) {
-  if (event[0] !== "product_view") await Promise.resolve();
+  await Promise.resolve();
   try {
     if (unavailable || !analytics) return;
     await analytics.logEvent(...event);
@@ -152,15 +156,23 @@ function enqueueEvent(event: PendingEvent) {
   }
 }
 
-export function logFoodProductView(foodId: number, price: number) {
+export function logMenuEvent(name: MenuEventName, properties: MenuProperties, identity: { user_id?: string; session_id?: string }) {
   if (!canTrack()) return;
-
-  enqueueEvent(["product_view", {
-    product_id: `P-${foodId}`,
-    category: "food",
-    in_stock: true,
-    price,
-  }]);
+  try {
+    enqueueEvent([name, {
+      event_id: createAnalyticsId(),
+      event_name: name,
+      event_time: new Date().toISOString(),
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+      ...(identity.user_id ? { user_id: identity.user_id } : {}),
+      ...(identity.session_id ? { session_id: identity.session_id } : {}),
+      ...properties,
+    }]);
+  } catch {
+    console.warn("Analytics could not record the menu event.");
+  }
 }
 
 export function logAuthEvent(name: AuthEventName, properties: AuthProperties, eventId?: string) {
