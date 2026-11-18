@@ -6,7 +6,7 @@ import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-reac
 import { apiClient } from "@/lib/api/client";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import { getFoodEventProperties, useMenuAnalytics } from "./MenuAnalyticsContext";
-import TrackedComment, { useCommentVisit } from "@/app/components/TrackedComment";
+import CommentViewTracker, { useCommentVisit } from "@/app/components/CommentViewTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -67,6 +67,8 @@ function FoodDetailsContent({ selection, isMobile, onViewed, commentVisit }: {
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3 sm:px-5">
+      <CommentViewTracker foodId={food.food_id} visit={commentVisit}
+        enabled={feedback.status === "success" && feedback.data.feedbacks.some(item => Boolean(item.comment?.trim()))} />
       <div className="relative mb-3 flex aspect-[4/3] max-h-[45dvh] items-center justify-center overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {imageUrl ? (
           <ReserveFoodImage src={imageUrl} alt={food.name} sizes="(max-width: 767px) 100vw, 640px" />
@@ -117,15 +119,13 @@ function FoodDetailsContent({ selection, isMobile, onViewed, commentVisit }: {
               <Button variant="outline" onClick={() => { setFeedback({ status: "loading" }); setAttempt(value => value + 1); }}>تلاش دوباره</Button>
             </div>
           ) : feedback.data.feedbacks?.length ? feedback.data.feedbacks.map((item, index) => (
-            <TrackedComment key={item.id ?? index} foodId={food.food_id} rating={item.rate}
-              visit={commentVisit} viewKey={`public:${item.id ?? `${index}:${item.created_at_jalali}`}`}
-              enabled={Boolean(item.comment?.trim())} className="space-y-3 rounded-xl border p-4">
+            <article key={item.id ?? index} className="space-y-3 rounded-xl border p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <RatingStars value={item.rate} />
                 <span className="text-xs text-(--secondary-text)">{item.created_day_name} · {item.created_at_jalali}</span>
               </div>
               {item.comment ? <p className="whitespace-pre-wrap break-words text-sm leading-7">{item.comment}</p> : null}
-            </TrackedComment>
+            </article>
           )) : <p className="rounded-xl border p-4 text-sm text-(--secondary-text)">نظری ثبت نشده است.</p>}
         </section>
         <p className="text-xs leading-6 text-(--secondary-text)">
@@ -140,7 +140,7 @@ export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetai
   const isMobile = useIsMobile();
   const viewedFoodId = useRef<string | null>(null);
   const logEvent = useMenuAnalytics();
-  const commentVisit = useCommentVisit(open, selection?.food.food_id ?? null);
+  const commentVisit = useCommentVisit(open, selection?.food.food_id ?? null, selection?.food.weekly_menu_id ?? null);
   const onViewed = useCallback(({ food, group, day }: SelectedReserveFood) => {
     const key = `${day.date}:${group.type}:${food.weekly_menu_id}`;
     if (viewedFoodId.current === key) return;

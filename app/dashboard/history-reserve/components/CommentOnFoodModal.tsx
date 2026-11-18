@@ -3,7 +3,7 @@
 import { apiClient } from "@/lib/api/client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import TrackedComment, { useCommentVisit } from "@/app/components/TrackedComment";
+import CommentViewTracker, { useCommentVisit } from "@/app/components/CommentViewTracker";
 import { logFeedbackEvent } from "@/lib/analytics";
 import { getAnalyticsIdentity } from "@/lib/auth-analytics";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
@@ -52,7 +52,7 @@ function CommentOnFoodModal({
   promptMessage,
 }: CommentOnFoodModalProps) {
   const isMobile = useIsMobile();
-  const visit = useCommentVisit(open, foodId);
+  const visit = useCommentVisit(open, foodId, reservationId);
   const [loaded, setLoaded] = useState<{ data: FoodFeedbackData; visit: typeof visit } | null>(null);
   const data = loaded?.visit === visit ? loaded.data : null;
   const [comment, setComment] = useState("");
@@ -159,6 +159,9 @@ function CommentOnFoodModal({
 
   const content = (
     <div className="space-y-4">
+        <CommentViewTracker foodId={foodId ?? 0} orderId={reservationId ?? undefined}
+          rating={has_feedback?.rate} visit={visit}
+          enabled={Boolean(has_feedback?.comment?.trim() || data?.feedbacks.some(item => Boolean(item.comment?.trim())))} />
         <Title className="text-center iranSansBold text-xl">نظرات غذا</Title>
         <Description className="sr-only">امتیاز و نظر شما، وضعیت انتشار و نظرات کاربران دربارهٔ غذا</Description>
 
@@ -269,11 +272,7 @@ function CommentOnFoodModal({
             {has_feedback?.has_feedback && (
               <div className="mt-3 space-y-3">
                 {has_feedback.comment && (
-                  <TrackedComment foodId={foodId ?? 0} orderId={reservationId ?? undefined}
-                    rating={has_feedback.rate} visit={visit} viewKey={`own:${reservationId}`}
-                    enabled={Boolean(has_feedback.comment.trim())}>
-                    <p className="whitespace-pre-wrap break-words text-sm leading-7">{has_feedback.comment}</p>
-                  </TrackedComment>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-7">{has_feedback.comment}</p>
                 )}
                 <div className="space-y-1">
                   <p className="text-xs text-(--secondary-text)">وضعیت نظر</p>
@@ -313,9 +312,7 @@ function CommentOnFoodModal({
             <h3 id="other-food-feedback-title" className="font-bold">نظرات بقیه راجع به این غذا</h3>
             <div className="divide-y overflow-hidden rounded-xl border">
             {data.feedbacks?.length ? data.feedbacks.map((feedback, index) => (
-              <TrackedComment key={feedback.id ?? index} foodId={foodId ?? 0} rating={feedback.rate}
-                visit={visit} viewKey={`public:${feedback.id ?? `${index}:${feedback.created_at_jalali}`}`}
-                enabled={Boolean(feedback.comment?.trim())} className="space-y-2 p-3 text-right">
+              <article key={feedback.id ?? index} className="space-y-2 p-3 text-right">
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                   <RatingStars value={feedback.rate} />
                   <span className="ms-auto text-left text-xs text-(--secondary-text)">
@@ -323,7 +320,7 @@ function CommentOnFoodModal({
                   </span>
                 </div>
                 {feedback.comment && <p className="whitespace-pre-wrap break-words text-sm leading-7">{feedback.comment}</p>}
-              </TrackedComment>
+              </article>
             )) : <p className="p-3 text-sm text-(--secondary-text)">هنوز نظری ثبت نشده است.</p>}
             </div>
           </section>
