@@ -108,7 +108,7 @@ export function trackCartChange(before: ReserveCartItem[], after: ReserveCartIte
 
 export function startOrderCheckout(items: ReserveCartItem[]) {
   try {
-    if (items.length) ensureAttempt(items);
+    if (items.length) return ensureAttempt(items).correlationId;
   } catch {
     console.warn("Analytics could not record checkout start.");
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { CreditCardIcon, MinusIcon, PlusIcon, Wallet2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,7 @@ import { apiClient, UnauthorizedError } from "@/lib/api/client";
 import { getPaymentGatewayUrl } from "@/lib/payment-gateway";
 import { logAnalyticsError } from "@/lib/analytics";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
+import { beginWalletTopup, trackGatewayInitiated } from "@/lib/payment-analytics";
 
 const rialsPerToman = 10;
 const minimumRials = 10_000;
@@ -46,12 +47,23 @@ export default function WalletOnlineCharge() {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const pending = useRef(false);
   const [error, setError] = useState("");
   const [amountInput, setAmountInput] = useState("500000");
   const amountTomans = Number(amountInput);
   const amountRials = amountTomans * rialsPerToman;
   const canPay =
     Number.isSafeInteger(amountRials) && amountRials >= minimumRials;
+
+  useEffect(() => {
+    const resume = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      pending.current = false;
+      setIsPending(false);
+    };
+    window.addEventListener("pageshow", resume);
+    return () => window.removeEventListener("pageshow", resume);
+  }, []);
 
   function updateAmount(digits: string) {
     setAmountInput(digits);
@@ -91,10 +103,13 @@ export default function WalletOnlineCharge() {
 
   async function handlePayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isPending || !canPay) return;
+    if (pending.current || !canPay) return;
+    pending.current = true;
     setIsPending(true);
     setError("");
     const errorAnalytics = { eventName: "payment_error", operation: "start_wallet_payment" } as const;
+    const attempt = beginWalletTopup(amountRials);
+    let isRedirecting = false;
 
     try {
       const { data, status } = await apiClient.post<WalletChargeResponse>(
@@ -110,15 +125,21 @@ export default function WalletOnlineCharge() {
         }
         setError(data?.message || paymentError);
       } else {
-        window.location.assign(getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics));
+        const paymentUrl = getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics);
+        trackGatewayInitiated(data, attempt, true);
+        window.location.assign(paymentUrl);
+        isRedirecting = true;
         return;
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) return;
       setError(paymentError);
+    } finally {
+      if (!isRedirecting) {
+        pending.current = false;
+        setIsPending(false);
+      }
     }
-
-    setIsPending(false);
   }
 
   const Close = isMobile ? DrawerClose : DialogClose;

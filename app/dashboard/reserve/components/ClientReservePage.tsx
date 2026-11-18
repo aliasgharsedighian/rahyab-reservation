@@ -7,6 +7,7 @@ import { logAnalyticsError } from "@/lib/analytics";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import { getPaymentGatewayUrl } from "@/lib/payment-gateway";
 import { confirmCartOrder, startOrderCheckout } from "@/lib/order-analytics";
+import { beginCheckout, trackGatewayInitiated, trackWalletPaymentSucceeded, type PaymentAttempt } from "@/lib/payment-analytics";
 
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
@@ -60,6 +61,7 @@ function ClientReservePage({
   const [isOnlineCheckoutPending, setIsOnlineCheckoutPending] = useState(false);
   const onlineCheckoutToast = useRef<string | number | null>(null);
   const checkoutInProgress = useRef(false);
+  const paymentAttempt = useRef<PaymentAttempt | undefined>(undefined);
   const [reservationSucceeded, setReservationSucceeded] = useState(false);
 
   const reserveCart = useSelector(reserveSelectItems);
@@ -148,6 +150,7 @@ function ClientReservePage({
   }, [activeReserveCart]);
 
   const completeReservation = (response: unknown, toastId?: string | number) => {
+    trackWalletPaymentSucceeded(response, paymentAttempt.current);
     confirmCartOrder(activeReserveCart, response);
     toast.success("پرداخت با موفقیت از کیف پول شما انجام شد", { id: toastId });
     dispatch(removeAllItemsFromReserve([]));
@@ -162,7 +165,8 @@ function ClientReservePage({
     }));
     if (!items.length || checkoutInProgress.current) return;
     checkoutInProgress.current = true;
-    startOrderCheckout(activeReserveCart);
+    const correlationId = startOrderCheckout(activeReserveCart);
+    paymentAttempt.current = beginCheckout(correlationId, totalPrice, !onlinePayment);
 
     if (onlinePayment) {
       const toastId = toast.loading("در حال اتصال به درگاه پرداخت…");
@@ -184,7 +188,9 @@ function ClientReservePage({
         } else if (data.status === 201) {
           completeReservation(data, toastId);
         } else if (data.status === 202) {
-          window.location.assign(getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics));
+          const paymentUrl = getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics);
+          trackGatewayInitiated(data, paymentAttempt.current, false);
+          window.location.assign(paymentUrl);
           isRedirecting = true;
         } else {
           logAnalyticsError(errorAnalytics, "invalid_response");

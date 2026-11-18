@@ -75,10 +75,35 @@ type OrderParameters = Omit<OrderOccurrence, "properties"> & OrderOccurrence["pr
   app_version: string;
 };
 
+export type PaymentEventName = "checkout_started" | "payment_initiated" | "payment_succeeded"
+  | "wallet_viewed" | "wallet_topup_started" | "wallet_payment_succeeded";
+export interface PaymentOccurrence {
+  event_name: PaymentEventName;
+  event_id: string;
+  event_time: string;
+  user_id?: string;
+  session_id?: string;
+  correlation_id?: string;
+  order_id?: number | string;
+  properties: {
+    transaction_id?: number | string;
+    payment_method?: "gateway" | "wallet";
+    amount?: number;
+    currency?: "IRR";
+    payment_status?: "started" | "initiated" | "succeeded";
+  };
+}
+type PaymentParameters = Omit<PaymentOccurrence, "properties"> & PaymentOccurrence["properties"] & {
+  source: "frontend";
+  platform: "web";
+  app_version: string;
+};
+
 type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: ErrorEventName, parameters: ErrorParameters]
   | [name: AuthEventName, parameters: AuthParameters]
-  | [name: OrderEventName, parameters: OrderParameters];
+  | [name: OrderEventName, parameters: OrderParameters]
+  | [name: PaymentEventName, parameters: PaymentParameters];
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
@@ -96,6 +121,7 @@ const immediateEvents = new Set<PendingEvent[0]>([
   "login_started", "login_completed", "login_failed", "session_started", "session_ended",
   "order_error", "payment_error", "menu_load_failed", "api_error",
   "order_started", "order_created", "order_modified", "order_confirmed", "order_cancelled",
+  "checkout_started", "wallet_topup_started", "payment_initiated", "payment_succeeded", "wallet_payment_succeeded",
 ]);
 let flushRequested = false;
 let flushing = false;
@@ -195,6 +221,22 @@ export function logOrderEvent(event: OrderOccurrence) {
     }]);
   } catch {
     console.warn("Analytics could not record the order event.");
+  }
+}
+
+export function logPaymentEvent(event: PaymentOccurrence) {
+  if (!canTrack()) return;
+  try {
+    const { properties, ...envelope } = event;
+    enqueueEvent([event.event_name, {
+      ...envelope,
+      ...properties,
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+    }]);
+  } catch {
+    console.warn("Analytics could not record the payment event.");
   }
 }
 

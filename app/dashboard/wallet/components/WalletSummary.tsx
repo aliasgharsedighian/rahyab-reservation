@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { trackWalletViewed } from "@/lib/payment-analytics";
 import { ArrowDownIcon, ArrowUpIcon, Wallet2Icon } from "lucide-react";
 import WalletOnlineCharge from "./WalletOnlineCharge";
 import WalletChargeGuideButton from "./WalletChargeGuideButton";
@@ -10,6 +14,13 @@ export default function WalletSummary({
   onlinePayment: boolean;
   wallet: Pick<WalletData, "balance" | "total_credit" | "total_debit">;
 }) {
+  const viewed = useRef(false);
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    trackWalletViewed();
+  }, []);
+
   return (
     <section
       aria-label="خلاصه کیف پول"
