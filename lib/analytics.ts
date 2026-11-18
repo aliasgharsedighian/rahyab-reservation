@@ -6,7 +6,7 @@ import {
   type ErrorEventName,
   type ErrorOccurrence,
 } from "./analytics-errors";
-import { initializeBaasCore, type BaasCore } from "./baas-core";
+import { initializeBaasCore } from "./baas-core";
 
 type ProductView = {
   product_id: string;
@@ -57,13 +57,8 @@ interface AnalyticsClient {
   setAutomaticCollection(enabled: boolean): void;
 }
 
-declare global {
-  interface Window {
-    AnalyticsSDK?: new (core: BaasCore, config: { appVersion: string }) => AnalyticsClient;
-  }
-}
-
 let analytics: AnalyticsClient | undefined;
+let initializing: Promise<void> | undefined;
 let unavailable = false;
 const pendingEvents: PendingEvent[] = [];
 const reportedErrorIds = new Set<string>();
@@ -128,25 +123,20 @@ async function sendEvent(event: PendingEvent) {
 }
 
 export function initializeAnalytics() {
-  if (analytics || unavailable || typeof window === "undefined") return;
-
-  const apiKey = process.env.NEXT_PUBLIC_BAAS_API_KEY;
-  if (!apiKey || !window.AnalyticsSDK) {
-    disableAnalytics();
-    return;
-  }
-
-  try {
-    const client = new window.AnalyticsSDK(initializeBaasCore(), { appVersion });
+  if (analytics || unavailable || typeof window === "undefined" || !process.env.NEXT_PUBLIC_BAAS_API_KEY) return;
+  initializing ??= Promise.all([import("baas-web-sdk/analytics"), initializeBaasCore()]).then(([{ AnalyticsSdk }, core]) => {
+    // The package repeats CoreSdk's private declarations in each subpath's types.
+    const client = new AnalyticsSdk(core as unknown as ConstructorParameters<typeof AnalyticsSdk>[0], { appVersion });
     client.setAutomaticCollection(false);
     analytics = client;
     for (const event of pendingEvents.splice(0)) {
       void sendEvent(event);
     }
-  } catch {
+  }).catch(() => {
     disableAnalytics();
     console.warn("Analytics could not be initialized.");
-  }
+  });
+  return initializing;
 }
 
 function canTrack() {

@@ -12,11 +12,25 @@
 
 ## وضعیت فعلی پروژه
 
-- [BaasAnalytics.tsx](../app/components/BaasAnalytics.tsx) در [layout اصلی](../app/layout.tsx) قرار دارد. در صورت وجود `NEXT_PUBLIC_BAAS_API_KEY`، یک Core SDK می‌سازد و آن را بین Analytics، Auth و Push به اشتراک می‌گذارد.
+- [BaasAnalytics.tsx](../app/components/BaasAnalytics.tsx) در [layout اصلی](../app/layout.tsx) قرار دارد. در صورت وجود `NEXT_PUBLIC_BAAS_API_KEY`، پس از mount مرورگر SDK پکیج را با import پویا راه‌اندازی می‌کند. یک Promise مشترک Core را بین Analytics، Auth و Push به اشتراک می‌گذارد و اجرای دوباره Effect نمونه تازه نمی‌سازد.
 - [analytics.ts](../lib/analytics.ts) SDK وب را با نسخه ثابت `1.0.0` راه‌اندازی می‌کند و `product_view` و چهار رویداد خطای وب را می‌فرستد. پیش از آماده شدن SDK تا ۱۰۰ رویداد را در حافظه نگه می‌دارد. خطای بارگذاری SDK صف را خالی می‌کند و خطای ارسال با هشدار ثبت می‌شود.
 - [FoodDetailsModal.tsx](../app/dashboard/reserve/components/FoodDetailsModal.tsx) هنگام باز شدن جزئیات غذا `logFoodProductView` را صدا می‌زند. این مسیر برای نمایش دسکتاپ و موبایل وب مشترک است و پارامترهای قبلی `product_view` را می‌فرستد.
 
 ## الگوی آزموده‌شده ارسال رویدادهای وب
+
+روش استفاده از پکیج مطابق صفحه ۷ راهنمای `analytics-web.pdf` است. برای استقلال نصب از دسترسی Nexus، نسخه رسمی نصب‌شده در پروژه به آرشیو محلی زیر بسته‌بندی شده است:
+
+```sh
+npm install ./vendor/baas-web-sdk-1.0.0.tgz
+```
+
+آرشیو `vendor/baas-web-sdk-1.0.0.tgz` باید همراه `package.json` و `package-lock.json` در مخزن نگهداری شود. نصب این SDK با `npm ci` از فایل محلی انجام می‌شود. دیگر وابستگی‌ها همچنان به رجیستری یا کش خودشان نیاز دارند. برای ارتقا، نسخه جدید بررسی و آرشیو نسخه‌دار، وابستگی و lockfile با هم به‌روز شوند.
+
+از `baas-web-sdk/core` و `baas-web-sdk/analytics` و زیرمسیرهای Auth و Push استفاده می‌شود. import و ساخت نمونه در سمت مرورگر انجام می‌شوند. نسخه و integrity آرشیو در `package-lock.json` ثبت شده‌اند. Service Worker همچنان فایل مخصوص BaaS را از CDN در `/sw.js` وارد می‌کند و ارسال واقعی Analytics و Push به سرویس‌های BaaS نیاز دارد.
+
+در عیب‌یابی Network، ابتدا درخواست ثبت دستگاه `/api/v1/devices/register` یا تازه‌سازی توکن نصب را بررسی کنید. SDK برای ارسال Analytics به توکن نصب نیاز دارد. سپس پاسخ `/api/v1/analytics/collect` را بررسی کنید. در نسخه پکیج، پاسخ `401` باعث یک تلاش تازه‌سازی توکن می‌شود، `403` ارسال‌های آن نمونه SDK را متوقف می‌کند و `400` باعث حذف بسته نامعتبر و ثبت خطا در Console می‌شود. پاسخ دارای `success: false` هم ثبت موفق بسته را تأیید نمی‌کند. تبدیل روش بارگذاری به پکیج، خطاهای شبکه یا مجوز سرویس را به‌تنهایی برطرف نمی‌کند.
+
+تایپ‌های منتشرشده پکیج، تعریف خصوصی Core را در هر زیرمسیر تکرار کرده‌اند. در نقاط ساخت ماژول‌ها تطبیق تایپ محدود انجام شده است. تست مرورگری با Core و Analytics خود پکیج و HTTP شبیه‌سازی‌شده، ثبت دستگاه، ذخیره IndexedDB، `product_view`، `login_started` و `flush()` را پوشش می‌دهد.
 
 تیم پروژه ارسال `product_view` را از طریق `sendProductView` در [analytics.ts](../lib/analytics.ts) آزموده و دریافت رویداد را تأیید کرده است. مسیر فعلی و پارامترهای `product_view` تا زمان تسک تکمیل این رویداد حفظ می‌شوند.
 

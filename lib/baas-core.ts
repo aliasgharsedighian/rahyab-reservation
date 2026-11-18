@@ -1,35 +1,26 @@
-export interface BaasCore {
-  readonly SDK_VERSION: string;
-  initializeApp(): Promise<void>;
-}
+import type { CoreSdk } from "baas-web-sdk/core";
 
-declare global {
-  interface Window {
-    CoreSDK?: new (config: { apiKey: string }) => BaasCore;
-    AuthSDK?: new (core: BaasCore) => object;
-  }
-}
-
-let core: BaasCore | undefined;
-let auth: object | undefined;
+let corePromise: Promise<CoreSdk> | undefined;
+let authPromise: Promise<void> | undefined;
 
 export function initializeBaasCore() {
-  if (core) return core;
-
+  if (typeof window === "undefined") throw new Error("BaaS requires a browser.");
+  if (corePromise) return corePromise;
   const apiKey = process.env.NEXT_PUBLIC_BAAS_API_KEY;
-  if (!apiKey || !window.CoreSDK) throw new Error("BaaS Core SDK is unavailable.");
-
-  core = new window.CoreSDK({ apiKey });
-  // The modules can retry installation through Core if the initial attempt fails.
-  void core.initializeApp().catch(() => console.warn("BaaS installation could not be initialized."));
-  return core;
+  if (!apiKey) throw new Error("BaaS browser API key is unavailable.");
+  corePromise = import("baas-web-sdk/core").then(({ CoreSdk }) => {
+    const core = new CoreSdk({ apiKey });
+    void core.initializeApp().catch(() => console.warn("BaaS installation could not be initialized."));
+    return core;
+  });
+  return corePromise;
 }
 
-export function initializeBaasAuth() {
-  if (auth || !window.AuthSDK) return;
-  try {
-    auth = new window.AuthSDK(initializeBaasCore());
-  } catch {
+export async function initializeBaasAuth() {
+  authPromise ??= Promise.all([import("baas-web-sdk/auth"), initializeBaasCore()]).then(([{ AuthSdk }, core]) => {
+    new AuthSdk(core as unknown as ConstructorParameters<typeof AuthSdk>[0]);
+  }).catch(() => {
     console.warn("BaaS Auth could not be initialized.");
-  }
+  });
+  return authPromise;
 }

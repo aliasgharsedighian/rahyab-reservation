@@ -1,4 +1,4 @@
-import { initializeBaasCore, type BaasCore } from "./baas-core";
+import { initializeBaasCore } from "./baas-core";
 
 interface PushClient {
   start(): Promise<NotificationPermission>;
@@ -6,16 +6,11 @@ interface PushClient {
   onError(listener: (error: unknown) => void): () => void;
 }
 
-declare global {
-  interface Window {
-    PushSDK?: new (core: BaasCore) => PushClient;
-  }
-}
-
 type PushStatus = "unconfigured" | "unsupported" | "loading" | "unavailable"
   | "ready" | "starting" | "enabled" | "denied" | "failed";
 
 let push: PushClient | undefined;
+let initializing: Promise<void> | undefined;
 let sdkFailed = false;
 let worker: "loading" | "ready" | "failed" = "loading";
 let phase: "idle" | "starting" | "enabled" | "failed" = "idle";
@@ -57,9 +52,8 @@ export function disablePushSdk() {
 
 export function initializePushSdk() {
   if (push || !isSupported()) return;
-  try {
-    if (!window.PushSDK) throw new Error("BaaS Push SDK is unavailable.");
-    const client = new window.PushSDK(initializeBaasCore());
+  initializing ??= Promise.all([import("baas-web-sdk/push"), initializeBaasCore()]).then(([{ PushSdk }, core]) => {
+    const client = new PushSdk(core as unknown as ConstructorParameters<typeof PushSdk>[0]);
     client.onError(() => {
       console.warn("BaaS Push connection reported an error.");
       if (dashboardActive && phase !== "starting") {
@@ -70,9 +64,10 @@ export function initializePushSdk() {
     push = client;
     sdkFailed = false;
     publish();
-  } catch {
+  }).catch(() => {
     disablePushSdk();
-  }
+  });
+  return initializing;
 }
 
 export async function startBaasPush() {

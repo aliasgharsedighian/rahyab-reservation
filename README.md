@@ -12,6 +12,14 @@ Set these variables in `.env.local` and in the deployment environment:
 
 The root layout initializes one CoreSDK instance and shares it with AnalyticsSDK,
 AuthSDK, and PushSDK. Foodnix sign-in continues to use its own backend.
+The SDK is installed from `vendor/baas-web-sdk-1.0.0.tgz`, packaged from the official
+BaaS SDK already installed in this project, and loaded through browser-only
+dynamic imports from `baas-web-sdk/core`, `baas-web-sdk/analytics`,
+`baas-web-sdk/auth`, and `baas-web-sdk/push`. Commit the vendor archive together with
+`package.json` and `package-lock.json`. `npm ci` installs this SDK from the archive
+without contacting Nexus. Other dependencies still use their configured registry.
+To upgrade the SDK, obtain and verify the intended release, replace the versioned
+vendor archive and update the dependency and lockfile together.
 Opening food details records
 `product_view` with the food ID (`P-{food_id}`), its displayed price in toman,
 `category: "food"`, and `in_stock: true`. Views wait for SDK loading; analytics
