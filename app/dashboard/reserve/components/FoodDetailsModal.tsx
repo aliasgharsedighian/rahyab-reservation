@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import { getFoodEventProperties, useMenuAnalytics } from "./MenuAnalyticsContext";
+import TrackedComment, { useCommentVisit } from "@/app/components/TrackedComment";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -27,10 +29,11 @@ type FeedbackState =
   | { status: "error" }
   | { status: "success"; data: FoodFeedbackData };
 
-function FoodDetailsContent({ selection, isMobile, onViewed }: {
+function FoodDetailsContent({ selection, isMobile, onViewed, commentVisit }: {
   selection: SelectedReserveFood;
   isMobile: boolean;
   onViewed: (selection: SelectedReserveFood) => void;
+  commentVisit: ReturnType<typeof useCommentVisit>;
 }) {
   const { food, group, day } = selection;
   const [feedback, setFeedback] = useState<FeedbackState>({ status: "loading" });
@@ -47,7 +50,8 @@ function FoodDetailsContent({ selection, isMobile, onViewed }: {
           "reservation-feedbacks/by-food",
           { params: { food_id: food.food_id }, signal: controller.signal },
         );
-        if (status !== 200 || !data.data) throw new Error("Feedback request failed");
+        if (status !== 200 || getTechnicalErrorCode(status, data) || !data.data
+          || !Array.isArray(data.data.feedbacks)) throw new Error("Feedback request failed");
         if (!controller.signal.aborted) setFeedback({ status: "success", data: data.data });
       } catch {
         if (!controller.signal.aborted) setFeedback({ status: "error" });
@@ -113,13 +117,15 @@ function FoodDetailsContent({ selection, isMobile, onViewed }: {
               <Button variant="outline" onClick={() => { setFeedback({ status: "loading" }); setAttempt(value => value + 1); }}>تلاش دوباره</Button>
             </div>
           ) : feedback.data.feedbacks?.length ? feedback.data.feedbacks.map((item, index) => (
-            <article key={index} className="space-y-3 rounded-xl border p-4">
+            <TrackedComment key={item.id ?? index} foodId={food.food_id} rating={item.rate}
+              visit={commentVisit} viewKey={`public:${item.id ?? `${index}:${item.created_at_jalali}`}`}
+              enabled={Boolean(item.comment?.trim())} className="space-y-3 rounded-xl border p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <RatingStars value={item.rate} />
                 <span className="text-xs text-(--secondary-text)">{item.created_day_name} · {item.created_at_jalali}</span>
               </div>
               {item.comment ? <p className="whitespace-pre-wrap break-words text-sm leading-7">{item.comment}</p> : null}
-            </article>
+            </TrackedComment>
           )) : <p className="rounded-xl border p-4 text-sm text-(--secondary-text)">نظری ثبت نشده است.</p>}
         </section>
         <p className="text-xs leading-6 text-(--secondary-text)">
@@ -134,6 +140,7 @@ export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetai
   const isMobile = useIsMobile();
   const viewedFoodId = useRef<string | null>(null);
   const logEvent = useMenuAnalytics();
+  const commentVisit = useCommentVisit(open, selection?.food.food_id ?? null);
   const onViewed = useCallback(({ food, group, day }: SelectedReserveFood) => {
     const key = `${day.date}:${group.type}:${food.weekly_menu_id}`;
     if (viewedFoodId.current === key) return;
@@ -146,7 +153,7 @@ export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetai
   }, [open]);
 
   const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id}
-    selection={selection} isMobile={isMobile} onViewed={onViewed} /> : null;
+    selection={selection} isMobile={isMobile} onViewed={onViewed} commentVisit={commentVisit} /> : null;
   if (isMobile) return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerContent dir="rtl" className="border border-(--base-green)/30 bg-white dark:bg-zinc-800 data-[vaul-drawer-direction=bottom]:h-[88dvh] data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">

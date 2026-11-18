@@ -2,7 +2,11 @@
 
 import { apiClient } from "@/lib/api/client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import TrackedComment, { useCommentVisit } from "@/app/components/TrackedComment";
+import { logFeedbackEvent } from "@/lib/analytics";
+import { getAnalyticsIdentity } from "@/lib/auth-analytics";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import {
   Dialog,
   DialogContent,
@@ -48,47 +52,63 @@ function CommentOnFoodModal({
   promptMessage,
 }: CommentOnFoodModalProps) {
   const isMobile = useIsMobile();
-  const [data, setData] = useState<FoodFeedbackData | null>(null);
+  const visit = useCommentVisit(open, foodId);
+  const [loaded, setLoaded] = useState<{ data: FoodFeedbackData; visit: typeof visit } | null>(null);
+  const data = loaded?.visit === visit ? loaded.data : null;
   const [comment, setComment] = useState("");
   const [rate, setRate] = useState(0);
   const [hoveredRate, setHoveredRate] = useState<number | null>(null);
   const [rateError, setRateError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
+  const submittedReservations = useRef(new Set<number>());
 
-  const fetchFeedbacks = useCallback(async () => {
+  const fetchFeedbacks = useCallback(async (signal: AbortSignal) => {
     try {
-      const { data: json } = await apiClient.get<{ data: FoodFeedbackData }>(
+      const { data: json, status } = await apiClient.get<{ data: FoodFeedbackData }>(
         `reservation-feedbacks/by-food?food_id=${foodId}`,
+        { signal },
       );
-      setData(json.data);
+      if (!signal.aborted && status === 200 && !getTechnicalErrorCode(status, json)
+        && json.data && Array.isArray(json.data.feedbacks)) setLoaded({ data: json.data, visit });
     } catch (err) {
       console.error(err);
     }
-  }, [foodId]);
+  }, [foodId, visit]);
 
   // ✅ fetch data وقتی مودال باز میشه
   useEffect(() => {
     if (!open || !foodId) return;
+    const controller = new AbortController();
 
     const timeout = window.setTimeout(() => {
-      void fetchFeedbacks();
+      void fetchFeedbacks(controller.signal);
       setRate(has_feedback?.rate ?? 0);
       setRateError(false);
       setHoveredRate(null);
     }, 0);
 
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, [fetchFeedbacks, foodId, has_feedback?.rate, open]);
 
   // ✅ ثبت نظر
   const handleSubmit = async () => {
-    if (rate === 0) {
+    if (submitting.current || !foodId || !reservationId || has_feedback?.has_feedback
+      || submittedReservations.current.has(reservationId)) return;
+    if (!Number.isInteger(rate) || rate < 1 || rate > 5) {
       setRateError(true);
       toast.error("امتیاز خود را ثبت کنید");
       return;
     }
+    submitting.current = true;
+    setIsSubmitting(true);
+    const identity = getAnalyticsIdentity(null);
 
     try {
-      const { data: response } = await apiClient.post<ReservationFeedbackResponse>(
+      const { data: response, status } = await apiClient.post<ReservationFeedbackResponse>(
         "reservation-feedbacks",
         {
           reservation_id: reservationId,
@@ -97,7 +117,12 @@ function CommentOnFoodModal({
         },
       );
 
-      if (response.status === 200) {
+      if (status >= 200 && status < 300 && response?.status === 200 && response.success !== false
+        && !getTechnicalErrorCode(status, response)) {
+        submittedReservations.current.add(reservationId);
+        const context = { foodId, orderId: reservationId, rating: rate, identity, eventTime: new Date().toISOString() };
+        logFeedbackEvent("rating_submitted", context);
+        if (comment.trim()) logFeedbackEvent("comment_submitted", context);
         setComment("");
         setRate(0);
         if (onSubmitted) {
@@ -107,9 +132,15 @@ function CommentOnFoodModal({
         }
         revalidateData();
         toast.success(response.message);
+      } else {
+        toast.error(response?.message || "ثبت بازخورد ممکن نشد. دوباره تلاش کنید.");
       }
     } catch (err) {
       console.error(err);
+      toast.error("ثبت بازخورد ممکن نشد. دوباره تلاش کنید.");
+    } finally {
+      submitting.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -209,6 +240,7 @@ function CommentOnFoodModal({
                   return (
                     <button
                       type="button"
+                      disabled={isSubmitting}
                       key={num}
                       aria-label={`${num} امتیاز از ۵`}
                       aria-pressed={rate === num}
@@ -237,9 +269,11 @@ function CommentOnFoodModal({
             {has_feedback?.has_feedback && (
               <div className="mt-3 space-y-3">
                 {has_feedback.comment && (
-                  <p className="whitespace-pre-wrap break-words text-sm leading-7">
-                    {has_feedback.comment}
-                  </p>
+                  <TrackedComment foodId={foodId ?? 0} orderId={reservationId ?? undefined}
+                    rating={has_feedback.rate} visit={visit} viewKey={`own:${reservationId}`}
+                    enabled={Boolean(has_feedback.comment.trim())}>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-7">{has_feedback.comment}</p>
+                  </TrackedComment>
                 )}
                 <div className="space-y-1">
                   <p className="text-xs text-(--secondary-text)">وضعیت نظر</p>
@@ -263,12 +297,13 @@ function CommentOnFoodModal({
           {!has_feedback?.has_feedback && (
             <>
               <Textarea
+                disabled={isSubmitting}
                 placeholder="نظر خود را بنویسید..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
-              <Button onClick={handleSubmit} className="w-full">
-                ثبت نظر
+              <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full">
+                {isSubmitting ? "در حال ثبت…" : "ثبت نظر"}
               </Button>
             </>
           )}
@@ -278,7 +313,9 @@ function CommentOnFoodModal({
             <h3 id="other-food-feedback-title" className="font-bold">نظرات بقیه راجع به این غذا</h3>
             <div className="divide-y overflow-hidden rounded-xl border">
             {data.feedbacks?.length ? data.feedbacks.map((feedback, index) => (
-              <article key={index} className="space-y-2 p-3 text-right">
+              <TrackedComment key={feedback.id ?? index} foodId={foodId ?? 0} rating={feedback.rate}
+                visit={visit} viewKey={`public:${feedback.id ?? `${index}:${feedback.created_at_jalali}`}`}
+                enabled={Boolean(feedback.comment?.trim())} className="space-y-2 p-3 text-right">
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                   <RatingStars value={feedback.rate} />
                   <span className="ms-auto text-left text-xs text-(--secondary-text)">
@@ -286,7 +323,7 @@ function CommentOnFoodModal({
                   </span>
                 </div>
                 {feedback.comment && <p className="whitespace-pre-wrap break-words text-sm leading-7">{feedback.comment}</p>}
-              </article>
+              </TrackedComment>
             )) : <p className="p-3 text-sm text-(--secondary-text)">هنوز نظری ثبت نشده است.</p>}
             </div>
           </section>

@@ -93,6 +93,7 @@ export interface SelectedReserveFood {
 // The OpenAPI endpoint documents food_id but does not define its response schema.
 // These fields follow the feedback response already consumed by this project.
 export interface FoodFeedbackItem {
+  id?: number | string;
   rate: number | string;
   created_day_name: string;
   created_at_jalali: string;

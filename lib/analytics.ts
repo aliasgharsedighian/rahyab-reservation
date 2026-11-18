@@ -99,11 +99,20 @@ type PaymentParameters = Omit<PaymentOccurrence, "properties"> & PaymentOccurren
   app_version: string;
 };
 
+export type FeedbackEventName = "comment_viewed" | "comment_submitted" | "rating_submitted";
+type FeedbackParameters = Omit<AuthParameters, "event_name"> & {
+  event_name: FeedbackEventName;
+  food_id: string;
+  order_id?: number;
+  rating?: number;
+};
+
 type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: ErrorEventName, parameters: ErrorParameters]
   | [name: AuthEventName, parameters: AuthParameters]
   | [name: OrderEventName, parameters: OrderParameters]
-  | [name: PaymentEventName, parameters: PaymentParameters];
+  | [name: PaymentEventName, parameters: PaymentParameters]
+  | [name: FeedbackEventName, parameters: FeedbackParameters];
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
@@ -122,6 +131,7 @@ const immediateEvents = new Set<PendingEvent[0]>([
   "order_error", "payment_error", "menu_load_failed", "api_error",
   "order_started", "order_created", "order_modified", "order_confirmed", "order_cancelled",
   "checkout_started", "wallet_topup_started", "payment_initiated", "payment_succeeded", "wallet_payment_succeeded",
+  "comment_submitted", "rating_submitted",
 ]);
 let flushRequested = false;
 let flushing = false;
@@ -237,6 +247,35 @@ export function logPaymentEvent(event: PaymentOccurrence) {
     }]);
   } catch {
     console.warn("Analytics could not record the payment event.");
+  }
+}
+
+export function logFeedbackEvent(name: FeedbackEventName, context: {
+  foodId: number;
+  orderId?: number;
+  rating?: number;
+  identity: { user_id?: string; session_id?: string };
+  eventTime?: string;
+}) {
+  if (!canTrack()) return;
+  try {
+    if (!Number.isSafeInteger(context.foodId) || context.foodId <= 0) return;
+    enqueueEvent([name, {
+      event_id: createAnalyticsId(),
+      event_name: name,
+      event_time: context.eventTime ?? new Date().toISOString(),
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+      food_id: `food_${context.foodId}`,
+      ...(context.orderId && Number.isSafeInteger(context.orderId) && context.orderId > 0 ? { order_id: context.orderId } : {}),
+      ...(context.identity.user_id ? { user_id: context.identity.user_id } : {}),
+      ...(context.identity.session_id ? { session_id: context.identity.session_id } : {}),
+      ...(typeof context.rating === "number" && Number.isInteger(context.rating) && context.rating >= 1 && context.rating <= 5
+        ? { rating: context.rating } : {}),
+    }]);
+  } catch {
+    console.warn("Analytics could not record the feedback event.");
   }
 }
 
