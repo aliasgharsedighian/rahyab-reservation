@@ -7,8 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import PwaRegistration from "./components/PwaRegistration";
 import BaasAnalytics from "./components/BaasAnalytics";
+import AnalyticsErrorEvents from "./components/AnalyticsErrorEvents";
 import { SiteSettingsProvider } from "./components/SiteSettingsProvider";
-import { getSiteSettings } from "@/lib/api/site-settings";
+import { loadSiteSettings } from "@/lib/api/site-settings";
 
 const mainFont = localFont({
   src: "./components/iransanswebfanum.ttf",
@@ -56,7 +57,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getSiteSettings();
+  const { settings, events } = await loadSiteSettings();
 
   return (
     <html
@@ -67,7 +68,7 @@ export default async function RootLayout({
       className={cn(mainFont.variable, boldFont.variable, "font-sans")}
     >
       <body className="transition-all duration-700">
-        <BaasAnalytics />
+        <AnalyticsErrorEvents events={events} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -95,6 +96,7 @@ export default async function RootLayout({
             </SiteSettingsProvider>
           </ReduxProvider>
         </ThemeProvider>
+        <BaasAnalytics />
       </body>
     </html>
   );

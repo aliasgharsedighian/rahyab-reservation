@@ -3,6 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { RefreshCwIcon, WifiOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { setPushWorkerStatus } from "@/lib/baas-push";
 
 function subscribeToConnection(callback: () => void) {
   window.addEventListener("online", callback);
@@ -11,6 +12,24 @@ function subscribeToConnection(callback: () => void) {
     window.removeEventListener("online", callback);
     window.removeEventListener("offline", callback);
   };
+}
+
+function supportsBaasPush(worker: ServiceWorker) {
+  return new Promise<boolean>((resolve) => {
+    const channel = new MessageChannel();
+    const finish = (ready: boolean) => {
+      window.clearTimeout(timeout);
+      channel.port1.close();
+      resolve(ready);
+    };
+    const timeout = window.setTimeout(() => finish(false), 2000);
+    channel.port1.onmessage = (event) => finish(event.data === true);
+    try {
+      worker.postMessage({ type: "FOODNIX_BAAS_PUSH_STATUS" }, [channel.port2]);
+    } catch {
+      finish(false);
+    }
+  });
 }
 
 export default function PwaRegistration() {
@@ -27,6 +46,15 @@ export default function PwaRegistration() {
     if (!("serviceWorker" in navigator)) return;
     let registration: ServiceWorkerRegistration | undefined;
     let disposed = false;
+    let pushCheck = 0;
+    const checkPushWorker = async () => {
+      if (!process.env.NEXT_PUBLIC_BAAS_API_KEY || !registration) return;
+
+      const check = ++pushCheck;
+      const { active } = await navigator.serviceWorker.ready;
+      const ready = active && await supportsBaasPush(active);
+      if (!disposed && check === pushCheck) setPushWorkerStatus(ready ? "ready" : "failed");
+    };
 
     const registerServiceWorker = async () => {
       try {
@@ -34,8 +62,11 @@ export default function PwaRegistration() {
           scope: "/",
           updateViaCache: "none",
         });
-        if (!disposed) registration = result;
+        if (disposed) return;
+        registration = result;
+        void checkPushWorker();
       } catch (error) {
+        if (!disposed) setPushWorkerStatus("failed");
         console.error("PWA registration failed:", error);
       }
     };
@@ -47,10 +78,12 @@ export default function PwaRegistration() {
 
     if (document.readyState === "complete") void registerServiceWorker();
     else window.addEventListener("load", registerServiceWorker);
+    navigator.serviceWorker.addEventListener("controllerchange", checkPushWorker);
     document.addEventListener("visibilitychange", checkForUpdate);
     return () => {
       disposed = true;
       window.removeEventListener("load", registerServiceWorker);
+      navigator.serviceWorker.removeEventListener("controllerchange", checkPushWorker);
       document.removeEventListener("visibilitychange", checkForUpdate);
     };
   }, []);

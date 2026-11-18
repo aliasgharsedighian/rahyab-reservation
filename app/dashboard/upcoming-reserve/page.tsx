@@ -1,5 +1,8 @@
 import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
+import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
+import ApiLoadFailure from "@/app/components/ApiLoadFailure";
+import type { ErrorOccurrence } from "@/lib/analytics-errors";
 import DashboardPagination from "../components/DashboardPagination";
 import ClearPaidReservationCart from "./components/ClearPaidReservationCart";
 import ReserveUpcomingTable from "./components/ReserveUpcomingTable";
@@ -17,6 +20,7 @@ interface Props {
 }
 
 const getReserveUpcoming = async (
+  errorEvents: ErrorOccurrence[],
   per_page: string = "10",
   page: string = "1",
   food_name: string,
@@ -44,9 +48,11 @@ const getReserveUpcoming = async (
   }
   const res = await serverApiFetch(
     `reservations/upcoming?${params.toString()}`,
+    {},
+    errorEvents,
   );
-  const reserveUpcoming: ReservationUpcomingResponse = await res.json();
   if (res.status === 200) {
+    const reserveUpcoming: ReservationUpcomingResponse = await res.json();
     return reserveUpcoming.data;
   }
 };
@@ -61,7 +67,9 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
     status,
   } = await searchParams;
 
+  const errorEvents: ErrorOccurrence[] = [];
   const reserveUpcoming = await getReserveUpcoming(
+    errorEvents,
     per_page,
     page,
     food_name,
@@ -76,10 +84,19 @@ export default async function UpcomingReservePage({ searchParams }: Props) {
     revalidatePath(`/dashboard/upcoming-reserve`);
   }
 
-  if (!reserveUpcoming?.items) return <ClearPaidReservationCart />;
+  if (!reserveUpcoming?.items) {
+    return (
+      <>
+        <AnalyticsErrorEvents events={errorEvents} />
+        {errorEvents.length > 0 && <ApiLoadFailure />}
+        <ClearPaidReservationCart />
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full mb-10">
+      <AnalyticsErrorEvents events={errorEvents} />
       <ClearPaidReservationCart />
       <DashboardHeader title={"رزروهای پیش رو"} />
       <div className="w-full flex flex-col gap-3">

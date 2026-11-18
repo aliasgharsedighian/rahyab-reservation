@@ -1,11 +1,14 @@
 "use client";
 
 import { BanknoteIcon, MessageSquareIcon, UtensilsIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { logProfileViewed } from "@/lib/auth-analytics";
 import ProfileForm from "./ProfileForm";
 import type { FoodPreferences, Profile } from "../types";
 
 interface ClientProfilePageProps {
   profile: Profile;
+  analyticsUserId: string | null;
   foodPreferences: FoodPreferences[];
   revalidateData: () => void | Promise<void>;
 }
@@ -30,7 +33,14 @@ function ProfileStatistics({ title, count, paid }: { title: string; count: numbe
   );
 }
 
-export default function ClientProfilePage({ profile, foodPreferences }: ClientProfilePageProps) {
+export default function ClientProfilePage({ profile, foodPreferences, analyticsUserId }: ClientProfilePageProps) {
+  const reported = useRef(false);
+  useEffect(() => {
+    if (reported.current) return;
+    reported.current = true;
+    logProfileViewed(analyticsUserId);
+  }, [analyticsUserId]);
+
   return (
     <div className="mx-2 min-w-0 md:mx-6">
       <div className="w-full space-y-4">

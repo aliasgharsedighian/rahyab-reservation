@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth-slice";
+import { orderAnalyticsMiddleware } from "./order-analytics-middleware";
 import { TypedUseSelectorHook, useSelector } from "react-redux";
 import storage from "redux-persist/lib/storage";
 import {
@@ -93,7 +94,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }), // add our custom middleware
+    }).concat(orderAnalyticsMiddleware),
 });
 
 // types

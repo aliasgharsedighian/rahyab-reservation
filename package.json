@@ -12,6 +12,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.20.0",
+    "baas-web-sdk": "file:vendor/baas-web-sdk-1.0.0.tgz",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
