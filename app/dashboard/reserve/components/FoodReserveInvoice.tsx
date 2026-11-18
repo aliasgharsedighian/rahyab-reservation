@@ -11,12 +11,14 @@ import {
 } from "@/redux/features/reserveBasketSlice";
 import { Trash2Icon } from "lucide-react";
 import { memo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
+import { getFoodEventProperties, useMenuAnalytics } from "./MenuAnalyticsContext";
 import { hasMainFoodForDate, isConfirmedReservation, isSideFood } from "../cartRules";
 import type { ReserveFoodType } from "../types";
 
 interface FoodReserveInvoiceProps {
   food_id: number;
+  food_category?: string;
   weekly_menu_id: number;
   name: string;
   price: number;
@@ -33,6 +35,7 @@ interface FoodReserveInvoiceProps {
 
 function FoodReserveInvoice({
   food_id,
+  food_category,
   weekly_menu_id,
   name,
   price,
@@ -47,6 +50,8 @@ function FoodReserveInvoice({
   reserveLabel = "رزرو",
 }: FoodReserveInvoiceProps) {
   const dispatch = useDispatch();
+  const store = useStore<Parameters<typeof reserveSelectItems>[0]>();
+  const logEvent = useMenuAnalytics();
 
   // مستقیم از ریداکس
   const countInput = useSelector(reserveSelectItemCountById(weekly_menu_id));
@@ -67,19 +72,23 @@ function FoodReserveInvoice({
     reserved_food_day: isConfirmedReservation(hasReservedMainFood),
   };
 
+  function selectFood() {
+    const currentCount = reserveSelectItemCountById(weekly_menu_id)(store.getState());
+    if (currentCount > 0 || !isReserve || MaxQuantity <= 0 || (isSide && !hasMainFoodForDay)) return;
+    dispatch(addToReserveBasket({ ...itemToBasket, count: 1 }));
+    if (reserveSelectItemCountById(weekly_menu_id)(store.getState()) > 0) {
+      logEvent("food_selected", getFoodEventProperties({
+        food_id, food_category, price, is_reserved: isReserve, max_reservation_quantity: MaxQuantity,
+      }, date, type));
+    }
+  }
+
   if (MaxQuantity === 0) {
     return (
       <Button
         className="h-auto min-h-10 w-full whitespace-normal px-2 py-2 text-xs sm:text-sm"
         disabled={true}
-        onClick={() => {
-          dispatch(
-            addToReserveBasket({
-              ...itemToBasket,
-              count: 1,
-            }),
-          );
-        }}
+        onClick={selectFood}
       >
         شما حداکثر تعداد را رزرو کردید.
       </Button>
@@ -91,14 +100,7 @@ function FoodReserveInvoice({
       <Button
         className="h-auto min-h-10 w-full whitespace-normal px-2 py-2 text-xs sm:text-sm dark:bg-(--base-green) dark:text-white"
         disabled={!isReserve || (isSide && !hasMainFoodForDay)}
-        onClick={() => {
-          dispatch(
-            addToReserveBasket({
-              ...itemToBasket,
-              count: 1,
-            }),
-          );
-        }}
+        onClick={selectFood}
       >
         {isSide && !hasMainFoodForDay
           ? "ابتدا غذای اصلی این روز را انتخاب کنید"

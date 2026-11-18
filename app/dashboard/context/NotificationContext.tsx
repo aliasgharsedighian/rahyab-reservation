@@ -1,6 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api/client";
+import { activateBaasPush } from "@/lib/baas-push";
 
 import {
   createContext,
@@ -25,6 +26,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notificationsData, setNotificationsData] = useState<NotificationItem[]>([]);
+  useEffect(activateBaasPush, []);
 
   const getNotifications = useCallback(async (reportError = false) => {
     try {

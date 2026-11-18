@@ -2,6 +2,10 @@ import ClientReservePage from "./components/ClientReservePage";
 import { getWalletBalance } from "./getWalletBalance";
 import type { UnreviewedReservation, WeeklyMenuResponse } from "./types";
 import { serverApiFetch } from "@/lib/api/server";
+import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
+import { collectErrorOccurrence, type ErrorOccurrence } from "@/lib/analytics-errors";
+import { getAnalyticsUserId } from "@/lib/analytics-identity";
+import { MenuAnalyticsProvider } from "./components/MenuAnalyticsContext";
 
 interface ReservationHistoryResponse {
   data?: {
@@ -9,10 +13,12 @@ interface ReservationHistoryResponse {
   };
 }
 
-const getUnreviewedReservations = async () => {
+const getUnreviewedReservations = async (errorEvents: ErrorOccurrence[]) => {
   const params = new URLSearchParams({ count: "1", page: "1" });
   const res = await serverApiFetch(
     `reservations/history?${params.toString()}`,
+    {},
+    errorEvents,
   );
 
   if (!res.ok) return [];
@@ -23,22 +29,48 @@ const getUnreviewedReservations = async () => {
   );
 };
 
-const getReserveList = async () => {
-  const res = await serverApiFetch("weekly-menu");
-  if (!res.ok) return null;
+const menuError = { eventName: "menu_load_failed", operation: "load_menu" } as const;
 
-  const reserveList: WeeklyMenuResponse = await res.json();
-  return reserveList.data ?? null;
+const getReserveList = async (errorEvents: ErrorOccurrence[]) => {
+  const res = await serverApiFetch("weekly-menu", {}, errorEvents, menuError);
+  if (res.status === 204) return { menu: null, failed: false };
+  if (!res.ok) {
+    if (!errorEvents.some(({ eventName }) => eventName === menuError.eventName)) {
+      collectErrorOccurrence(errorEvents, menuError, `http_${res.status}`);
+    }
+    return { menu: null, failed: true };
+  }
+
+  const payload: WeeklyMenuResponse | null | undefined = await res.json().catch(() => undefined);
+  if (payload === null) return { menu: null, failed: false };
+  if (!payload || typeof payload !== "object" || payload.success === false
+    || (typeof payload.status === "number" && payload.status >= 400)
+    || (payload.data != null && !Array.isArray(payload.data.weeks))) {
+    collectErrorOccurrence(errorEvents, menuError, "invalid_response");
+    return { menu: null, failed: true };
+  }
+  return { menu: payload.data ?? null, failed: false };
 };
 
 export default async function ReservePage() {
-  const [reserveList, walletBalance, unreviewedReservations] =
+  const errorEvents: ErrorOccurrence[] = [];
+  const [{ menu, failed }, walletBalance, unreviewedReservations, profileResponse] =
     await Promise.all([
-      getReserveList(),
-      getWalletBalance(),
-      getUnreviewedReservations(),
+      getReserveList(errorEvents),
+      getWalletBalance(errorEvents),
+      getUnreviewedReservations(errorEvents),
+      serverApiFetch("profile", {}, errorEvents),
     ]);
+  const profile = profileResponse.ok ? await profileResponse.json().catch(() => null) : null;
+  const analyticsUserId = getAnalyticsUserId(profile?.data);
 
-  return <ClientReservePage reserveList={reserveList} walletBalance={walletBalance}
-    unreviewedReservations={unreviewedReservations} />;
+  return (
+    <>
+      <AnalyticsErrorEvents events={errorEvents} />
+      <MenuAnalyticsProvider userId={analyticsUserId}>
+        <ClientReservePage reserveList={menu} walletBalance={walletBalance}
+          menuLoadFailed={failed} unreviewedReservations={unreviewedReservations} />
+      </MenuAnalyticsProvider>
+    </>
+  );
 }

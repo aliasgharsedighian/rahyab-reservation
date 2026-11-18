@@ -1,5 +1,8 @@
 "use client";
 
+import { logAnalyticsError } from "@/lib/analytics";
+import { beginLoginAttempt, completeLoginAttempt, endAnalyticsSession, failLoginAttempt, type LoginAttempt } from "@/lib/auth-analytics";
+
 import { toEnglishDigits } from "@/lib/digits";
 import loginAction from "@/actions/loginAction";
 import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
@@ -59,6 +62,7 @@ function LoginScreen() {
     configuredLoginType === "online" || configuredLoginType === "otp" ? "otp" : "password",
   );
   const otpTab = useRef<HTMLButtonElement>(null);
+  const submittingPassword = useRef(false);
   const forgotPasswordButton = useRef<HTMLButtonElement>(null);
 
   const [open, setOpen] = useState(false);
@@ -69,6 +73,8 @@ function LoginScreen() {
 
   useEffect(() => {
     // This also completes cleanup after a 401 detected during server rendering.
+    const reason = new URLSearchParams(window.location.search).get("session");
+    if (reason === "expired" || reason === "disabled") endAnalyticsSession(reason);
     clearClientSession();
     dispatch(logOut());
   }, [dispatch]);
@@ -85,7 +91,10 @@ function LoginScreen() {
     data: { token: string; user: unknown },
     message?: string,
     toastId?: string | number,
+    attempt: LoginAttempt | null = null,
+    analyticsUserId: string | null = null,
   ) => {
+    completeLoginAttempt(attempt, analyticsUserId);
     try {
       localStorage.setItem("token", data.token);
     } catch (storageError) {
@@ -109,7 +118,9 @@ function LoginScreen() {
   const handleLoginSubmit = async (
     values: z.infer<typeof signinFormSchema>,
   ) => {
-    if (isPendingLogin) return;
+    if (submittingPassword.current) return;
+    submittingPassword.current = true;
+    const attempt = beginLoginAttempt("password");
 
     setIsPendingLogin(true);
     const toastId = toast.loading("در حال ورود...");
@@ -117,18 +128,22 @@ function LoginScreen() {
     try {
       const result = await loginAction(values, rememberMe);
       if (!result.success) {
+        failLoginAttempt(attempt);
+        if (result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "login_with_password" }, result.errorCode);
         toast.error(result.message, { id: toastId });
         return;
       }
 
       loginForm.reset();
-      finishLogin(result.data, result.message, toastId);
+      finishLogin(result.data, result.message, toastId, attempt, result.analyticsUserId);
     } catch (error) {
+      failLoginAttempt(attempt);
       console.error("Login failed", error);
       toast.error("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.", {
         id: toastId,
       });
     } finally {
+      submittingPassword.current = false;
       setIsPendingLogin(false);
     }
   };
@@ -190,7 +205,7 @@ function LoginScreen() {
                 <TabsContent value="password">
                   <Form {...loginForm}>
                     <form
-                      onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
+                      onSubmit={(event) => void loginForm.handleSubmit(handleLoginSubmit)(event)}
                       className="flex flex-col gap-3"
                     >
                       {/* Mobile */}

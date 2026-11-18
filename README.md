@@ -2,18 +2,45 @@
 
 فودنیکس، سامانه رزرو و مدیریت غذای کارکنان است.
 
-## Analytics configuration
+## BaaS web configuration
 
 Set these variables in `.env.local` and in the deployment environment:
 
 - `NEXT_PUBLIC_BAAS_API_KEY`: browser API key for the BaaS SDK; required at build time.
 - `BAAS_SERVER_KEY`: server-only key, reserved for server integrations; never sent to the browser.
+- `FOODNIX_ANALYTICS_IDENTITY_KEY`: stable server-only HMAC secret for pseudonymous employee IDs. Configure the same secret and algorithm in the server issuing IDs for web and native apps.
 
-The root layout loads CoreSDK followed by AnalyticsSDK. Opening food details records
-`product_view` with the food ID (`P-{food_id}`), its displayed price in toman,
-`category: "food"`, and `in_stock: true`. Views wait for SDK loading; analytics
+The root layout initializes one CoreSDK instance and shares it with AnalyticsSDK,
+AuthSDK, and PushSDK. Foodnix sign-in continues to use its own backend.
+The SDK is installed from `vendor/baas-web-sdk-1.0.0.tgz`, packaged from the official
+BaaS SDK already installed in this project, and loaded through browser-only
+dynamic imports from `baas-web-sdk/core`, `baas-web-sdk/analytics`,
+`baas-web-sdk/auth`, and `baas-web-sdk/push`. Commit the vendor archive together with
+`package.json` and `package-lock.json`. `npm ci` installs this SDK from the archive
+without contacting Nexus. Other dependencies still use their configured registry.
+To upgrade the SDK, obtain and verify the intended release, replace the versioned
+vendor archive and update the dependency and lockfile together.
+Opening food details records `menu_item_viewed` with the food ID (`food_{food_id}`),
+menu date, its displayed price in toman, availability and available category/meal
+metadata. This replaces the earlier test event `product_view`. Visible daily menus
+record `menu_viewed`; successfully adding a food to the cart records `food_selected`.
+Views wait for SDK loading; analytics
 failures do not block the reservation interface. Restart the dev server or rebuild
 after changing the public API key.
+
+Important events and events explicitly selected by the user must flush the SDK
+queue in the background after logging. Add their names to `immediateEvents` in
+`lib/analytics.ts` and update the list and acceptance criteria in
+[the Analytics documentation](docs/analytics.md). Upload failures must remain
+isolated from the application flow.
+
+Browser notifications are enabled from the dashboard Notifications page on HTTPS
+or localhost. The existing `/sw.js` imports the BaaS worker and must be active
+before Push starts. The current BaaS SDK receives messages over a WebSocket while
+a dashboard tab is open and reports notification clicks and dismissals through
+the worker. Closing all dashboard tabs stops the WebSocket. To verify delivery,
+grant permission in the browser and send a test notification to that installation
+from the BaaS test environment.
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 

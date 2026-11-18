@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BanknoteIcon, CheckCircle2Icon, UtensilsIcon, XIcon } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { logFoodProductView } from "@/lib/analytics";
+import { getTechnicalErrorCode } from "@/lib/analytics-errors";
+import { getFoodEventProperties, useMenuAnalytics } from "./MenuAnalyticsContext";
+import CommentViewTracker, { useCommentVisit } from "@/app/components/CommentViewTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -27,10 +29,18 @@ type FeedbackState =
   | { status: "error" }
   | { status: "success"; data: FoodFeedbackData };
 
-function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserveFood; isMobile: boolean }) {
+function FoodDetailsContent({ selection, isMobile, onViewed, commentVisit }: {
+  selection: SelectedReserveFood;
+  isMobile: boolean;
+  onViewed: (selection: SelectedReserveFood) => void;
+  commentVisit: ReturnType<typeof useCommentVisit>;
+}) {
   const { food, group, day } = selection;
   const [feedback, setFeedback] = useState<FeedbackState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    onViewed(selection);
+  }, [onViewed, selection]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -40,7 +50,8 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
           "reservation-feedbacks/by-food",
           { params: { food_id: food.food_id }, signal: controller.signal },
         );
-        if (status !== 200 || !data.data) throw new Error("Feedback request failed");
+        if (status !== 200 || getTechnicalErrorCode(status, data) || !data.data
+          || !Array.isArray(data.data.feedbacks)) throw new Error("Feedback request failed");
         if (!controller.signal.aborted) setFeedback({ status: "success", data: data.data });
       } catch {
         if (!controller.signal.aborted) setFeedback({ status: "error" });
@@ -56,6 +67,8 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-3 sm:px-5">
+      <CommentViewTracker foodId={food.food_id} visit={commentVisit}
+        enabled={feedback.status === "success" && feedback.data.feedbacks.some(item => Boolean(item.comment?.trim()))} />
       <div className="relative mb-3 flex aspect-[4/3] max-h-[45dvh] items-center justify-center overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
         {imageUrl ? (
           <ReserveFoodImage src={imageUrl} alt={food.name} sizes="(max-width: 767px) 100vw, 640px" />
@@ -106,7 +119,7 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
               <Button variant="outline" onClick={() => { setFeedback({ status: "loading" }); setAttempt(value => value + 1); }}>تلاش دوباره</Button>
             </div>
           ) : feedback.data.feedbacks?.length ? feedback.data.feedbacks.map((item, index) => (
-            <article key={index} className="space-y-3 rounded-xl border p-4">
+            <article key={item.id ?? index} className="space-y-3 rounded-xl border p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <RatingStars value={item.rate} />
                 <span className="text-xs text-(--secondary-text)">{item.created_day_name} · {item.created_at_jalali}</span>
@@ -125,22 +138,22 @@ function FoodDetailsContent({ selection, isMobile }: { selection: SelectedReserv
 
 export default function FoodDetailsModal({ open, setOpen, selection }: FoodDetailsModalProps) {
   const isMobile = useIsMobile();
-  const viewedFoodId = useRef<number | null>(null);
-  const foodId = selection?.food.food_id;
-  const foodPrice = selection?.food.price;
+  const viewedFoodId = useRef<string | null>(null);
+  const logEvent = useMenuAnalytics();
+  const commentVisit = useCommentVisit(open, selection?.food.food_id ?? null, selection?.food.weekly_menu_id ?? null);
+  const onViewed = useCallback(({ food, group, day }: SelectedReserveFood) => {
+    const key = `${day.date}:${group.type}:${food.weekly_menu_id}`;
+    if (viewedFoodId.current === key) return;
+    viewedFoodId.current = key;
+    logEvent("menu_item_viewed", getFoodEventProperties(food, day.date, group.type));
+  }, [logEvent]);
 
   useEffect(() => {
-    if (!open || foodId === undefined || foodPrice === undefined) {
-      viewedFoodId.current = null;
-      return;
-    }
-    if (viewedFoodId.current === foodId) return;
+    if (!open) viewedFoodId.current = null;
+  }, [open]);
 
-    viewedFoodId.current = foodId;
-    logFoodProductView(foodId, foodPrice);
-  }, [open, foodId, foodPrice]);
-
-  const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id} selection={selection} isMobile={isMobile} /> : null;
+  const content = open && selection ? <FoodDetailsContent key={selection.food.weekly_menu_id}
+    selection={selection} isMobile={isMobile} onViewed={onViewed} commentVisit={commentVisit} /> : null;
   if (isMobile) return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerContent dir="rtl" className="border border-(--base-green)/30 bg-white dark:bg-zinc-800 data-[vaul-drawer-direction=bottom]:h-[88dvh] data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">

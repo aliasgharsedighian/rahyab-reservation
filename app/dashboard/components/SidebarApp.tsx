@@ -40,6 +40,7 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { useDispatch } from "react-redux";
 import { logOut } from "@/redux/features/auth-slice";
 import logoutCookiesAction from "@/actions/logoutCookiesAction";
+import { endAnalyticsSession, getAnalyticsSessionId } from "@/lib/auth-analytics";
 import { toast } from "sonner";
 import { RulesModal } from "@/app/components/RulesModal";
 import { ContactModal } from "@/app/components/ContactModal";
@@ -149,6 +150,7 @@ function SidebarApp() {
 
   const handleLogoutUser = () => {
     if (isLoggingOut) return;
+    const sessionId = getAnalyticsSessionId();
     startTransition(async () => {
       try {
         const { data: result } = await apiClient.post("auth/logout");
@@ -161,6 +163,7 @@ function SidebarApp() {
         localStorage.removeItem("token");
         dispatch(logOut());
         await logoutCookiesAction();
+        if (sessionId) endAnalyticsSession("logout", sessionId);
         setOpenLogoutConfirm(false);
         push("/login");
       }

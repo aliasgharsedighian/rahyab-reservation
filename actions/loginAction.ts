@@ -1,6 +1,8 @@
 "use server";
 
 import { toEnglishDigits } from "@/lib/digits";
+import { getAnalyticsUserId } from "@/lib/analytics-identity";
+import { getFetchErrorCode, getTechnicalErrorCode, type ErrorCode } from "@/lib/analytics-errors";
 import loginCookiesAction from "./loginCookiesAction";
 
 interface LoginCredentials {
@@ -12,6 +14,7 @@ type LoginResponse =
   | {
       success: true;
       message: string;
+      analyticsUserId: string | null;
       data: {
         token: string;
         user: unknown;
@@ -20,6 +23,7 @@ type LoginResponse =
   | {
       success: false;
       message: string;
+      errorCode?: ErrorCode;
     };
 
 export default async function loginAction(
@@ -41,12 +45,21 @@ export default async function loginAction(
         credentials: "include",
       },
     );
-    const result = await response.json();
+    const result = await response.json().catch(() => null);
+    const errorCode = getTechnicalErrorCode(response.status, result);
+    if (errorCode || !result) {
+      return {
+        success: false,
+        message: result?.message || "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.",
+        errorCode: errorCode ?? "invalid_response",
+      };
+    }
     if (response.ok && result.status === 200 && result.data?.token) {
       await loginCookiesAction(result.data.token, rememberMe);
       return {
         success: true,
         message: result.message,
+        analyticsUserId: getAnalyticsUserId(result.data.user),
         data: result.data,
       };
     }
@@ -59,6 +72,7 @@ export default async function loginAction(
     return {
       success: false,
       message: "ارتباط با سرور برقرار نشد. دوباره تلاش کنید.",
+      errorCode: getFetchErrorCode(error),
     };
   }
 }

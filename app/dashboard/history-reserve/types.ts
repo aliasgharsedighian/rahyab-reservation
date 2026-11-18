@@ -23,6 +23,7 @@ export interface ReservationHistoryResponse {
 }
 
 export interface ReservationFeedbackResponse {
+  success?: boolean;
   status: number;
   message: string;
 }
