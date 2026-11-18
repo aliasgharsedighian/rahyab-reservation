@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -19,6 +19,7 @@ import { TriangleAlert } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { logAnalyticsError } from "@/lib/analytics";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
+import { trackReservationCancelled } from "@/lib/order-analytics";
 import type { CancelReservationResponse, ReservationUpcomingItem } from "../types";
 
 interface CancelFoodModalProps {
@@ -37,9 +38,11 @@ function CancelReservationModal({
   revalidateData,
 }: CancelFoodModalProps) {
   const [loading, setLoading] = useState(false);
+  const inProgress = useRef(false);
 
   const handleCancelFood = async () => {
-    if (loading || reservationId === null) return;
+    if (inProgress.current || reservationId === null) return;
+    inProgress.current = true;
     const errorAnalytics = { eventName: "order_error", operation: "cancel_order", orderId: reservationId } as const;
 
     try {
@@ -53,7 +56,8 @@ function CancelReservationModal({
 
       if (getTechnicalErrorCode(status, response)) {
         toast.error("لغو رزرو ممکن نشد. دوباره تلاش کنید.");
-      } else if (response?.status === 200) {
+      } else if (status >= 200 && status < 300 && response?.status === 200) {
+        trackReservationCancelled(reservationId, reservation);
         toast.success(response.message || "رزرو غذا لغو شد");
         setOpen(false);
         revalidateData();
@@ -67,6 +71,7 @@ function CancelReservationModal({
       console.error(err);
       toast.error("مشکلی پیش آمده است");
     } finally {
+      inProgress.current = false;
       setLoading(false);
     }
   };

@@ -51,9 +51,34 @@ export type MenuProperties = {
 };
 type MenuParameters = Omit<AuthParameters, "event_name"> & MenuProperties & { event_name: MenuEventName };
 
+export type OrderEventName = "order_started" | "order_created" | "order_modified" | "order_confirmed" | "order_cancelled";
+export interface OrderOccurrence {
+  event_id: string;
+  event_time: string;
+  event_name: OrderEventName;
+  user_id?: string;
+  session_id?: string;
+  correlation_id?: string;
+  order_id?: number | string;
+  properties: {
+    item_count?: number;
+    order_amount?: number;
+    order_status: "draft" | "reserved" | "cancelled";
+    food_id?: string;
+    meal_type?: "breakfast" | "lunch" | "dinner";
+    order_date?: string;
+  };
+}
+type OrderParameters = Omit<OrderOccurrence, "properties"> & OrderOccurrence["properties"] & {
+  source: "frontend";
+  platform: "web";
+  app_version: string;
+};
+
 type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: ErrorEventName, parameters: ErrorParameters]
-  | [name: AuthEventName, parameters: AuthParameters];
+  | [name: AuthEventName, parameters: AuthParameters]
+  | [name: OrderEventName, parameters: OrderParameters];
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
@@ -70,6 +95,7 @@ let sessionId: string | undefined;
 const immediateEvents = new Set<PendingEvent[0]>([
   "login_started", "login_completed", "login_failed", "session_started", "session_ended",
   "order_error", "payment_error", "menu_load_failed", "api_error",
+  "order_started", "order_created", "order_modified", "order_confirmed", "order_cancelled",
 ]);
 let flushRequested = false;
 let flushing = false;
@@ -153,6 +179,22 @@ function enqueueEvent(event: PendingEvent) {
   } else {
     if (pendingEvents.length >= 100) pendingEvents.shift();
     pendingEvents.push(event);
+  }
+}
+
+export function logOrderEvent(event: OrderOccurrence) {
+  if (!canTrack()) return;
+  try {
+    const { properties, ...envelope } = event;
+    enqueueEvent([event.event_name, {
+      ...envelope,
+      ...properties,
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+    }]);
+  } catch {
+    console.warn("Analytics could not record the order event.");
   }
 }
 

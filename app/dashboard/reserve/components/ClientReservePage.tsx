@@ -6,6 +6,7 @@ import { apiClient, UnauthorizedError } from "@/lib/api/client";
 import { logAnalyticsError } from "@/lib/analytics";
 import { getTechnicalErrorCode } from "@/lib/analytics-errors";
 import { getPaymentGatewayUrl } from "@/lib/payment-gateway";
+import { confirmCartOrder, startOrderCheckout } from "@/lib/order-analytics";
 
 import FoodReserveTabs, { type FoodReserveList } from "./FoodReserveTabs";
 import FoodReserveCart from "./FoodReserveCart";
@@ -58,6 +59,7 @@ function ClientReservePage({
   const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
   const [isOnlineCheckoutPending, setIsOnlineCheckoutPending] = useState(false);
   const onlineCheckoutToast = useRef<string | number | null>(null);
+  const checkoutInProgress = useRef(false);
   const [reservationSucceeded, setReservationSucceeded] = useState(false);
 
   const reserveCart = useSelector(reserveSelectItems);
@@ -119,6 +121,7 @@ function ClientReservePage({
 
       toast.dismiss(onlineCheckoutToast.current);
       onlineCheckoutToast.current = null;
+      checkoutInProgress.current = false;
       setIsOnlineCheckoutPending(false);
     }
 
@@ -144,7 +147,8 @@ function ClientReservePage({
     );
   }, [activeReserveCart]);
 
-  const completeReservation = (toastId?: string | number) => {
+  const completeReservation = (response: unknown, toastId?: string | number) => {
+    confirmCartOrder(activeReserveCart, response);
     toast.success("پرداخت با موفقیت از کیف پول شما انجام شد", { id: toastId });
     dispatch(removeAllItemsFromReserve([]));
     setReservationSucceeded(true);
@@ -156,9 +160,11 @@ function ClientReservePage({
       weekly_menu_id: item.id,
       quantity: item.count,
     }));
+    if (!items.length || checkoutInProgress.current) return;
+    checkoutInProgress.current = true;
+    startOrderCheckout(activeReserveCart);
 
     if (onlinePayment) {
-      if (onlineCheckoutToast.current !== null || items.length === 0) return;
       const toastId = toast.loading("در حال اتصال به درگاه پرداخت…");
       onlineCheckoutToast.current = toastId;
       setIsOnlineCheckoutPending(true);
@@ -176,7 +182,7 @@ function ClientReservePage({
         if (getTechnicalErrorCode(status, data) || status < 200 || status >= 300 || data?.success !== true) {
           toast.error(data?.message || paymentError, { id: toastId });
         } else if (data.status === 201) {
-          completeReservation(toastId);
+          completeReservation(data, toastId);
         } else if (data.status === 202) {
           window.location.assign(getPaymentGatewayUrl(data.data?.payment_url, errorAnalytics));
           isRedirecting = true;
@@ -193,6 +199,7 @@ function ClientReservePage({
       } finally {
         if (!isRedirecting) {
           onlineCheckoutToast.current = null;
+          checkoutInProgress.current = false;
           setIsOnlineCheckoutPending(false);
         }
       }
@@ -217,7 +224,7 @@ function ClientReservePage({
         toast.error("ثبت رزرو ممکن نشد. دوباره تلاش کنید.");
         return;
       }
-      if (responseData?.status !== 201) {
+      if (status < 200 || status >= 300 || responseData?.status !== 201) {
         toast.error("موجودی کیف پول کافی نیست.");
         const detail: WalletChargeGuideCartDetail | null =
           walletBalance === null
@@ -235,11 +242,13 @@ function ClientReservePage({
         return;
       }
 
-      completeReservation();
+      completeReservation(responseData);
     } catch (error) {
       if (error instanceof UnauthorizedError) return;
       console.error("Error sending data:", error);
       toast.error("ثبت رزرو ممکن نشد. دوباره تلاش کنید.");
+    } finally {
+      checkoutInProgress.current = false;
     }
   };
 

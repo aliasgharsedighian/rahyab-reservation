@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { removeAllItemsFromReserve } from "@/redux/features/reserveBasketSlice";
+import { finishOrderAttempt } from "@/lib/order-analytics";
 
 export default function ClearPaidReservationCart() {
   const cart = useSearchParams().get("cart");
@@ -15,6 +16,7 @@ export default function ClearPaidReservationCart() {
     const url = new URL(window.location.href);
     if (url.searchParams.get("cart") !== "empty") return;
 
+    finishOrderAttempt();
     dispatch(removeAllItemsFromReserve([]));
     url.searchParams.delete("cart");
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
