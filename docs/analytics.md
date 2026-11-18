@@ -99,7 +99,7 @@ npm install ./vendor/baas-web-sdk-1.0.0.tgz
 | ۴. سفارش و سبد در وب | `order_started`، `order_created`، `order_modified`، `order_confirmed` و `order_cancelled` طبق رفتار سبد و نتیجه عملیات فعلی سایت | `item_count`، `order_amount`، `order_status`، شناسه تلاش و شناسه سفارش در صورت دسترسی |
 | ۵. پرداخت و کیف پول در وب | `checkout_started`، `wallet_viewed` و `wallet_topup_started` در وب. `payment_initiated`، `payment_succeeded` و `wallet_payment_succeeded` مشروط به شواهد نتیجه و شناسه‌های معتبر پاسخ | `transaction_id`، `payment_method`، `amount`، `currency`، `payment_status` و `order_id` در صورت ارتباط |
 | ۶. نظرات و بازخورد در وب | `comment_viewed` هنگام دیده‌شدن نظر، `comment_submitted` و `rating_submitted` پس از پاسخ موفق ذخیره بازخورد | `food_id`، `rating` و `order_id` رزرو مربوط |
-| ۷. اعلان و پیام درون‌برنامه‌ای در وب | `notification_opened` هنگام باز کردن اعلان، `in_app_message_viewed` هنگام نمایش پیام و `in_app_message_action_clicked` هنگام انتخاب اقدام پیام | `notification_id`، `message_id`، `action_id` بر اساس رویداد |
+| ۷. اعلان و پیام درون‌برنامه‌ای در وب | `inapp_message_shown`، `inapp_message_clicked` و `inapp_message_dismissed` برای جزئیات پیام داخل سایت. گزارش بازکردن Push از ثبت بومی BaaS استفاده می‌کند. | `message_id` برای پیام سایت و `pushId` در گزارش بومی Push |
 
 ## ثبت خطا در وب
 
@@ -192,11 +192,29 @@ Metadata شروع checkout و تراکنش‌های ثبت‌شده در مرو�
 
 معیار بازبینی شامل خطا و فهرست خالی، باز کردن یک مودال با چندین نظر و ثبت فقط یک مشاهده، رندر و اسکرول همان بازدید، بازگشایی مودال، پاسخ دیررس غذای قبلی، امتیاز بدون متن، خطای ذخیره، ذخیره موفق، دوبار کلیک روی ارسال و بررسی نبود متن نظر در درخواست Analytics است.
 
+## اعلان و پیام درون‌برنامه‌ای در وب
+
+اعلان سیستم‌عامل از مسیر Push SDK و Worker رسمی BaaS استفاده می‌کند. Worker به‌صورت خودکار `OPENED` و `DISMISSED` را به `/api/v1/push/event` گزارش می‌کند. برای شمارش بازکردن Push از همان گزارش بومی استفاده می‌شود و برنامه رویداد موازی `push_opened` به Analytics اضافه نمی‌کند. تأیید نگاشت این وضعیت به گزارش Analytics در پنل BaaS نیازمند بررسی سرویس است.
+
+نسخه Worker عمومی از پایگاه `baas-sdk` و کلید `baas:installation_token` می‌خواند، در حالی که Core پکیج فعلی از `mbaas-sdk` و `mbaas:installation_token` استفاده می‌کند. `/sw.js` گزارش بومی را با محل ذخیره Core سازگار کرده است. کلیک اعلان ابتدا بسته‌شدن اعلان و بازکردن یا فوکوس برنامه را انجام می‌دهد و گزارش شبکه هم‌زمان در پس‌زمینه اجرا می‌شود. گزارش شبکه مهلت پنج‌ثانیه‌ای دارد. شکست آن مانع بازشدن برنامه نمی‌شود. فقط یک مجموعه listener بومی Worker باقی می‌ماند.
+
+SDK فعلی وضعیت `push_sent` یا رسید قطعی `push_delivered` را به کد وب ارائه نمی‌کند. دریافت پیام WebSocket، موفقیت درخواست ارسال و نمایش اعلان به‌عنوان تأیید تحویل از سمت BaaS ثبت نمی‌شوند. اگر سرویس گزارش این وضعیت‌ها را ارائه کند، گزارش بومی آن منبع تحلیل خواهد بود.
+
+| رویداد پیام سایت | نقطه وقوع |
+| --- | --- |
+| `inapp_message_shown` | پس از mount واقعی جزئیات پیام انتخاب‌شده از هدر یا فهرست اعلان‌ها، در صفحه قابل مشاهده. دریافت داده، رندر پیش‌نمایش، پاسخ mark-seen یا رندر مجدد همان نمایش رویداد تازه نمی‌سازند. |
+| `inapp_message_clicked` | کلیک روی لینک یا دکمه داخل بدنه پیام در همان نمایش. کلیک روی متن ساده، بازکردن ردیف فهرست و دکمه‌های بستن مشمول این رویداد نیستند. بدنه پیام در UI فعلی متن ساده است. تشخیص اقدام برای دکمه و لینک واقعی در بدنه پشتیبانی می‌شود. |
+| `inapp_message_dismissed` | بستن توسط کاربر با دکمه، Escape، تعامل بیرون مودال یا gesture بستن Drawer. تغییر خودکار prop بازبودن، تغییر مسیر و unmount به‌تنهایی رویداد بستن نمی‌سازند. |
+
+`message_id` با الگوی `msg_<notification.id>` ساخته می‌شود. برای هر نمایش، `correlation_id` مستقل ساخته و در رویدادهای همان نمایش حفظ می‌شود. بازگشایی، نمایش تازه‌ای برای همان پیام است. `event_id` برای هر وقوع یکتاست و ارسال مجدد از صف SDK همان شناسه را حفظ می‌کند. نام رویدادها با `source: frontend` و `platform: web` در Analytics ثبت می‌شوند. متن پیام، لینک مقصد و اطلاعات هویتی خام ارسال نمی‌شوند. کلیک و بستن پیام، flush پس‌زمینه دارند و نمایش پیام از ارسال گروهی استفاده می‌کند.
+
+این مرحله ارسال Analytics از Backend فودنیکس ندارد. رسید Push بومی BaaS و پیام API داخل سایت بدون شناسه مرجع مشترک، به یکدیگر نسبت داده نمی‌شوند.
+
 ## انتخاب رویدادهای دارای flush
 
 رویدادهای پایان عملیات مهم محصول مانند نتیجه ورود، سفارش، پرداخت و پایان نشست، هنگام پیاده‌سازی برای ارسال فوری صف در نظر گرفته شوند. درخواست صریح کاربر برای فعال‌سازی flush روی هر رویداد نیز در همان تسک اعمال شود. نام رویداد و فعال‌بودن flush در مستندات آن ثبت شود.
 
-فهرست فعلی شامل `login_started`، `login_completed`، `login_failed`، `session_started`، `session_ended`، `order_error`، `payment_error`، `menu_load_failed`، `api_error`، پنج رویداد سفارش `order_started`، `order_created`، `order_modified`، `order_confirmed` و `order_cancelled` و رویدادهای پرداخت `checkout_started`، `wallet_topup_started`، `payment_initiated`، `payment_succeeded`، `wallet_payment_succeeded` و ثبت بازخورد `comment_submitted` و `rating_submitted` است. برای رویدادهای آینده، این فهرست هم‌زمان با `immediateEvents` به‌روز شود.
+فهرست فعلی شامل `login_started`، `login_completed`، `login_failed`، `session_started`، `session_ended`، `order_error`، `payment_error`، `menu_load_failed`، `api_error`، پنج رویداد سفارش `order_started`، `order_created`، `order_modified`، `order_confirmed` و `order_cancelled` و رویدادهای پرداخت `checkout_started`، `wallet_topup_started`، `payment_initiated`، `payment_succeeded`، `wallet_payment_succeeded` و ثبت بازخورد `comment_submitted`، `rating_submitted` و تعامل پیام `inapp_message_clicked` و `inapp_message_dismissed` است. برای رویدادهای آینده، این فهرست هم‌زمان با `immediateEvents` به‌روز شود.
 
 پذیرش هر رویداد دارای flush باید ترتیب «ثبت موفق در صف، سپس flush»، ادامه عملیات اصلی هنگام کندی یا خطای ارسال و ارسال رویدادی که حین flush جاری اضافه شده را پوشش دهد. flush همان وقوع موجود در صف را ارسال می‌کند و نباید برای آن `event_id` تازه بسازد. `flush()` کل صف SDK را پردازش می‌کند و تحویل قطعی هنگام خروج ناگهانی مرورگر همچنان محدودیت مرورگر و شبکه را دارد.
 

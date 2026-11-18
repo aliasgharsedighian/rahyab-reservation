@@ -107,12 +107,19 @@ type FeedbackParameters = Omit<AuthParameters, "event_name"> & {
   rating?: number;
 };
 
+export type InappEventName = "inapp_message_shown" | "inapp_message_clicked" | "inapp_message_dismissed";
+type InappParameters = Omit<AuthParameters, "event_name"> & {
+  event_name: InappEventName;
+  message_id: string;
+};
+
 type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: ErrorEventName, parameters: ErrorParameters]
   | [name: AuthEventName, parameters: AuthParameters]
   | [name: OrderEventName, parameters: OrderParameters]
   | [name: PaymentEventName, parameters: PaymentParameters]
-  | [name: FeedbackEventName, parameters: FeedbackParameters];
+  | [name: FeedbackEventName, parameters: FeedbackParameters]
+  | [name: InappEventName, parameters: InappParameters];
 
 interface AnalyticsClient {
   logEvent(...event: PendingEvent): Promise<unknown>;
@@ -132,6 +139,7 @@ const immediateEvents = new Set<PendingEvent[0]>([
   "order_started", "order_created", "order_modified", "order_confirmed", "order_cancelled",
   "checkout_started", "wallet_topup_started", "payment_initiated", "payment_succeeded", "wallet_payment_succeeded",
   "comment_submitted", "rating_submitted",
+  "inapp_message_clicked", "inapp_message_dismissed",
 ]);
 let flushRequested = false;
 let flushing = false;
@@ -276,6 +284,30 @@ export function logFeedbackEvent(name: FeedbackEventName, context: {
     }]);
   } catch {
     console.warn("Analytics could not record the feedback event.");
+  }
+}
+
+export function logInappEvent(name: InappEventName, context: {
+  messageId: string;
+  displayId: string;
+  identity: { user_id?: string; session_id?: string };
+}) {
+  if (!canTrack()) return;
+  try {
+    enqueueEvent([name, {
+      event_id: createAnalyticsId(),
+      event_name: name,
+      event_time: new Date().toISOString(),
+      source: "frontend",
+      platform: "web",
+      app_version: appVersion,
+      message_id: context.messageId,
+      correlation_id: context.displayId,
+      ...(context.identity.user_id ? { user_id: context.identity.user_id } : {}),
+      ...(context.identity.session_id ? { session_id: context.identity.session_id } : {}),
+    }]);
+  } catch {
+    console.warn("Analytics could not record the in-app message event.");
   }
 }
 
