@@ -4,6 +4,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { RefreshCwIcon, WifiOffIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setPushWorkerStatus } from "@/lib/baas-push";
+import { observePwaInstall } from "@/lib/pwa-install";
 
 function subscribeToConnection(callback: () => void) {
   window.addEventListener("online", callback);
@@ -35,6 +36,7 @@ function supportsBaasPush(worker: ServiceWorker) {
 export default function PwaRegistration() {
   const isOnline = useSyncExternalStore(subscribeToConnection, () => navigator.onLine, () => true);
   const offlineDialog = useRef<HTMLDialogElement>(null);
+  useEffect(observePwaInstall, []);
 
   useEffect(() => {
     const dialog = offlineDialog.current;

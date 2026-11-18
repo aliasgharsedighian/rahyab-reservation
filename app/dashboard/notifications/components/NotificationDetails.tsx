@@ -26,9 +26,10 @@ interface Props {
   notification: NotificationItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCloseAutoFocus?: () => void;
 }
 
-export default function NotificationDetails({ notification, open, onOpenChange }: Props) {
+export default function NotificationDetails({ notification, open, onOpenChange, onCloseAutoFocus }: Props) {
   const isMobile = useIsMobile();
   const messageId = notification?.id ?? null;
   const display = useMemo(() => ({
@@ -41,6 +42,11 @@ export default function NotificationDetails({ notification, open, onOpenChange }
   };
   const Title = isMobile ? DrawerTitle : DialogTitle;
   const Description = isMobile ? DrawerDescription : DialogDescription;
+  const restoreFocus = (event: Event) => {
+    if (!onCloseAutoFocus) return;
+    event.preventDefault();
+    onCloseAutoFocus();
+  };
   const content = (
     <>
       {display.message && notification && <MessageShownTracker display={display.message} open={display.open} />}
@@ -56,7 +62,7 @@ export default function NotificationDetails({ notification, open, onOpenChange }
         <div className="min-h-0 overflow-y-auto overscroll-contain p-5">
           <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-(--secondary-text)">
             <CalendarDays className="size-4 shrink-0" />
-            <span className="min-w-0 break-words">{notification.created_at}</span>
+            <bdi dir="ltr" className="min-w-0 break-words">{notification.created_at}</bdi>
           </div>
           <div className="rounded-xl border border-border bg-card p-4 text-card-foreground sm:p-5"
             onClickCapture={(event) => {
@@ -76,12 +82,12 @@ export default function NotificationDetails({ notification, open, onOpenChange }
   );
 
   return isMobile ? (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent dir="rtl" className="overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">{content}</DrawerContent>
+    <Drawer open={open} autoFocus onOpenChange={handleOpenChange}>
+      <DrawerContent dir="rtl" onCloseAutoFocus={restoreFocus} className="overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[88dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">{content}</DrawerContent>
     </Drawer>
   ) : (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent dir="rtl" showCloseButton={false} className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">{content}</DialogContent>
+      <DialogContent dir="rtl" onCloseAutoFocus={restoreFocus} showCloseButton={false} className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">{content}</DialogContent>
     </Dialog>
   );
 }

@@ -30,6 +30,7 @@ import {
   LogOutIcon,
   PhoneCallIcon,
   ShieldCheckIcon,
+  Smartphone,
   UserCircle2Icon,
   WalletCardsIcon,
   PanelRight,
@@ -46,6 +47,7 @@ import { RulesModal } from "@/app/components/RulesModal";
 import { ContactModal } from "@/app/components/ContactModal";
 import { useSiteSettings } from "@/app/components/SiteSettingsProvider";
 import { OPEN_WALLET_CHARGE_GUIDE_EVENT } from "./WalletChargeGuideModal";
+import { useNotificationSetup } from "../context/NotificationSetupContext";
 
 const dashboardList = [
   // {
@@ -132,6 +134,7 @@ const dashboardList = [
 ];
 
 function SidebarApp() {
+  const { showInstallLink, openInstallGuide } = useNotificationSetup();
   const pathname = usePathname();
   const settings = useSiteSettings();
   const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
@@ -342,6 +345,21 @@ function SidebarApp() {
             )}
           </SidebarMenu>
           <SidebarFooter className="mt-auto shrink-0 border-t bg-background pb-[calc(1rem+env(safe-area-inset-bottom))] md:mb-6 md:pb-2">
+            {isMobile && showInstallLink && (
+              <SidebarMenuItem className="w-full list-none">
+                <SidebarMenuButton
+                  type="button"
+                  className="h-auto min-h-10 px-3 py-2 text-right hover:bg-(--light-green)"
+                  onClick={() => {
+                    setOpenMobile(false);
+                    openInstallGuide();
+                  }}
+                >
+                  <Smartphone className="text-emerald-600" aria-hidden="true" />
+                  <span>راهنمای نصب و فعال‌سازی اعلان‌ها</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             {/* Rules */}
             <SidebarMenuItem className="w-full h-10 flex items-center justify-center rounded-md">
               <SidebarMenuButton

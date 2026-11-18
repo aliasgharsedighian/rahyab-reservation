@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
 import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
 import ApiLoadFailure from "@/app/components/ApiLoadFailure";
@@ -40,30 +39,26 @@ export default async function NotificationsPage({ searchParams }: Props) {
   const errorEvents: ErrorOccurrence[] = [];
   const notifications = await getNotifications(errorEvents, per_page, page);
 
-  async function revalidateData() {
-    "use server";
-
-    revalidatePath(`/dashboard/notifications`);
-  }
-
   return (
-    <div className="flex flex-col gap-6 w-full mb-10">
+    <div className="mb-10 flex w-full flex-col gap-6">
       <AnalyticsErrorEvents events={errorEvents} />
-      <DashboardHeader title={"اعلان ها"} />
-      <PushNotificationControl />
-      {!notifications && errorEvents.length > 0 ? <ApiLoadFailure /> : <ClientNotificationsPage
-        notificationsData={notifications?.notifications ?? []}
-        revalidateData={revalidateData}
-      />}
-      {Boolean(notifications?.notifications.length) && <div className="ml-auto">
-        <div className="mr-4">
-          <DashboardPagination
-            per_page={per_page}
-            page={page}
-            posts={notifications?.pagination.total || per_page}
-          />
-        </div>
-      </div>}
+      <DashboardHeader title="اعلان‌ها" />
+      <div dir="rtl" className="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-5 px-3 md:px-6">
+        <PushNotificationControl />
+        <section aria-labelledby="notification-list-title" className="space-y-3">
+          <h1 id="notification-list-title" className="text-lg font-bold sm:text-xl">همهٔ اعلان‌ها</h1>
+          {!notifications && errorEvents.length > 0 ? (
+            <ApiLoadFailure />
+          ) : (
+            <ClientNotificationsPage notificationsData={notifications?.notifications ?? []} />
+          )}
+        </section>
+        {notifications && notifications.pagination.total > Number(per_page) && (
+          <div className="self-start">
+            <DashboardPagination per_page={per_page} page={page} posts={notifications.pagination.total} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

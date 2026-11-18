@@ -2,15 +2,9 @@
 
 import { apiClient } from "@/lib/api/client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import NotificationDetails from "../notifications/components/NotificationDetails";
-import type { NotificationItem } from "../notifications/types";
+import NotificationBell from "../notifications/components/NotificationBell";
 
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,8 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { logIn, userInfoAccess } from "@/redux/features/auth-slice";
 import { Button } from "@/components/ui/button";
-import { BellIcon, MoonStar, Sun } from "lucide-react";
-import { useNotifications } from "../context/NotificationContext";
+import { MoonStar, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
 import HeaderReserveCart from "./HeaderReserveCart";
@@ -54,33 +47,11 @@ function DashboardHeader({
     };
   }, [stickyHeightVariable]);
 
-  const { notificationsData, markSeenNotification } = useNotifications();
   const { resolvedTheme, setTheme } = useTheme();
-  //   const userInfo = useSelector(userInfoAccess);
   const dispatch = useDispatch();
-
-  const userInfoRedux: any = useSelector(userInfoAccess);
-
-  const [openNotif, setOpenNotif] = useState(false);
-  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(null);
-  const [mounted, setMounted] = useState(false);
-  //   const hiddenSidebar = useSelector(hiddenSidebarReducer);
-
-  const handleOpenNotif = async (item: NotificationItem) => {
-    setSelectedNotif(item);
-    setOpenNotif(true);
-    await markSeenNotification(item.id);
-  };
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const userInfoRedux = useSelector(userInfoAccess);
 
   const toggleTheme = () => {
-    if (!mounted) {
-      return;
-    }
-
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
@@ -113,7 +84,6 @@ function DashboardHeader({
         open={Number(userInfoRedux?.must_change_password) === 1}
         onPasswordChanged={getProfileDetail}
       />
-      <NotificationDetails notification={selectedNotif} open={openNotif} onOpenChange={setOpenNotif} />
       <div ref={headerRef} className="bg-background py-4.5 px-4 md:px-6 flex justify-between items-center shadow-md border-b border-border text-sm md:text-base sticky top-0 z-50">
         <div className="flex min-w-0 items-start gap-2 sm:gap-3">
           <SidebarTrigger className="flex md:hidden sticky top-9 " />
@@ -127,87 +97,13 @@ function DashboardHeader({
             variant="outline"
             size="icon"
             onClick={toggleTheme}
-            aria-label={
-              mounted && resolvedTheme === "dark"
-                ? "فعال کردن حالت روشن"
-                : "فعال کردن حالت تیره"
-            }
+            aria-label="تغییر حالت روشن یا تیره"
           >
-            {mounted && resolvedTheme === "dark" ? (
-              <Sun className="size-4" />
-            ) : (
-              <MoonStar className="size-4" />
-            )}
+            <Sun className="hidden size-4 dark:block" aria-hidden="true" />
+            <MoonStar className="size-4 dark:hidden" aria-hidden="true" />
           </Button>
 
-          <Popover>
-            <PopoverTrigger className="flex">
-              <div className="relative border-l border-border pl-2 sm:pl-6 cursor-pointer">
-                <BellIcon
-                  className="size-5 text-(--base-green)"
-                  fill={
-                    notificationsData.length === 0
-                      ? "none"
-                      : "var(--base-green)"
-                  }
-                />
-                {notificationsData.length === 0 ? null : (
-                  <span className="absolute -right-1 -top-2 bg-(--base-green) h-4 w-4 flex items-center justify-center rounded-full text-white">
-                    {notificationsData.length > 9
-                      ? "9+"
-                      : notificationsData.length}
-                  </span>
-                )}
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="p-0 m-0 rounded-md">
-              <div className="rounded-md">
-                <div className="bg-(--base-green) text-white text-sm p-2 rounded-t-md">
-                  <p>اعلان‌ها و پیام‌ها</p>
-                </div>
-                <div className="flex flex-col divide-y rounded-xl border overflow-hidden">
-                  {notificationsData.length === 0 ? (
-                    <div className="flex items-center justify-center w-full">
-                      <p className="p-2">پیام خوانده نشده ندارید</p>
-                    </div>
-                  ) : (
-                    notificationsData?.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleOpenNotif(item)}
-                        className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer hover:bg-muted transition"
-                      >
-                        <div className="flex flex-col flex-1">
-                          <p className="text-sm text-(--base-black) line-clamp-1">
-                            {item.body}
-                          </p>
-                          <span className="text-xs text-(--secondary-text)">
-                            {item.created_at}
-                          </span>
-                        </div>
-
-                        {/* دات برای unread */}
-                        {!item.seen ? (
-                          <span className="p-2 text-[11px] bg-(--light-green) text-(--base-green) rounded-md">
-                            خوانده نشده
-                          </span>
-                        ) : null}
-                      </div>
-                    ))
-                  )}
-
-                  <Button variant="link" asChild>
-                    <Link
-                      href="/dashboard/notifications?page=1"
-                      className="p-2 flex items-center justify-center text-blue-600!"
-                    >
-                      مشاهده همه
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <NotificationBell />
 
           <Link
             href="/dashboard/profile"

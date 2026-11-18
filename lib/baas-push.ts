@@ -1,4 +1,5 @@
 import { initializeBaasCore } from "./baas-core";
+import { getInstallState, subscribeToInstall } from "./pwa-install";
 
 interface PushClient {
   start(): Promise<NotificationPermission>;
@@ -6,8 +7,8 @@ interface PushClient {
   onError(listener: (error: unknown) => void): () => void;
 }
 
-type PushStatus = "unconfigured" | "unsupported" | "loading" | "unavailable"
-  | "ready" | "starting" | "enabled" | "denied" | "failed";
+type PushStatus = "unconfigured" | "install-required" | "unsupported" | "loading" | "unavailable"
+  | "ready" | "prompting" | "starting" | "enabled" | "denied" | "failed";
 
 let push: PushClient | undefined;
 let initializing: Promise<void> | undefined;
@@ -15,6 +16,7 @@ let sdkFailed = false;
 let worker: "loading" | "ready" | "failed" = "loading";
 let phase: "idle" | "starting" | "enabled" | "failed" = "idle";
 let dashboardActive = false;
+let requestingPermission = false;
 const listeners = new Set<() => void>();
 
 function publish() {
@@ -33,10 +35,14 @@ export function subscribeToPush(listener: () => void) {
 
 export function getPushStatus(): PushStatus {
   if (!process.env.NEXT_PUBLIC_BAAS_API_KEY) return "unconfigured";
+  const { platform, standalone } = getInstallState();
+  if (platform === "unknown") return "loading";
+  if ((platform === "ios" || platform === "android") && !standalone) return "install-required";
   if (!isSupported()) return "unsupported";
   if (Notification.permission === "denied") return "denied";
   if (sdkFailed || worker === "failed") return "unavailable";
   if (!push || worker !== "ready") return "loading";
+  if (requestingPermission) return "prompting";
   return phase === "idle" ? "ready" : phase;
 }
 
@@ -72,12 +78,12 @@ export function initializePushSdk() {
 
 export async function startBaasPush() {
   const status = getPushStatus();
-  if (!dashboardActive || !push || (status !== "ready" && status !== "failed")) return;
+  if (!dashboardActive || !push || (status !== "ready" && status !== "failed") || Notification.permission !== "granted") return;
 
   phase = "starting";
   publish();
   try {
-    // start() requests permission immediately when called from the enable button.
+    // The SDK restores its installation token and connection with the existing grant.
     const permission = await push.start();
     phase = dashboardActive && permission === "granted" ? "enabled" : "idle";
     if (!dashboardActive) push.disconnect();
@@ -86,6 +92,27 @@ export async function startBaasPush() {
     console.warn("BaaS Push could not be started.");
   }
   publish();
+}
+
+export async function requestBaasPushPermission() {
+  const status = getPushStatus();
+  if (!dashboardActive || (status !== "ready" && status !== "failed")) return;
+  try {
+    if (Notification.permission === "default") {
+      requestingPermission = true;
+      try {
+        const request = Notification.requestPermission();
+        publish();
+        await request;
+      } finally {
+        requestingPermission = false;
+      }
+    }
+    await startBaasPush();
+    return Notification.permission;
+  } finally {
+    publish();
+  }
 }
 
 export function activateBaasPush() {
@@ -106,23 +133,38 @@ export function activateBaasPush() {
     publish();
   };
   const syncPermission = () => {
-    if (phase === "enabled" && Notification.permission !== "granted") {
+    if (phase !== "idle" && phase !== "starting" && isSupported() && Notification.permission !== "granted") {
       push?.disconnect();
       phase = "idle";
     }
     publish();
   };
+  const onVisible = () => { if (document.visibilityState === "visible") syncPermission(); };
   const unsubscribe = subscribeToPush(resume);
+  const unsubscribeInstall = subscribeToInstall(syncPermission);
+  let permissionStatus: PermissionStatus | undefined;
+  let disposed = false;
+  void navigator.permissions?.query({ name: "notifications" }).then((result) => {
+    if (disposed) return;
+    permissionStatus = result;
+    result.addEventListener("change", syncPermission);
+    syncPermission();
+  }).catch(() => { /* Focus and visibility also refresh permission. */ });
   resume();
 
   window.addEventListener("pagehide", pause);
   window.addEventListener("pageshow", restore);
   window.addEventListener("focus", syncPermission);
+  document.addEventListener("visibilitychange", onVisible);
   return () => {
+    disposed = true;
+    permissionStatus?.removeEventListener("change", syncPermission);
     unsubscribe();
+    unsubscribeInstall();
     window.removeEventListener("pagehide", pause);
     window.removeEventListener("pageshow", restore);
     window.removeEventListener("focus", syncPermission);
+    document.removeEventListener("visibilitychange", onVisible);
     pause();
   };
 }

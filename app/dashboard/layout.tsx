@@ -3,6 +3,7 @@ import DashboardSidebar from "./components/DashboardSidebar";
 import { cookies } from "next/headers";
 import DashboardContent from "./components/DashboardContent";
 import { NotificationProvider } from "./context/NotificationContext";
+import { NotificationSetupProvider } from "./context/NotificationSetupContext";
 import WalletChargeGuideModal from "./components/WalletChargeGuideModal";
 import { Suspense } from "react";
 
@@ -26,14 +27,16 @@ export default async function RootLayout({
         defaultOpen={defaultOpen}
         className="w-full flex flex-col"
       >
-        <div className="flex min-h-screen">
-          <div className="bg-(--dashboard-background) shadow-lg">
-            <DashboardSidebar />
+        <NotificationSetupProvider>
+          <div className="flex min-h-screen">
+            <div className="bg-(--dashboard-background) shadow-lg">
+              <DashboardSidebar />
+            </div>
+            <DashboardContent>
+              <main className="min-h-[86dvh] ">{children}</main>
+            </DashboardContent>
           </div>
-          <DashboardContent>
-            <main className="min-h-[86dvh] ">{children}</main>
-          </DashboardContent>
-        </div>
+        </NotificationSetupProvider>
       </SidebarProvider>
     </NotificationProvider>
   );
