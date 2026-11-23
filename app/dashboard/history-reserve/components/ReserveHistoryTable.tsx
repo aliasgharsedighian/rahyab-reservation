@@ -21,6 +21,8 @@ interface ReserveHistoryTableProps {
 
 function FeedbackStatus({ item }: { item: ReservationHistoryItem }) {
   const reviewed = item.has_feedback?.has_feedback;
+  if (item.status === "cancelled" && !reviewed) return null;
+
   const Icon = reviewed ? CheckCircle2Icon : MessageSquareIcon;
   return (
     <span
