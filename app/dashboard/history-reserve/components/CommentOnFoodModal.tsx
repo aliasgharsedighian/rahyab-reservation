@@ -222,7 +222,7 @@ function CommentOnFoodModal({
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {rate > 0 ? `${rate} از ۵` : "انتخاب نشده"}
+                {rate > 0 ? `${rate.toLocaleString("fa-IR")} از ۵` : "انتخاب نشده"}
               </span>
             </div>
 
@@ -230,22 +230,23 @@ function CommentOnFoodModal({
               <RatingStars
                 value={rate}
                 starClassName="size-8"
-                label={`امتیاز ثبت‌شده ${rate} از ۵`}
+                label={`امتیاز ثبت‌شده ${rate.toLocaleString("fa-IR")} از ۵`}
               />
             ) : (
               <div
-                className="flex w-fit gap-1 rounded-lg p-1"
+                className="grid w-full max-w-64 grid-cols-5 gap-1 rounded-lg p-1"
                 onMouseLeave={() => setHoveredRate(null)}
               >
                 {[1, 2, 3, 4, 5].map((num) => {
                   const visibleRate = hoveredRate ?? rate;
+                  const ratingLabel = num.toLocaleString("fa-IR");
 
                   return (
                     <button
                       type="button"
                       disabled={isSubmitting}
                       key={num}
-                      aria-label={`${num} امتیاز از ۵`}
+                      aria-label={`${ratingLabel} امتیاز از ۵`}
                       aria-pressed={rate === num}
                       onMouseEnter={() => setHoveredRate(num)}
                       onFocus={() => setHoveredRate(num)}
@@ -254,15 +255,19 @@ function CommentOnFoodModal({
                         setRate(num);
                         setRateError(false);
                       }}
-                      className="group rounded-md p-1 transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                      className="group flex flex-col items-center gap-1 rounded-md py-1 transition hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                     >
                       <StarIcon
-                        className={`size-9 transition-colors ${
+                        aria-hidden="true"
+                        className={`size-7 max-w-full transition-colors sm:size-9 ${
                           num <= visibleRate
                             ? "fill-amber-400 text-amber-400"
                             : "fill-transparent text-muted-foreground/40 group-hover:text-amber-300"
                         }`}
                       />
+                      <span aria-hidden="true" className="text-sm font-semibold leading-5 text-foreground">
+                        {ratingLabel}
+                      </span>
                     </button>
                   );
                 })}
