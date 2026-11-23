@@ -27,6 +27,11 @@ export interface ProfileFormValues extends Omit<Profile, "description"> {
   password: string;
   password_confirmation: string;
 }
-export interface ProfileResponse { data?: Profile; }
+export interface ProfileResponse { data?: Profile; status?: number; }
 export interface FoodPreferencesResponse { data?: FoodPreferences[]; }
-export interface ProfileMutationResponse { message: string; status?: number; }
+export interface ProfileMutationResponse {
+  message: string;
+  status?: number;
+  success?: boolean;
+  data?: Partial<Pick<Profile, "avatar_url">>;
+}

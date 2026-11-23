@@ -29,6 +29,12 @@ export const authSlice = createSlice({
     logIn: (state, action: PayloadAction<any>) => {
       state.value.userInfo = action.payload;
     },
+    updateUserAvatar: (state, action: PayloadAction<string>) => {
+      state.value.userInfo = {
+        ...state.value.userInfo,
+        avatar_url: action.payload,
+      };
+    },
     setToken: (state, action: PayloadAction<any>) => {
       state.value.token = action.payload;
     },
@@ -76,6 +82,7 @@ export const authSlice = createSlice({
 
 export const {
   logIn,
+  updateUserAvatar,
   setToken,
   getAddress,
   logOut,

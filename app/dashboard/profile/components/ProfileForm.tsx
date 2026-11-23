@@ -1,36 +1,75 @@
 "use client";
 
 import { apiClient } from "@/lib/api/client";
+import { updateUserAvatar } from "@/redux/features/auth-slice";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Building2Icon, CameraIcon, IdCardIcon, KeyRoundIcon, LayersIcon, Loader2, MailIcon, PhoneCallIcon, ShieldCheckIcon } from "lucide-react";
 import IntrestProfile from "./IntrestProfile";
-import type { FoodPreferences, Profile, ProfileFormValues, ProfileMutationResponse } from "../types";
+import type { FoodPreferences, Profile, ProfileFormValues, ProfileMutationResponse, ProfileResponse } from "../types";
 
 export default function ProfileForm({ profile, foodPreferences }: { profile: Profile; foodPreferences: FoodPreferences[] }) {
+  const dispatch = useDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInProgress = useRef(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(profile.avatar_url);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploadedAvatar, setUploadedAvatar] = useState<string | null>(null);
   const form = useForm<ProfileFormValues>({
     defaultValues: { ...profile, description: profile.description ?? "", current_password: "", password: "", password_confirmation: "" },
   });
 
-  const uploadAvatar = async (selectedFile: File) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file || uploadInProgress.current) return;
+
+    e.currentTarget.value = "";
+    const previewUrl = URL.createObjectURL(file);
+    uploadInProgress.current = true;
+    setIsUploading(true);
+    setPreview(previewUrl);
+
     try {
-      setIsUploading(true);
       const formData = new FormData();
-      formData.append("avatar_url", selectedFile);
+      formData.append("avatar_url", file);
       const { data: response, status } = await apiClient.post<ProfileMutationResponse>("profile", formData);
-      if (status >= 200 && status < 300) toast.success(response.message);
-      else toast.error(response.message || "خطا در آپلود تصویر");
+      const responseStatus = Number(response?.status ?? status);
+      if (status < 200 || status >= 300 || responseStatus < 200 || responseStatus >= 300 || response?.success === false) {
+        toast.error(response?.message || "خطا در آپلود تصویر");
+        return;
+      }
+
+      let avatarUrl = response?.data?.avatar_url;
+      if (!avatarUrl) {
+        // Some successful upload responses only contain a message.
+        const updatedProfile = await apiClient.get<ProfileResponse>("profile").catch(() => null);
+        if (updatedProfile?.status === 200 && (updatedProfile.data?.status ?? 200) === 200) {
+          avatarUrl = updatedProfile.data?.data?.avatar_url;
+        }
+      }
+
+      if (!avatarUrl) {
+        toast.warning("تصویر ذخیره شد، اما نمایش آن به‌روز نشد.");
+        return;
+      }
+
+      dispatch(updateUserAvatar(avatarUrl));
+      setUploadedAvatar(avatarUrl);
+      toast.success(response?.message || "تصویر پروفایل به‌روز شد.");
     } catch (error) {
       toast.error("خطا در ارتباط با سرور");
       console.error(error);
-    } finally { setIsUploading(false); }
+    } finally {
+      URL.revokeObjectURL(previewUrl);
+      uploadInProgress.current = false;
+      setPreview(null);
+      setIsUploading(false);
+    }
   };
 
   const onSubmitChangePassword = async (values: ProfileFormValues) => {
@@ -40,13 +79,6 @@ export default function ProfileForm({ profile, foodPreferences }: { profile: Pro
     formData.append("password_confirmation", values.password_confirmation);
     const { data: response, status } = await apiClient.post<ProfileMutationResponse>("profile/change-password", formData);
     if (status === 200) toast.success(response.message);
-  };
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (!selected) return;
-    setPreview(URL.createObjectURL(selected));
-    await uploadAvatar(selected);
   };
 
   const accountFields = [
@@ -81,7 +113,7 @@ export default function ProfileForm({ profile, foodPreferences }: { profile: Pro
             className="group relative size-16 shrink-0 cursor-pointer rounded-full border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--base-green) disabled:cursor-wait sm:size-20"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview || profile.avatar_url || "/assets/images/blank-profile.webp"} alt="" className="size-full rounded-full object-cover" />
+            <img src={preview || uploadedAvatar || profile.avatar_url || "/assets/images/blank-profile.webp"} alt="" className="size-full rounded-full object-cover" />
             <span className="absolute -bottom-1 -left-1 grid size-7 place-items-center rounded-full border bg-card text-green-700 shadow-sm group-hover:bg-(--light-green) dark:text-(--base-green)">
               {isUploading
                 ? <Loader2 className="size-4 motion-safe:animate-spin" aria-hidden="true" />
