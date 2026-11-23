@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Check, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
+import { Check, Download, EllipsisVertical, RefreshCw, Share, Smartphone, SquarePlus } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -44,6 +44,17 @@ export default function PwaInstallGuide({ open, onClose, onInstall, ios, safari,
             <Description className="text-sm leading-6 text-muted-foreground">
               فودنیکس را به صفحهٔ اصلی گوشی اضافه کنید تا بتوانید اعلان‌های رزرو و پیام‌های مهم را دریافت کنید.
             </Description>
+          </div>
+        </div>
+        <div className="flex items-start gap-3 rounded-xl border border-(--base-green)/20 bg-(--light-green)/60 p-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-(--light-green) text-(--base-green)">
+            <RefreshCw className="size-4" aria-hidden="true" />
+          </span>
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold">به‌روزرسانی بدون نصب دوباره</h3>
+            <p className="text-xs leading-6 text-muted-foreground sm:text-sm">
+              نسخهٔ تحت وب را یک‌بار نصب کنید. قابلیت‌ها و بهبودهای تازه از طریق خود فودنیکس در دسترس‌تان قرار می‌گیرند.
+            </p>
           </div>
         </div>
         {ios && !safari && (
