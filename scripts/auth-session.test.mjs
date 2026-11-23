@@ -80,6 +80,57 @@ test('analytics uses the profile ID and clears it after an in-flight identity re
   assert.deepEqual(calls, [['set', '86'], ['clear']]);
 });
 
+for (const outcome of ['success', 'failure', 'logout']) {
+  test(`login analytics waits for profile identity confirmation (${outcome})`, async () => {
+    let startSet;
+    const setStarted = new Promise(resolve => { startSet = resolve; });
+    let finishSet;
+    const setResult = new Promise(resolve => { finishSet = resolve; });
+    const calls = [];
+    const { completeLoginAttempt, syncAuthAnalyticsIdentity } = loadModule('lib/auth-analytics.ts', {
+      './baas-core': { initializeBaasCore: async () => ({}) },
+      'baas-web-sdk/analytics': {
+        AnalyticsSdk: class {
+          setAutomaticCollection() {}
+          setUserId(id) {
+            calls.push(['set', id]);
+            startSet();
+            return setResult;
+          }
+          async clearUserId() {
+            calls.push(['clear']);
+            return { success: true };
+          }
+          async logEvent(name, params) {
+            calls.push([name, params.correlation_id]);
+          }
+          async flush() {}
+        },
+      },
+    }, {
+      window: {}, crypto: globalThis.crypto, console: { ...console, error() {} },
+      process: { env: { NEXT_PUBLIC_BAAS_API_KEY: 'test-key' } },
+    });
+
+    completeLoginAttempt({ correlationId: 'attempt', method: 'otp', finished: false }, null);
+    assert.deepEqual(calls, []);
+    const profile = syncAuthAnalyticsIdentity('86');
+    await setStarted;
+    assert.deepEqual(calls, [['set', '86']]);
+
+    const nextSync = outcome === 'logout' ? syncAuthAnalyticsIdentity(null) : undefined;
+    finishSet(outcome === 'failure' ? { success: false, error: 'Unavailable' } : { success: true });
+    await Promise.all([profile, nextSync]);
+
+    if (outcome === 'success') {
+      await syncAuthAnalyticsIdentity('86');
+      assert.deepEqual(calls, [['set', '86'], ['login_completed', 'attempt'], ['session_started', 'attempt']]);
+    } else {
+      assert.deepEqual(calls, outcome === 'logout' ? [['set', '86'], ['clear']] : [['set', '86']]);
+    }
+  });
+}
+
 test('push registration uses the live cookie and sends only a validated web installation', async () => {
   let token;
   let upstream = { status: 200, data: { success: true, status: 200 } };

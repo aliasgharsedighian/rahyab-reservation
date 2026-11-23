@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { initializeAnalytics, syncAnalyticsUserId } from "@/lib/analytics";
+import { initializeAnalytics } from "@/lib/analytics";
+import { syncAuthAnalyticsIdentity } from "@/lib/auth-analytics";
 import { initializeBaasAuth } from "@/lib/baas-core";
 import { initializePushSdk } from "@/lib/baas-push";
 import { useAppSelector } from "@/redux/store";
@@ -21,7 +22,7 @@ export default function BaasAnalytics() {
   }, []);
 
   useEffect(() => {
-    if (userId !== undefined) void syncAnalyticsUserId(userId);
+    if (userId !== undefined) void syncAuthAnalyticsIdentity(userId);
   }, [userId]);
 
   return null;

@@ -1,4 +1,4 @@
-import { logAuthEvent } from "./analytics";
+import { logAuthEvent, syncAnalyticsUserId } from "./analytics";
 import { createAnalyticsId } from "./analytics-errors";
 
 type LoginMethod = "otp" | "password";
@@ -19,6 +19,12 @@ interface AnalyticsSession {
 const sessionKey = "foodnix.analytics.auth-session";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 let memorySession: AnalyticsSession | null = null;
+let pendingLogin: {
+  user_id?: string;
+  session_id: string;
+  correlation_id?: string;
+  login_method?: LoginMethod;
+} | undefined;
 
 function readSession(): AnalyticsSession | null {
   try {
@@ -71,17 +77,32 @@ export function completeLoginAttempt(attempt: LoginAttempt | null, userId: strin
   try {
     const session = { sessionId: `ses_${createAnalyticsId()}`, userId, endEventId: createAnalyticsId() };
     writeSession(session);
-    const identity = { user_id: userId ?? undefined, session_id: session.sessionId };
-    const login = { ...identity, correlation_id: attempt?.correlationId, login_method: attempt?.method };
-    logAuthEvent("login_completed", login);
-    logAuthEvent("session_started", login);
+    // The dashboard profile supplies the SDK user ID after navigation.
+    pendingLogin = {
+      user_id: userId ?? undefined,
+      session_id: session.sessionId,
+      correlation_id: attempt?.correlationId,
+      login_method: attempt?.method,
+    };
   } catch {
     // Analytics must not interfere with the established application session.
   }
 }
 
+export async function syncAuthAnalyticsIdentity(profileUserId: string | null) {
+  if (profileUserId === null) pendingLogin = undefined;
+  const login = pendingLogin;
+  const synced = await syncAnalyticsUserId(profileUserId);
+  if (!synced || !login || pendingLogin !== login) return;
+
+  pendingLogin = undefined;
+  logAuthEvent("login_completed", login);
+  logAuthEvent("session_started", login);
+}
+
 export function endAnalyticsSession(reason: SessionEndReason, expectedSessionId = getAnalyticsSessionId()) {
   if (!expectedSessionId) return;
+  if (pendingLogin?.session_id === expectedSessionId) pendingLogin = undefined;
   const end = () => {
     const session = readSession();
     if (session?.sessionId !== expectedSessionId) return;

@@ -128,7 +128,7 @@ interface AnalyticsClient extends Pick<AnalyticsSdk, "flush" | "setUserId" | "cl
 
 let analytics: AnalyticsClient | undefined;
 let initializing: Promise<void> | undefined;
-let identityUpdate = Promise.resolve();
+let identityUpdate = Promise.resolve(false);
 let appliedUserId: string | null | undefined;
 let unavailable = false;
 const pendingEvents: PendingEvent[] = [];
@@ -220,7 +220,8 @@ export function syncAnalyticsUserId(userId: string | null) {
   // A logout must finish after any in-flight setUserId request.
   identityUpdate = identityUpdate.then(async () => {
     await initializeAnalytics();
-    if (!analytics || unavailable || appliedUserId === userId) return;
+    if (!analytics || unavailable) return false;
+    if (appliedUserId === userId) return true;
 
     appliedUserId = undefined;
     const result = userId === null
@@ -228,8 +229,10 @@ export function syncAnalyticsUserId(userId: string | null) {
       : await analytics.setUserId(userId);
     if (result.success) appliedUserId = userId;
     else console.error(result.error);
+    return result.success;
   }).catch((error: unknown) => {
     console.error("Analytics user ID could not be synchronized.", error);
+    return false;
   });
   return identityUpdate;
 }
