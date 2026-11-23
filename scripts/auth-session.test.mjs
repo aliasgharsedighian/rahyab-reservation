@@ -39,6 +39,47 @@ const session = loadModule('lib/api/session.ts');
 const disabled = { success: false, status: 403, message: 'حساب کاربری شما غیرفعال است.', errors: null };
 const destination = '/dashboard/history-reserve?page=3&count=10';
 
+test('analytics uses the profile ID and clears it after an in-flight identity request', async () => {
+  let startSet;
+  const setStarted = new Promise(resolve => { startSet = resolve; });
+  let finishSet;
+  const setResult = new Promise(resolve => { finishSet = resolve; });
+  const calls = [];
+  const { syncAnalyticsUserId } = loadModule('lib/analytics.ts', {
+    './baas-core': { initializeBaasCore: async () => ({}) },
+    'baas-web-sdk/analytics': {
+      AnalyticsSdk: class {
+        setAutomaticCollection() {}
+        setUserId(id) {
+          calls.push(['set', id]);
+          startSet();
+          return setResult;
+        }
+        async clearUserId() {
+          calls.push(['clear']);
+          return { success: true };
+        }
+      },
+    },
+  }, { window: {}, process: { env: { NEXT_PUBLIC_BAAS_API_KEY: 'test-key' } } });
+
+  const { default: authReducer, logIn, setUserProfile, logOut } = loadModule('redux/features/auth-slice.ts');
+  const login = authReducer(undefined, logIn({ id: 12 }));
+  assert.equal(login.value.profileUserId, undefined);
+  const profile = authReducer(login, setUserProfile({ id: 86 }));
+  const loginIdentity = syncAnalyticsUserId(profile.value.profileUserId);
+  const refreshIdentity = syncAnalyticsUserId('86');
+  await setStarted;
+
+  const logout = authReducer(profile, logOut());
+  const logoutIdentity = syncAnalyticsUserId(logout.value.profileUserId);
+  assert.deepEqual(calls, [['set', '86']]);
+  finishSet({ success: true });
+
+  await Promise.all([loginIdentity, refreshIdentity, logoutIdentity]);
+  assert.deepEqual(calls, [['set', '86'], ['clear']]);
+});
+
 test('push registration uses the live cookie and sends only a validated web installation', async () => {
   let token;
   let upstream = { status: 200, data: { success: true, status: 200 } };

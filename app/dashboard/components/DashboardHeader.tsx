@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { logIn, userInfoAccess } from "@/redux/features/auth-slice";
+import { setUserProfile, userInfoAccess } from "@/redux/features/auth-slice";
 import DashboardThemeToggle from "./DashboardThemeToggle";
 import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
 import HeaderReserveCart from "./HeaderReserveCart";
@@ -53,7 +53,7 @@ function DashboardHeader({
       const { data: result, status } = await apiClient.get("profile");
       // console.log(result);
       if (status === 200 && result.status === 200) {
-        dispatch(logIn(result.data));
+        dispatch(setUserProfile(result.data));
         const passwordChangeIsRequired =
           Number(result.data?.must_change_password) === 1;
         return !passwordChangeIsRequired;

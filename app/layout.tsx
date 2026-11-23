@@ -77,6 +77,7 @@ export default async function RootLayout({
         >
           <PwaRegistration />
           <ReduxProvider>
+            <BaasAnalytics />
             <Toaster
               position="top-center"
               toastOptions={{
@@ -96,7 +97,6 @@ export default async function RootLayout({
             </SiteSettingsProvider>
           </ReduxProvider>
         </ThemeProvider>
-        <BaasAnalytics />
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
-import { logIn } from "@/redux/features/auth-slice";
+import { setUserProfile } from "@/redux/features/auth-slice";
 import { installPwaPullToRefresh, PULL_THRESHOLD } from "@/lib/pwa-pull-to-refresh";
 import { useNotifications } from "../context/NotificationContext";
 
@@ -35,7 +35,7 @@ export default function PwaPullToRefresh({ children }: { children: React.ReactNo
         getNotifications(true),
         apiClient.get("profile", { timeout: 15000 }).then(({ data, status }) => {
           if (status !== 200 || data.status !== 200) throw new Error("Profile refresh failed");
-          dispatch(logIn(data.data));
+          dispatch(setUserProfile(data.data));
         }),
       ]);
       if (results.some((result) => result.status === "rejected")) {

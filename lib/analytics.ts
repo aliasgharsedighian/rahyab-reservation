@@ -6,6 +6,7 @@ import {
   type ErrorEventName,
   type ErrorOccurrence,
 } from "./analytics-errors";
+import type { AnalyticsSdk } from "baas-web-sdk/analytics";
 import { initializeBaasCore } from "./baas-core";
 
 const appVersion = "1.0.0";
@@ -121,14 +122,14 @@ type PendingEvent = [name: MenuEventName, parameters: MenuParameters]
   | [name: FeedbackEventName, parameters: FeedbackParameters]
   | [name: InappEventName, parameters: InappParameters];
 
-interface AnalyticsClient {
+interface AnalyticsClient extends Pick<AnalyticsSdk, "flush" | "setUserId" | "clearUserId"> {
   logEvent(...event: PendingEvent): Promise<unknown>;
-  flush(): Promise<unknown>;
-  setAutomaticCollection(enabled: boolean): void;
 }
 
 let analytics: AnalyticsClient | undefined;
 let initializing: Promise<void> | undefined;
+let identityUpdate = Promise.resolve();
+let appliedUserId: string | null | undefined;
 let unavailable = false;
 const pendingEvents: PendingEvent[] = [];
 const reportedErrorIds = new Set<string>();
@@ -211,6 +212,26 @@ export function initializeAnalytics() {
     console.warn("Analytics could not be initialized.");
   });
   return initializing;
+}
+
+export function syncAnalyticsUserId(userId: string | null) {
+  if (!canTrack()) return;
+
+  // A logout must finish after any in-flight setUserId request.
+  identityUpdate = identityUpdate.then(async () => {
+    await initializeAnalytics();
+    if (!analytics || unavailable || appliedUserId === userId) return;
+
+    appliedUserId = undefined;
+    const result = userId === null
+      ? await analytics.clearUserId()
+      : await analytics.setUserId(userId);
+    if (result.success) appliedUserId = userId;
+    else console.error(result.error);
+  }).catch((error: unknown) => {
+    console.error("Analytics user ID could not be synchronized.", error);
+  });
+  return identityUpdate;
 }
 
 function canTrack() {

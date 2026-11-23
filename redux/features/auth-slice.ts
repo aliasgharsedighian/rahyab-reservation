@@ -8,6 +8,7 @@ type AuthState = {
   isAuth: boolean;
   token: string;
   userInfo: any;
+  profileUserId?: string | null;
   userAddress: any;
   productHistorys: [] | any;
 };
@@ -28,6 +29,17 @@ export const authSlice = createSlice({
   reducers: {
     logIn: (state, action: PayloadAction<any>) => {
       state.value.userInfo = action.payload;
+      delete state.value.profileUserId;
+    },
+    setUserProfile: (state, action: PayloadAction<unknown>) => {
+      state.value.userInfo = action.payload;
+      const profile = action.payload;
+      const id = profile && typeof profile === "object" && "id" in profile ? profile.id : null;
+      state.value.profileUserId =
+        (typeof id === "number" && Number.isSafeInteger(id) && id > 0) ||
+        (typeof id === "string" && /^[1-9]\d*$/.test(id))
+          ? String(id)
+          : null;
     },
     updateUserAvatar: (state, action: PayloadAction<string>) => {
       state.value.userInfo = {
@@ -72,6 +84,7 @@ export const authSlice = createSlice({
           isAuth: false,
           token: "",
           userInfo: {},
+          profileUserId: null,
           userAddress: [],
           productHistorys: productHistorySaved,
         },
@@ -82,6 +95,7 @@ export const authSlice = createSlice({
 
 export const {
   logIn,
+  setUserProfile,
   updateUserAvatar,
   setToken,
   getAddress,
