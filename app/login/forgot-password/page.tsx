@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRightIcon, Clock3Icon, KeyRoundIcon } from "lucide-react";
@@ -9,10 +9,12 @@ import { requestPasswordRecovery, resetRecoveredPassword } from "@/actions/forgo
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { toEnglishDigits } from "@/lib/digits";
 import { getRecoveryMobileError, getRecoveryResetErrors, type RecoveryFieldErrors } from "@/lib/password-recovery";
+import { readSmsCode } from "@/lib/web-otp";
 
 type Deadlines = { resendAt?: number; verifyAt?: number };
 
@@ -56,6 +58,8 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
   const [pending, setPending] = useState<"send" | "reset" | null>(null);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<RecoveryFieldErrors>({});
+  const codeInput = useRef<HTMLInputElement>(null);
+  const smsRequest = useRef<AbortController | null>(null);
 
   const { resendAt = 0, verifyAt = 0 } = deadlines[mobile] ?? {};
   const hasCode = expiresAt > now;
@@ -64,6 +68,13 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
   const verifySeconds = Math.max(0, Math.ceil((verifyAt - now) / 1000));
   const expiresSeconds = Math.max(0, Math.ceil((expiresAt - now) / 1000));
   const timerRunning = hasCode || resendSeconds > 0 || verifySeconds > 0;
+
+  useEffect(() => () => smsRequest.current?.abort(), []);
+
+  useEffect(() => {
+    if (hasCode) codeInput.current?.focus();
+    if (hasExpiredCode) smsRequest.current?.abort();
+  }, [hasCode, hasExpiredCode]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -82,6 +93,13 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
     setConfirmation("");
   }
 
+  function fillCode(value: string) {
+    const normalized = toEnglishDigits(value).trim();
+    if (/^\d{4}$/.test(normalized)) smsRequest.current?.abort();
+    setCode(normalized);
+    setFieldErrors((errors) => ({ ...errors, code: undefined }));
+  }
+
   function updateDeadlines(mobileNumber: string, nextDeadlines: Deadlines) {
     setDeadlines((current) => ({
       ...current,
@@ -96,12 +114,18 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
     setFieldErrors(mobileError ? { mobile: mobileError } : {});
     if (mobileError) return;
     setPending("send");
+    smsRequest.current?.abort();
+    const controller = "OTPCredential" in window ? new AbortController() : null;
+    smsRequest.current = controller;
 
     try {
+      // Listen before requesting the SMS so a fast delivery can be picked up.
+      const smsCode = controller ? readSmsCode(controller.signal) : null;
       const result = await requestPasswordRecovery(mobile);
       const receivedAt = Date.now();
       setNow(receivedAt);
       if (!result.success) {
+        controller?.abort();
         if (result.retryAfter !== undefined) {
           updateDeadlines(mobile, { resendAt: receivedAt + result.retryAfter * 1000 });
         }
@@ -111,10 +135,17 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
       }
 
       clearResetFields();
-      setExpiresAt(receivedAt + result.expiresIn * 60_000);
+      const challengeExpiresAt = receivedAt + result.expiresIn * 60_000;
+      setExpiresAt(challengeExpiresAt);
       updateDeadlines(mobile, { resendAt: receivedAt + result.resendAfter * 1000 });
       toast.success(result.message);
+      void smsCode?.then((value) => {
+        if (controller && !controller.signal.aborted && Date.now() < challengeExpiresAt && /^\d{4}$/.test(value)) {
+          fillCode(value);
+        }
+      });
     } catch {
+      controller?.abort();
       setError("ارتباط با سرور برقرار نشد. دوباره تلاش کنید.");
     } finally {
       setPending(null);
@@ -135,6 +166,7 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
     const resetErrors = getRecoveryResetErrors(code, password, confirmation);
     setFieldErrors(resetErrors);
     if (Object.keys(resetErrors).length > 0) return;
+    smsRequest.current?.abort();
     setPending("reset");
     try {
       const result = await resetRecoveredPassword(mobile, code, password, confirmation);
@@ -207,6 +239,7 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
                   className="px-0 text-green-700 underline dark:text-green-300"
                   disabled={pending !== null}
                   onClick={() => {
+                    smsRequest.current?.abort();
                     setExpiresAt(0);
                     clearResetFields();
                     setError("");
@@ -229,24 +262,37 @@ function RecoveryForm({ initialMobile }: { initialMobile: string }) {
             {hasCode ? (
               <>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="recovery-code">کد چهاررقمی بازیابی</Label>
-                  <Input
-                    id="recovery-code"
-                    className={`${fieldClassName} text-center font-semibold tracking-[0.3em] tabular-nums`}
-                    dir="ltr"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{4}"
-                    required
-                    value={code}
-                    disabled={pending !== null}
-                    aria-invalid={Boolean(fieldErrors.code)}
-                    aria-describedby={fieldErrors.code ? "recovery-code-error" : undefined}
-                    onChange={(event) => {
-                      setCode(toEnglishDigits(event.target.value).replace(/\D/g, "").slice(0, 4));
-                      setFieldErrors((errors) => ({ ...errors, code: undefined }));
-                    }}
-                  />
+                  <Label htmlFor="recovery-code" className="justify-center">کد چهاررقمی بازیابی</Label>
+                  <div dir="ltr">
+                    <InputOTP
+                      ref={codeInput}
+                      id="recovery-code"
+                      name="code"
+                      value={code}
+                      onChange={fillCode}
+                      pasteTransformer={(value) => toEnglishDigits(value).trim()}
+                      pattern="^[0-9۰-۹٠-٩]+$"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={4}
+                      required
+                      disabled={pending !== null}
+                      aria-invalid={Boolean(fieldErrors.code)}
+                      aria-describedby={fieldErrors.code ? "recovery-code-error" : undefined}
+                      containerClassName="justify-center"
+                    >
+                      <InputOTPGroup className="gap-2">
+                        {[0, 1, 2, 3].map((index) => (
+                          <InputOTPSlot
+                            key={index}
+                            index={index}
+                            aria-invalid={Boolean(fieldErrors.code)}
+                            className="size-12 rounded-lg border bg-background text-lg font-bold data-[active=true]:border-(--base-green) data-[active=true]:ring-(--base-green)/25"
+                          />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
                   <RecoveryFieldError id="recovery-code-error" message={fieldErrors.code} />
                   {codeValidity}
                 </div>

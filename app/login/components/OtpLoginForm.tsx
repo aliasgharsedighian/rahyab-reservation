@@ -11,23 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { normalizeOtpDigits, otpCodePattern, otpMobilePattern } from "@/lib/otp-login";
+import { readSmsCode } from "@/lib/web-otp";
 
 const resendDelay = 60;
 const mobileLength = 11;
-
-async function readSmsCode(signal: AbortSignal) {
-  try {
-    const options: CredentialRequestOptions & { otp: { transport: ["sms"] } } = {
-      otp: { transport: ["sms"] },
-      signal,
-    };
-    const credential = await navigator.credentials.get(options);
-    return credential && "code" in credential ? normalizeOtpDigits(credential.code) : "";
-  } catch {
-    // Manual entry stays available if the browser denies or cancels WebOTP.
-    return "";
-  }
-}
 
 export function OtpLoginForm({
   active,
