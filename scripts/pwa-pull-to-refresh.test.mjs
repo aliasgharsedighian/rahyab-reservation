@@ -18,7 +18,7 @@ before(async () => {
 });
 after(async () => { await browser?.close(); });
 
-async function setup(t, { standalone = true, ios = false, touch = true } = {}) {
+async function setup(t, { standalone = true, ios = false, touch = true, coarsePointer = touch } = {}) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: touch, hasTouch: touch });
   t.after(() => context.close());
   const page = await context.newPage();
@@ -32,12 +32,12 @@ async function setup(t, { standalone = true, ios = false, touch = true } = {}) {
     <div id="scroll-area" data-slot="scroll-area">scroll area</div>
     <div data-pull-to-refresh-ignore><div id="ignore-child">ignore</div></div>
     <div id="fixed">bottom cart</div></div>`);
-  await page.evaluate(({ standalone, ios, touch }) => {
+  await page.evaluate(({ standalone, ios, coarsePointer }) => {
 
     window.media = {};
     window.matchMedia = (query) => {
 
-      let matches = query.includes('display-mode') ? standalone : touch;
+      let matches = query.includes('display-mode') ? standalone : coarsePointer;
       const listeners = new Set();
       const media = { media: query, get matches() { return matches; },
         addEventListener: (_, fn) => listeners.add(fn), removeEventListener: (_, fn) => listeners.delete(fn),
@@ -47,7 +47,7 @@ async function setup(t, { standalone = true, ios = false, touch = true } = {}) {
       return media;
     };
     if (ios) Object.defineProperty(navigator, 'standalone', { value: true });
-  }, { standalone, ios, touch });
+  }, { standalone, ios, coarsePointer });
   await page.addScriptTag({ content: `window.gestureModule = (() => { const exports = {}; ${compiled}; return exports; })();` });
   await page.evaluate(() => {
     window.refreshes = 0; window.progress = 0; window.busy = false;
@@ -79,12 +79,14 @@ for (const options of [{ standalone: false }, { touch: false }]) {
   });
 }
 
-test('Android standalone and iOS standalone fallback refresh on release only', async t => {
-  for (const options of [{}, { standalone: false, ios: true }]) {
+test('installed touch apps refresh on release only, including iOS and touch points fallbacks', async t => {
+  for (const options of [{}, { standalone: false, ios: true }, { coarsePointer: false }]) {
     const page = await setup(t, options);
-    await page.evaluate(() => { window.emit('touchstart'); window.emit('touchmove', '#surface', 150, 300); });
+    await page.evaluate(() => window.emit('touchstart'));
+    assert.equal(await page.evaluate(() => window.emit('touchmove', '#surface', 150, 103)), true);
+    await page.evaluate(() => window.emit('touchmove', '#surface', 150, 225));
     assert.equal(await page.evaluate(() => window.refreshes), 0);
-    assert.equal(await page.evaluate(() => window.progress), 90);
+    assert.equal(await page.evaluate(() => window.progress), 75);
     await page.evaluate(() => window.emit('touchend'));
     assert.equal(await page.evaluate(() => window.refreshes), 1);
     assert.equal(await page.evaluate(() => window.progress), 0);

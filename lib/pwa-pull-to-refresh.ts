@@ -1,5 +1,6 @@
 const PULL_THRESHOLD = 72;
 const MAX_PULL = 104;
+const PULL_RESISTANCE = 0.6;
 const EDGE_GUTTER = 24;
 
 const INTERACTIVE = [
@@ -63,12 +64,12 @@ export function installPwaPullToRefresh(
     detach?.();
     detach = undefined;
     const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    if (!(standalone.matches || iosStandalone) || !touch.matches) return;
+    if (!(standalone.matches || iosStandalone) || !(touch.matches || navigator.maxTouchPoints > 0)) return;
 
     let gesture: { x: number; y: number; id: number; distance: number; claimed: boolean } | null = null;
     const reset = () => {
+      if (!gesture) return;
       gesture = null;
-      root.removeEventListener("touchmove", move);
       onProgress(0);
     };
     const start = (event: TouchEvent) => {
@@ -79,8 +80,6 @@ export function installPwaPullToRefresh(
       // Preserve OS/browser edge navigation.
       if (finger.clientX < EDGE_GUTTER || finger.clientX > window.innerWidth - EDGE_GUTTER) return;
       gesture = { x: finger.clientX, y: finger.clientY, id: finger.identifier, distance: 0, claimed: false };
-      // Only an eligible gesture temporarily needs a non-passive move listener.
-      root.addEventListener("touchmove", move, { passive: false });
     };
     const move = (event: TouchEvent) => {
       if (!gesture) return;
@@ -92,18 +91,15 @@ export function installPwaPullToRefresh(
       }
       const dx = Math.abs(finger.clientX - gesture.x);
       const dy = finger.clientY - gesture.y;
-      if (dy < 0 || (!gesture.claimed && dx > 6 && dx >= dy)) {
+      if (dy < 0 || (!gesture.claimed && dx > 6 && dy <= dx * 1.5)) {
         reset();
         return;
       }
-      if (!gesture.claimed && dy < 6) return;
-      if (!gesture.claimed && dy <= dx * 1.5) {
-        reset();
-        return;
-      }
+      // Claim the first downward move before the browser takes over scrolling.
+      if (!gesture.claimed && dy <= dx * 1.5) return;
       gesture.claimed = true;
       event.preventDefault();
-      gesture.distance = Math.min(MAX_PULL, Math.max(0, dy * 0.45));
+      gesture.distance = Math.min(MAX_PULL, Math.max(0, dy * PULL_RESISTANCE));
       onProgress(gesture.distance);
     };
     const end = () => {
@@ -118,6 +114,8 @@ export function installPwaPullToRefresh(
     const previousOverscroll = document.documentElement.style.overscrollBehaviorY;
     document.documentElement.style.overscrollBehaviorY = "none";
     root.addEventListener("touchstart", start, { passive: true });
+    // Register before touchstart so the browser knows the first move can be cancelled.
+    root.addEventListener("touchmove", move, { passive: false });
     root.addEventListener("touchend", end, { passive: true });
     root.addEventListener("touchcancel", reset, { passive: true });
     window.addEventListener("blur", reset);
@@ -127,6 +125,7 @@ export function installPwaPullToRefresh(
       reset();
       document.documentElement.style.overscrollBehaviorY = previousOverscroll;
       root.removeEventListener("touchstart", start);
+      root.removeEventListener("touchmove", move);
       root.removeEventListener("touchend", end);
       root.removeEventListener("touchcancel", reset);
       window.removeEventListener("blur", reset);
