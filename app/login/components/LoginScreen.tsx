@@ -35,6 +35,7 @@ import { RulesModal } from "../../components/RulesModal";
 import { useRouter } from "next/navigation";
 import { clearClientSession } from "@/lib/api/client";
 import { getSafeRedirectTo } from "@/lib/api/session";
+import { syncPushInstallationAfterLogin } from "@/lib/push-installation-sync";
 // import { ForgetPasswordModal } from "../../components/ForgetPasswordModal";
 import { OtpLoginForm } from "./OtpLoginForm";
 
@@ -107,6 +108,7 @@ function LoginScreen({ preferPassword = false }: { preferPassword?: boolean }) {
 
     dispatch(setToken(data.token));
     dispatch(logIn(data.user));
+    syncPushInstallationAfterLogin();
     toast.success(message || "ورود با موفقیت انجام شد.", {
       id: toastId,
     });

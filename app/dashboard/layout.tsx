@@ -5,6 +5,7 @@ import DashboardContent from "./components/DashboardContent";
 import { NotificationProvider } from "./context/NotificationContext";
 import { NotificationSetupProvider } from "./context/NotificationSetupContext";
 import WalletChargeGuideModal from "./components/WalletChargeGuideModal";
+import PushInstallationSync from "./components/PushInstallationSync";
 import { Suspense } from "react";
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default async function RootLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
   return (
     <NotificationProvider>
+      <PushInstallationSync />
       <Suspense fallback={null}>
         <WalletChargeGuideModal />
       </Suspense>
