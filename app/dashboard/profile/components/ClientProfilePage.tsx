@@ -4,6 +4,7 @@ import { BanknoteIcon, MessageSquareIcon, UtensilsIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { logProfileViewed } from "@/lib/auth-analytics";
 import ProfileForm from "./ProfileForm";
+import PushNotificationControl from "../../notifications/components/PushNotificationControl";
 import type { FoodPreferences, Profile } from "../types";
 
 interface ClientProfilePageProps {
@@ -48,6 +49,7 @@ export default function ClientProfilePage({ profile, foodPreferences, analyticsU
           <h1 className="text-2xl font-bold sm:text-3xl">پروفایل کاربری</h1>
           <p className="text-sm leading-7 text-(--secondary-text)">اطلاعات حساب کاربری خود را مدیریت کنید.</p>
         </header>
+        <PushNotificationControl />
         <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_16rem] 2xl:grid-cols-[minmax(0,1fr)_18rem]">
           <ProfileForm profile={profile} foodPreferences={foodPreferences} />
           <aside aria-label="آمار حساب کاربری" className="min-w-0 space-y-4">

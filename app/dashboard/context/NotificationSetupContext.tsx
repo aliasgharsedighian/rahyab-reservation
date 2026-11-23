@@ -9,6 +9,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { userInfoAccess } from "@/redux/features/auth-slice";
 import { getInitialInstallState, getInstallState, promptPwaInstall, subscribeToInstall } from "@/lib/pwa-install";
 import { getPushStatus, requestBaasPushPermission, subscribeToPush } from "@/lib/baas-push";
+import { getInitialPushInstallation, getPushInstallation, setPushInstallationEnabled, subscribeToPushInstallation } from "@/lib/push-installation-sync";
 import PwaInstallGuide from "../components/PwaInstallGuide";
 
 const INSTALL_CHOICE = "foodnix:pwa-install-choice";
@@ -41,6 +42,8 @@ interface Setup {
   showInstallLink: boolean;
   openInstallGuide: () => void;
   showPushOffer: () => void;
+  disablePush: () => Promise<void>;
+  installation: ReturnType<typeof getPushInstallation>;
   pushStatus: ReturnType<typeof getPushStatus>;
   installedInBrowser: boolean;
   ios: boolean;
@@ -53,6 +56,7 @@ export function NotificationSetupProvider({ children }: { children: ReactNode })
     subscribeToInstall, getInstallState, getInitialInstallState,
   );
   const pushStatus = useSyncExternalStore(subscribeToPush, getPushStatus, () => "loading" as const);
+  const installation = useSyncExternalStore(subscribeToPushInstallation, getPushInstallation, getInitialPushInstallation);
   const { openMobile } = useSidebar();
   const passwordChangeRequired = Number(useSelector(userInfoAccess)?.must_change_password) === 1;
   const [guideOpen, setGuideOpen] = useState(false);
@@ -91,11 +95,45 @@ export function NotificationSetupProvider({ children }: { children: ReactNode })
     }
   };
 
+  const enablePush = useCallback(async () => {
+    const beforePermission = getPushInstallation();
+    try {
+      const permission = await requestBaasPushPermission();
+      if (permission === "denied") {
+        saveChoice(PUSH_CHOICE, "denied");
+        toast.warning(pushPermissionHelp(ios), { position: "bottom-center", icon: <BellOff className="size-4" />, duration: 9000 });
+      }
+      if (permission !== "granted") return;
+      if (beforePermission !== getPushInstallation()) return;
+      if (getPushInstallation().status !== "on" && !await setPushInstallationEnabled(true)) {
+        toast.error("روشن کردن اعلان‌ها انجام نشد. دوباره تلاش کنید.");
+        return;
+      }
+      saveChoice(PUSH_CHOICE, "accepted");
+    } catch {
+      toast.error("درخواست مجوز اعلان انجام نشد. دوباره تلاش کنید.");
+    }
+  }, [ios]);
+
+  const disablePush = useCallback(async () => {
+    toast.dismiss(PUSH_TOAST);
+    saveChoice(PUSH_CHOICE, "dismissed");
+    if (!await setPushInstallationEnabled(false)) {
+      toast.error("خاموش کردن اعلان‌ها انجام نشد. دوباره تلاش کنید.");
+    }
+  }, []);
+
   const showOffer = useCallback((automatic = false) => {
     if (showGuide || installing || passwordChangeRequired) return;
+    const current = getPushInstallation();
+    if (current.changing || current.status === "loading" || current.status === "error") return;
     const status = getPushStatus();
     if (status !== "ready" && status !== "failed") return;
     const permission = Notification.permission;
+    if (permission === "granted") {
+      if (!automatic) void enablePush();
+      return;
+    }
     if (automatic && (permission !== "default" || readChoice(PUSH_CHOICE))) return;
 
     setPushOffered(true);
@@ -105,33 +143,25 @@ export function NotificationSetupProvider({ children }: { children: ReactNode })
           <Bell className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">{permission === "granted" ? "اتصال دوبارهٔ اعلان‌ها" : "اعلان‌های فودنیکس را دریافت می‌کنید؟"}</p>
+          <p className="text-sm font-bold">اعلان‌های فودنیکس را دریافت می‌کنید؟</p>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {permission === "granted" ? "مجوز داده شده است. برای برقراری دوبارهٔ اتصال تلاش کنید." : "با فعال‌سازی اعلان‌ها، از وضعیت رزروها و اطلاع‌رسانی‌های مهم باخبر شوید."}
+            با فعال‌سازی اعلان‌ها، از وضعیت رزروها و اطلاع‌رسانی‌های مهم باخبر شوید.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button type="button" size="sm" onClick={() => {
               toast.dismiss(id);
-              void requestBaasPushPermission().then((result) => {
-                if (result === "granted") saveChoice(PUSH_CHOICE, "accepted");
-                if (result === "denied") {
-                  saveChoice(PUSH_CHOICE, "denied");
-                  toast.warning(pushPermissionHelp(ios), { position: "bottom-center", icon: <BellOff className="size-4" />, duration: 9000 });
-                }
-              }).catch(() => toast.error("درخواست مجوز اعلان انجام نشد. دوباره تلاش کنید."));
-            }}>{permission === "granted" ? "تلاش دوباره" : "می‌خواهم"}</Button>
-            <Button type="button" variant="ghost" size="sm" onClick={() => {
-              saveChoice(PUSH_CHOICE, "dismissed");
-              toast.dismiss(id);
-            }}>نمی‌خواهم</Button>
+              void enablePush();
+            }}>می‌خواهم</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => void disablePush()}>نمی‌خواهم</Button>
           </div>
         </div>
       </div>
     ), { id: PUSH_TOAST, duration: Infinity, position: "bottom-center", dismissible: false });
-  }, [showGuide, installing, ios, passwordChangeRequired]);
+  }, [showGuide, installing, passwordChangeRequired, enablePush, disablePush]);
 
   const canOfferInstall = hasInstallGuide && !installOffered;
-  const canOfferPush = pushStatus === "ready" && !pushOffered;
+  const canOfferPush = pushStatus === "ready" && !pushOffered && !installation.changing
+    && (installation.status === "on" || installation.status === "off");
   useEffect(() => {
     const offerInstall = canOfferInstall && !readChoice(INSTALL_CHOICE);
     const offerPush = canOfferPush && Notification.permission === "default" && !readChoice(PUSH_CHOICE);
@@ -170,6 +200,8 @@ export function NotificationSetupProvider({ children }: { children: ReactNode })
       showInstallLink: hasInstallGuide,
       openInstallGuide,
       showPushOffer: () => showOffer(),
+      disablePush,
+      installation,
       pushStatus,
       installedInBrowser: installed && !standalone,
       ios,

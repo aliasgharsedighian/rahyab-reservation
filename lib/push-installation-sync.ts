@@ -3,112 +3,145 @@
 import { getBaasInstallationId } from "./baas-core";
 import { subscribeToBaasInstallation } from "./baas-installation";
 
-const RETRY_DELAYS_MS = [5000, 15000, 30000];
-let active = false;
-let session = 0;
-let settledId: string | undefined;
-let running = false;
-let queued = false;
-let failures = 0;
-let retryTimer: number | undefined;
+const ENDPOINT = "/api/push/installations";
+const CHANGE_KEY = "foodnix:push-installation-change";
 
-async function register(currentSession: number) {
-  if (!active || currentSession !== session) return;
-  const id = await getBaasInstallationId();
-  if (!id) throw new Error("BaaS installation ID is unavailable.");
-
-  const send = async () => {
-    if (!active || currentSession !== session || id === settledId) return;
-    const response = await fetch("/api/push/installations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ device_id: id, platform: "web" }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (response.status !== 200 && response.status !== 401 && response.status !== 422) {
-      throw new Error("Push installation registration failed.");
-    }
-    if (currentSession === session) settledId = id;
-  };
-
-  // Only hold the cross-tab lock during the write, once the SDK has supplied the ID.
-  if (navigator.locks) await navigator.locks.request("foodnix:push-installation", send);
-  else await send();
+interface InstallationState {
+  status: "loading" | "on" | "off" | "error";
+  changing: "on" | "off" | null;
 }
 
-async function drainQueue() {
-  running = true;
+const initialState: InstallationState = { status: "loading", changing: null };
+const listeners = new Set<() => void>();
+let state = initialState;
+let active = false;
+let revision = 0;
+let checking = false;
+let refreshQueued = false;
+
+export const getPushInstallation = () => state;
+export const getInitialPushInstallation = () => initialState;
+export function subscribeToPushInstallation(listener: () => void) {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+function publish(next: InstallationState) {
+  if (state.status === next.status && state.changing === next.changing) return;
+  state = next;
+  for (const listener of listeners) listener();
+}
+
+function reset() {
+  revision++;
+  checking = false;
+  refreshQueued = false;
+  publish(initialState);
+}
+
+export async function refreshPushInstallation(showLoading = false) {
+  if (!active) return;
+  if (checking || state.changing) {
+    refreshQueued = true;
+    return;
+  }
+  refreshQueued = false;
+  const current = revision;
+  checking = true;
+  if (showLoading && state.status === "error") publish(initialState);
   try {
-    while (active && queued) {
-      queued = false;
-      const currentSession = session;
-      try {
-        await register(currentSession);
-        failures = 0;
-      } catch {
-        const delay = RETRY_DELAYS_MS[failures++];
-        if (active && currentSession === session && !queued && delay !== undefined) {
-          retryTimer = window.setTimeout(queueSync, delay);
-        }
-      }
+    const id = await getBaasInstallationId();
+    if (!active || current !== revision) return;
+    if (!id) throw new Error("BaaS installation ID is unavailable.");
+    const response = await fetch(`${ENDPOINT}?${new URLSearchParams({ device_id: id })}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.status === 401) {
+      if (current === revision) publish({ status: "error", changing: null });
+      return;
+    }
+    if (!response.ok) throw new Error("Push installation lookup failed.");
+    const { active: registered } = await response.json();
+    if (typeof registered !== "boolean") throw new Error("Invalid push installation status.");
+    if (current === revision) publish({ status: registered ? "on" : "off", changing: null });
+  } catch {
+    if (current === revision && (state.status === "loading" || state.status === "error")) {
+      publish({ status: "error", changing: null });
     }
   } finally {
-    running = false;
+    if (current === revision) {
+      checking = false;
+      if (refreshQueued) void refreshPushInstallation();
+    }
   }
 }
 
-function queueSync() {
-  if (!active) return;
-  window.clearTimeout(retryTimer);
-  queued = true;
-  if (!running) void drainQueue();
-}
+export async function setPushInstallationEnabled(enabled: boolean) {
+  if (!active || state.changing) return false;
+  const current = ++revision;
+  const previousStatus = state.status;
+  checking = false;
+  publish({ status: previousStatus, changing: enabled ? "on" : "off" });
 
-function syncNow() {
-  failures = 0;
-  queueSync();
-}
-
-export function syncPushInstallationAfterLogin() {
-  if (!process.env.NEXT_PUBLIC_BAAS_API_KEY) return;
-  active = true;
-  session++;
-  settledId = undefined;
-  syncNow();
+  try {
+    const id = await getBaasInstallationId();
+    if (!id) throw new Error("BaaS installation ID is unavailable.");
+    const write = async () => {
+      if (!active || current !== revision) return false;
+      const response = await fetch(ENDPOINT, {
+        method: enabled ? "POST" : "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device_id: id, platform: "web" }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error("Push installation update failed.");
+      try {
+        localStorage.setItem(CHANGE_KEY, `${Date.now()}:${Math.random()}`);
+      } catch {
+        // Other tabs can still refresh on focus.
+      }
+      return true;
+    };
+    const updated = navigator.locks
+      ? await navigator.locks.request("foodnix:push-installation", write)
+      : await write();
+    if (!updated || current !== revision) return false;
+    publish({ status: enabled ? "on" : "off", changing: null });
+    return true;
+  } catch {
+    if (current === revision) publish({ status: previousStatus, changing: null });
+    return false;
+  } finally {
+    // Recheck the current device after an update or an ambiguous network failure.
+    if (current === revision) void refreshPushInstallation();
+  }
 }
 
 export function observePushInstallation() {
   if (!process.env.NEXT_PUBLIC_BAAS_API_KEY) return;
   active = true;
-  const unsubscribe = subscribeToBaasInstallation(syncNow);
+  const refresh = () => { void refreshPushInstallation(); };
+  const unsubscribe = subscribeToBaasInstallation(refresh);
   const onStorage = (event: StorageEvent) => {
-    if (event.key !== "token" && event.key !== null) return;
-    if (event.newValue) {
-      syncPushInstallationAfterLogin();
-    } else {
-      active = false;
-      session++;
-      settledId = undefined;
-      window.clearTimeout(retryTimer);
+    if (event.key === "token" || event.key === null) {
+      active = !!event.newValue;
+      reset();
     }
-  };
-  const onPageShow = (event: PageTransitionEvent) => {
-    if (!active) return;
-    if (event.persisted) settledId = undefined;
-    syncNow();
+    if (event.key === CHANGE_KEY || event.key === "token") refresh();
   };
   window.addEventListener("storage", onStorage);
-  window.addEventListener("online", syncNow);
-  window.addEventListener("focus", syncNow);
-  window.addEventListener("pageshow", onPageShow);
-  syncNow();
+  window.addEventListener("online", refresh);
+  window.addEventListener("focus", refresh);
+  window.addEventListener("pageshow", refresh);
+  refresh();
   return () => {
     active = false;
-    window.clearTimeout(retryTimer);
+    reset();
     unsubscribe();
     window.removeEventListener("storage", onStorage);
-    window.removeEventListener("online", syncNow);
-    window.removeEventListener("focus", syncNow);
-    window.removeEventListener("pageshow", onPageShow);
+    window.removeEventListener("online", refresh);
+    window.removeEventListener("focus", refresh);
+    window.removeEventListener("pageshow", refresh);
   };
 }

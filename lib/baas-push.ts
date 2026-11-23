@@ -1,5 +1,6 @@
 import { initializeBaasCore } from "./baas-core";
 import { getInstallState, subscribeToInstall } from "./pwa-install";
+import { getPushInstallation, subscribeToPushInstallation } from "./push-installation-sync";
 
 interface PushClient {
   start(): Promise<NotificationPermission>;
@@ -26,6 +27,11 @@ function publish() {
 function isSupported() {
   return typeof window !== "undefined" && window.isSecureContext
     && "Notification" in window && "WebSocket" in window && "serviceWorker" in navigator;
+}
+
+function canReceivePush() {
+  return dashboardActive && getPushInstallation().status === "on"
+    && isSupported() && Notification.permission === "granted";
 }
 
 export function subscribeToPush(listener: () => void) {
@@ -62,7 +68,7 @@ export function initializePushSdk() {
     const client = new PushSdk(core as unknown as ConstructorParameters<typeof PushSdk>[0]);
     client.onError(() => {
       console.warn("BaaS Push connection reported an error.");
-      if (dashboardActive && phase !== "starting") {
+      if (canReceivePush() && phase !== "starting") {
         phase = "failed";
         publish();
       }
@@ -78,17 +84,17 @@ export function initializePushSdk() {
 
 export async function startBaasPush() {
   const status = getPushStatus();
-  if (!dashboardActive || !push || (status !== "ready" && status !== "failed") || Notification.permission !== "granted") return;
+  if (!canReceivePush() || !push || (status !== "ready" && status !== "failed")) return;
 
   phase = "starting";
   publish();
   try {
     // The SDK restores its installation token and connection with the existing grant.
     const permission = await push.start();
-    phase = dashboardActive && permission === "granted" ? "enabled" : "idle";
-    if (!dashboardActive) push.disconnect();
+    phase = canReceivePush() && permission === "granted" ? "enabled" : "idle";
+    if (phase === "idle") push.disconnect();
   } catch {
-    phase = dashboardActive ? "failed" : "idle";
+    phase = canReceivePush() ? "failed" : "idle";
     console.warn("BaaS Push could not be started.");
   }
   publish();
@@ -118,9 +124,16 @@ export async function requestBaasPushPermission() {
 export function activateBaasPush() {
   dashboardActive = true;
   const resume = () => {
-    if (dashboardActive && getPushStatus() === "ready" && Notification.permission === "granted") {
+    if (canReceivePush() && getPushStatus() === "ready") {
       void startBaasPush();
     }
+  };
+  const syncInstallation = () => {
+    if (!canReceivePush() && phase !== "idle" && phase !== "starting") {
+      push?.disconnect();
+      phase = "idle";
+    }
+    publish();
   };
   const pause = () => {
     dashboardActive = false;
@@ -142,6 +155,7 @@ export function activateBaasPush() {
   const onVisible = () => { if (document.visibilityState === "visible") syncPermission(); };
   const unsubscribe = subscribeToPush(resume);
   const unsubscribeInstall = subscribeToInstall(syncPermission);
+  const unsubscribeInstallation = subscribeToPushInstallation(syncInstallation);
   let permissionStatus: PermissionStatus | undefined;
   let disposed = false;
   void navigator.permissions?.query({ name: "notifications" }).then((result) => {
@@ -161,6 +175,7 @@ export function activateBaasPush() {
     permissionStatus?.removeEventListener("change", syncPermission);
     unsubscribe();
     unsubscribeInstall();
+    unsubscribeInstallation();
     window.removeEventListener("pagehide", pause);
     window.removeEventListener("pageshow", restore);
     window.removeEventListener("focus", syncPermission);

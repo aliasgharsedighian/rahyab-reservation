@@ -43,13 +43,13 @@ test('push registration uses the live cookie and sends only a validated web inst
   let token;
   let upstream = { status: 200, data: { success: true, status: 200 } };
   const received = [];
-  const { POST } = loadModule('app/api/push/installations/route.ts', {
+  const { GET, POST, DELETE } = loadModule('app/api/push/installations/route.ts', {
     'next/headers': { cookies: async () => ({ get: () => token ? { value: token } : undefined }) },
   }, {
     AbortSignal,
     process: { env: { NEXT_PUBLIC_API_ADDRESS: 'https://api.example/api/v1' } },
     fetch: async (url, init) => {
-      received.push({ url, auth: init.headers.Authorization, body: JSON.parse(init.body) });
+      received.push({ url, method: init.method, auth: init.headers.Authorization, body: init.body && JSON.parse(init.body) });
       return Response.json(upstream.data, { status: upstream.status });
     },
   });
@@ -82,6 +82,25 @@ test('push registration uses the live cookie and sends only a validated web inst
   assert.equal((await send()).status, 422);
   upstream = { status: 503, data: {} };
   assert.equal((await send()).status, 502);
+
+  const lookup = id => GET(new Request('https://app.example/api/push/installations?' + new URLSearchParams({ device_id: id })));
+  assert.equal((await lookup('')).status, 422);
+  for (const active of [true, false]) {
+    upstream = { status: 200, data: { success: true, status: 200, data: active } };
+    assert.deepEqual(await (await lookup('device / +?')).json(), { active });
+    assert.equal(received.at(-1).url, 'https://api.example/api/v1/push/installations/active?device_id=device+%2F+%2B%3F');
+    assert.equal(received.at(-1).method, 'GET');
+    assert.equal(received.at(-1).auth, 'Bearer account-b');
+  }
+  upstream = { status: 200, data: { success: true, status: 200, data: null } };
+  const remove = platform => DELETE(new Request('https://app.example/api/push/installations', {
+    method: 'DELETE', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ device_id: 'installation-1', platform }),
+  }));
+  assert.equal((await remove('app')).status, 422);
+  assert.equal((await remove('web')).status, 200);
+  assert.equal(received.at(-1).method, 'DELETE');
+  assert.deepEqual(received.at(-1).body, { device_id: 'installation-1', platform: 'web' });
 });
 
 test('BaaS resolves existing installations through refresh and tracks actual ID changes', async () => {
@@ -129,18 +148,15 @@ test('BaaS resolves existing installations through refresh and tracks actual ID 
   unsubscribe();
 });
 
-test('browser sync queues account changes, retries outages and waits for a different ID after 422', async () => {
+test('push on/off is shared, survives reopen and never posts from a background lookup', async () => {
+  let registered = true;
+  let failLookup = false;
+  let failWrite = false;
   let id = 'device-one';
-  let finishFirst;
   let notifyChange;
-  let timer;
-  let nextStatus = 200;
   const requests = [];
-  const window = Object.assign(new EventTarget(), {
-    setTimeout: callback => { timer = callback; return 1; },
-    clearTimeout: () => { timer = undefined; },
-  });
-  const { syncPushInstallationAfterLogin, observePushInstallation } = loadModule('lib/push-installation-sync.ts', {
+  const window = new EventTarget();
+  const { getPushInstallation, observePushInstallation, refreshPushInstallation, setPushInstallationEnabled } = loadModule('lib/push-installation-sync.ts', {
     './baas-core': { getBaasInstallationId: async () => id },
     './baas-installation': { subscribeToBaasInstallation: listener => {
       notifyChange = listener;
@@ -148,53 +164,105 @@ test('browser sync queues account changes, retries outages and waits for a diffe
     } },
   }, {
     window, navigator: {}, AbortSignal,
+    localStorage: { setItem() {} },
     process: { env: { NEXT_PUBLIC_BAAS_API_KEY: 'test-key' } },
     fetch: async (url, init) => {
-      requests.push({ url, method: init.method, body: JSON.parse(init.body) });
-      if (requests.length === 1) return new Promise(resolve => { finishFirst = resolve; });
-      return { status: nextStatus };
+      requests.push({ url, method: init.method ?? 'GET', body: init.body && JSON.parse(init.body) });
+      if (!init.method) return Response.json({ active: registered }, { status: failLookup ? 502 : 200 });
+      if (failWrite) return new Response(null, { status: 502 });
+      registered = init.method === 'POST';
+      return new Response(null);
     },
   });
   const flush = () => new Promise(setImmediate);
 
-  const stop = observePushInstallation();
+  let stop = observePushInstallation();
   await flush();
-  assert.equal(requests.length, 1);
-  syncPushInstallationAfterLogin();
+  assert.equal(getPushInstallation().status, 'on');
+  assert.equal(await setPushInstallationEnabled(false), true);
   await flush();
-  assert.equal(requests.length, 1, 'the previous account write finishes first');
-  finishFirst({ status: 200 });
-  await flush();
-  assert.equal(requests.length, 2);
-  window.dispatchEvent(new Event('focus'));
-  await flush();
-  assert.equal(requests.length, 2);
-
-  id = 'changed-device';
-  nextStatus = 502;
-  notifyChange();
-  await flush();
-  assert.equal(requests.length, 3);
-  assert.equal(typeof timer, 'function');
-  nextStatus = 422;
-  timer();
-  await flush();
-  assert.equal(requests.length, 4);
-  window.dispatchEvent(new Event('online'));
-  await flush();
-  assert.equal(requests.length, 4);
-  id = 'ready-device';
-  nextStatus = 200;
-  notifyChange();
-  await flush();
-  assert.deepEqual(requests.map(call => call.body.device_id), [
-    'device-one', 'device-one', 'changed-device', 'changed-device', 'ready-device',
-  ]);
-  assert.ok(requests.every(call => call.method === 'POST' && call.body.platform === 'web'));
+  assert.equal(getPushInstallation().status, 'off');
   stop();
-  window.dispatchEvent(new Event('focus'));
+  stop = observePushInstallation();
   await flush();
-  assert.equal(requests.length, 5);
+  assert.equal(getPushInstallation().status, 'off');
+  window.dispatchEvent(new Event('focus'));
+  id = 'device-two';
+  notifyChange();
+  await flush();
+  assert.equal(getPushInstallation().status, 'off');
+  assert.ok(requests.some(call => call.url.endsWith('device_id=device-two')));
+  assert.deepEqual(requests.filter(call => call.method !== 'GET'), [
+    { url: '/api/push/installations', method: 'DELETE', body: { device_id: 'device-one', platform: 'web' } },
+  ]);
+
+  failWrite = true;
+  assert.equal(await setPushInstallationEnabled(true), false);
+  await flush();
+  assert.equal(getPushInstallation().status, 'off');
+  failWrite = false;
+  assert.equal(await setPushInstallationEnabled(true), true);
+  await flush();
+  assert.equal(getPushInstallation().status, 'on');
+  assert.deepEqual(requests.filter(call => call.method === 'POST').at(-1)?.body, { device_id: 'device-two', platform: 'web' });
+
+  stop();
+  failLookup = true;
+  stop = observePushInstallation();
+  await flush();
+  assert.equal(getPushInstallation().status, 'error');
+  failLookup = false;
+  await refreshPushInstallation(true);
+  assert.equal(getPushInstallation().status, 'on');
+  stop();
+});
+
+test('disabling push disconnects the SDK and enabling with a grant never prompts again', async () => {
+  let installation = 'on';
+  const listeners = new Set();
+  let requests = 0;
+  let connects = 0;
+  let disconnects = 0;
+  const Notification = { permission: 'granted', requestPermission: async () => {
+    requests++;
+    return 'granted';
+  } };
+  class PushSdk {
+    onError() {}
+    async start() { connects++; return Notification.permission; }
+    disconnect() { disconnects++; }
+  }
+  const push = loadModule('lib/baas-push.ts', {
+    './baas-core': { initializeBaasCore: async () => ({}) },
+    './pwa-install': { getInstallState: () => ({ platform: 'desktop' }), subscribeToInstall: () => () => {} },
+    './push-installation-sync': {
+      getPushInstallation: () => ({ status: installation }),
+      subscribeToPushInstallation: listener => { listeners.add(listener); return () => listeners.delete(listener); },
+    },
+    'baas-web-sdk/push': { PushSdk },
+  }, {
+    window: Object.assign(new EventTarget(), { isSecureContext: true, Notification, WebSocket: {} }),
+    document: new EventTarget(), navigator: { serviceWorker: {} }, Notification,
+    process: { env: { NEXT_PUBLIC_BAAS_API_KEY: 'test-key' } },
+  });
+  const flush = () => new Promise(setImmediate);
+  await push.initializePushSdk();
+  push.setPushWorkerStatus('ready');
+  const stop = push.activateBaasPush();
+  await flush();
+  assert.equal(connects, 1);
+  installation = 'off';
+  for (const listener of listeners) listener();
+  assert.equal(disconnects, 1);
+  assert.equal(Notification.permission, 'granted');
+  assert.equal(await push.requestBaasPushPermission(), 'granted');
+  assert.equal(connects, 1, 'a browser grant alone does not restart disabled push');
+  installation = 'on';
+  for (const listener of listeners) listener();
+  await flush();
+  assert.equal(connects, 2);
+  assert.equal(requests, 0);
+  stop();
 });
 
 function checkLogout(location, reason, redirectTo) {
