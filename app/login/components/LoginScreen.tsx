@@ -22,19 +22,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { logIn, logOut, setToken } from "@/redux/features/auth-slice";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import Link from "next/link";
 import { KeyRoundIcon, ShieldCheckIcon, SmartphoneIcon } from "lucide-react";
 import { RulesModal } from "../../components/RulesModal";
 import { useRouter } from "next/navigation";
 import { clearClientSession } from "@/lib/api/client";
 import { getSafeRedirectTo } from "@/lib/api/session";
-import { ForgetPasswordModal } from "../../components/ForgetPasswordModal";
+// import { ForgetPasswordModal } from "../../components/ForgetPasswordModal";
 import { OtpLoginForm } from "./OtpLoginForm";
 
 const phoneRegex = new RegExp("^(\\+98|09)\\d{9}$");
@@ -52,21 +53,21 @@ const signinFormSchema = z.object({
   password: z.string().min(8, "حداقل ۸ کاراکتر وارد کنید"),
 });
 
-function LoginScreen() {
+function LoginScreen({ preferPassword = false }: { preferPassword?: boolean }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const settings = useSiteSettings();
   const onlinePayment = settings.find(({ key }) => key === "PAYMENT_TYPE")?.value === "online";
   const configuredLoginType = settings.find(({ key }) => key === "LOGIN_TYPE")?.value;
   const [loginType, setLoginType] = useState(
-    configuredLoginType === "online" || configuredLoginType === "otp" ? "otp" : "password",
+    !preferPassword && (configuredLoginType === "online" || configuredLoginType === "otp") ? "otp" : "password",
   );
-  const otpTab = useRef<HTMLButtonElement>(null);
+  // const otpTab = useRef<HTMLButtonElement>(null);
   const submittingPassword = useRef(false);
-  const forgotPasswordButton = useRef<HTMLButtonElement>(null);
+  // const forgotPasswordButton = useRef<HTMLButtonElement>(null);
 
   const [open, setOpen] = useState(false);
-  const [openForgetPasswordModal, setOpenForgetPasswordModal] = useState(false);
+  // const [openForgetPasswordModal, setOpenForgetPasswordModal] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isPendingLogin, setIsPendingLogin] = useState(false);
   const [isPendingOtp, setIsPendingOtp] = useState(false);
@@ -86,6 +87,9 @@ function LoginScreen() {
       password: "",
     },
   });
+  const recoveryMobile = useWatch({ control: loginForm.control, name: "mobile" })
+    .trim()
+    .replace(/^\+98(?=9)/, "0");
 
   const finishLogin = (
     data: { token: string; user: unknown },
@@ -130,6 +134,13 @@ function LoginScreen() {
       if (!result.success) {
         failLoginAttempt(attempt);
         if (result.errorCode) logAnalyticsError({ eventName: "api_error", operation: "login_with_password" }, result.errorCode);
+        if (result.fieldError) {
+          const { name, message } = result.fieldError;
+          const currentValue = loginForm.getValues(name);
+          if ((name === "mobile" ? currentValue.trim() : currentValue) === values[name]) {
+            loginForm.setError(name, { type: "server", message });
+          }
+        }
         toast.error(result.message, { id: toastId });
         return;
       }
@@ -183,7 +194,7 @@ function LoginScreen() {
             <CardContent>
               <Tabs dir="rtl" value={loginType} onValueChange={setLoginType} className="gap-3 md:gap-5">
                 <TabsList aria-label="روش ورود" className="grid w-full grid-cols-2">
-                  <TabsTrigger ref={otpTab} value="otp" disabled={isPendingLogin} className="whitespace-normal leading-tight">
+                  <TabsTrigger value="otp" disabled={isPendingLogin} className="whitespace-normal leading-tight">
                     <SmartphoneIcon aria-hidden="true" />
                     ورود با کد یکبار مصرف
                   </TabsTrigger>
@@ -229,7 +240,7 @@ function LoginScreen() {
                                     toEnglishDigits(event.target.value),
                                   )
                                 }
-                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
+                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition aria-invalid:focus:border-destructive aria-invalid:focus:ring-destructive/20"
                               />
                             </FormControl>
                             <FormMessage />
@@ -269,7 +280,7 @@ function LoginScreen() {
                               <PasswordInput
                                 placeholder="رمز عبور"
                                 {...field}
-                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition"
+                                className="h-11 rounded-lg bg-background border border-border focus:border-(--base-green) focus:ring-2 focus:ring-(--light-green) transition aria-invalid:focus:border-destructive aria-invalid:focus:ring-destructive/20"
                               />
                             </FormControl>
                             <FormMessage />
@@ -279,7 +290,7 @@ function LoginScreen() {
 
                       {/* Options */}
                       <div className="flex justify-between text-sm text-(--secondary-text)">
-                        <button
+                        {/* <button
                           ref={forgotPasswordButton}
                           type="button"
                           disabled={isPendingLogin}
@@ -289,7 +300,21 @@ function LoginScreen() {
                           <span className="cursor-pointer hover:text-green-600 transition">
                             فراموشی رمز؟
                           </span>
-                        </button>
+                        </button> */}
+                        {isPendingLogin ? (
+                          <span className="text-(--base-green) opacity-50">فراموشی رمز؟</span>
+                        ) : (
+                          <Link
+                            href={{
+                              pathname: "/login/forgot-password",
+                              query: /^\d{1,11}$/.test(recoveryMobile) ? { mobile: recoveryMobile } : undefined,
+                            }}
+                            prefetch={false}
+                            className="text-(--base-green) transition hover:text-green-600"
+                          >
+                            فراموشی رمز؟
+                          </Link>
+                        )}
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -327,7 +352,7 @@ function LoginScreen() {
 
       {/* Modal */}
       <RulesModal open={open} onOpenChange={setOpen} />
-      <ForgetPasswordModal
+      {/* <ForgetPasswordModal
         open={openForgetPasswordModal}
         onOpenChange={setOpenForgetPasswordModal}
         onSelectOtp={() => {
@@ -338,7 +363,7 @@ function LoginScreen() {
           event.preventDefault();
           (loginType === "otp" ? otpTab : forgotPasswordButton).current?.focus();
         }}
-      />
+      /> */}
     </div>
   );
 }

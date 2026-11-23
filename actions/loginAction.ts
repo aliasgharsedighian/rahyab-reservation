@@ -24,6 +24,7 @@ type LoginResponse =
       success: false;
       message: string;
       errorCode?: ErrorCode;
+      fieldError?: { name: keyof LoginCredentials; message: string };
     };
 
 export default async function loginAction(
@@ -63,9 +64,18 @@ export default async function loginAction(
         data: result.data,
       };
     }
+    const message = result.message || "ورود ناموفق بود.";
+    const status = response.ok ? result.status : response.status;
+    const mobileError = result.errors?.mobile?.[0];
+    const passwordError = result.errors?.password?.[0];
     return {
       success: false,
-      message: result.message || "ورود ناموفق بود.",
+      message,
+      fieldError: typeof mobileError === "string"
+        ? { name: "mobile", message: mobileError }
+        : typeof passwordError === "string" || status === 400 || status === 401 || status === 422
+          ? { name: "password", message: typeof passwordError === "string" ? passwordError : message }
+          : undefined,
     };
   } catch (error) {
     console.error("Login request failed", error);
