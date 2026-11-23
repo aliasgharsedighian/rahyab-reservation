@@ -5,6 +5,7 @@ import { BellOff, BellRing, LoaderCircle, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { refreshPushInstallation } from "@/lib/push-installation-sync";
+import { cn } from "@/lib/utils";
 import { pushPermissionHelp, useNotificationSetup } from "../../context/NotificationSetupContext";
 
 export default function PushNotificationControl() {
@@ -38,8 +39,14 @@ export default function PushNotificationControl() {
   if (installation.changing) description = installation.changing === "off" ? "در حال خاموش کردن اعلان‌ها…" : "در حال روشن کردن اعلان‌ها…";
 
   return (
-    <section aria-labelledby={titleId} className="flex flex-wrap items-center gap-3 rounded-2xl border border-(--base-green)/20 bg-(--light-green)/35 p-4 sm:gap-4 sm:p-5">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-(--light-green) text-(--base-green)">
+    <section aria-labelledby={titleId} className={cn(
+      "flex flex-wrap items-center gap-3 rounded-2xl border p-4 sm:gap-4 sm:p-5",
+      enabled ? "border-(--base-green)/25 bg-(--light-green)/35" : "bg-card",
+    )}>
+      <span className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-xl",
+        enabled ? "bg-(--light-green) text-green-700 dark:text-(--base-green)" : "bg-muted text-muted-foreground",
+      )}>
         <Icon className={busy ? "size-5 motion-safe:animate-spin" : "size-5"} aria-hidden="true" />
       </span>
       <div className="min-w-0 basis-40 grow space-y-1">
@@ -48,11 +55,16 @@ export default function PushNotificationControl() {
       </div>
       {known && (
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-xs font-medium" aria-hidden="true">{enabled ? "روشن" : "خاموش"}</span>
+          <span className={cn(
+            "text-xs font-bold",
+            enabled ? "text-green-700 dark:text-(--base-green)" : "text-muted-foreground",
+          )} aria-hidden="true">{enabled ? "روشن" : "خاموش"}</span>
           <Switch
             dir="ltr"
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
+            size="lg"
+            className="data-[state=checked]:bg-green-700 dark:data-[state=checked]:bg-(--base-green) data-[state=unchecked]:bg-slate-500 dark:data-[state=unchecked]:bg-slate-600 dark:[&_[data-slot=switch-thumb][data-state=checked]]:bg-green-950"
             checked={enabled}
             disabled={busy || (!enabled && !canEnable)}
             onCheckedChange={(checked) => { if (checked) showPushOffer(); else void disablePush(); }}

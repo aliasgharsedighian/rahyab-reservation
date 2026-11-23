@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { serverApiFetch } from "@/lib/api/server";
 import { getAnalyticsUserId } from "@/lib/analytics-identity";
 import AnalyticsErrorEvents from "@/app/components/AnalyticsErrorEvents";
@@ -39,12 +38,6 @@ export default async function ProfilePage({ searchParams }: Props) {
   const profile = await getProfileInfo(errorEvents);
   const foodPreferences = await getFoodPreferences(errorEvents);
 
-  async function revalidateData() {
-    "use server";
-
-    revalidatePath(`/dashboard/profile`);
-  }
-
   if (!profile || !foodPreferences) {
     return (
       <>
@@ -62,7 +55,6 @@ export default async function ProfilePage({ searchParams }: Props) {
         profile={profile}
         analyticsUserId={getAnalyticsUserId(profile)}
         foodPreferences={foodPreferences}
-        revalidateData={revalidateData}
       />
     </div>
   );

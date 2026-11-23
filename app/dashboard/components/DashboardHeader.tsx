@@ -11,9 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { logIn, userInfoAccess } from "@/redux/features/auth-slice";
-import { Button } from "@/components/ui/button";
-import { MoonStar, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import DashboardThemeToggle from "./DashboardThemeToggle";
 import ForcedPasswordChangeModal from "./ForcedPasswordChangeModal";
 import HeaderReserveCart from "./HeaderReserveCart";
 
@@ -47,13 +45,8 @@ function DashboardHeader({
     };
   }, [stickyHeightVariable]);
 
-  const { resolvedTheme, setTheme } = useTheme();
   const dispatch = useDispatch();
   const userInfoRedux = useSelector(userInfoAccess);
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  };
 
   const getProfileDetail = useCallback(async () => {
     try {
@@ -92,16 +85,7 @@ function DashboardHeader({
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-4 lg:gap-6">
           <HeaderReserveCart />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            aria-label="تغییر حالت روشن یا تیره"
-          >
-            <Sun className="hidden size-4 dark:block" aria-hidden="true" />
-            <MoonStar className="size-4 dark:hidden" aria-hidden="true" />
-          </Button>
+          <DashboardThemeToggle />
 
           <NotificationBell />
 

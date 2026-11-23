@@ -4,11 +4,10 @@ import { apiClient } from "@/lib/api/client";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Building2Icon, CameraIcon, IdCardIcon, KeyRoundIcon, Loader2, MailIcon, PhoneCallIcon } from "lucide-react";
+import { Building2Icon, CameraIcon, IdCardIcon, KeyRoundIcon, LayersIcon, Loader2, MailIcon, PhoneCallIcon, ShieldCheckIcon } from "lucide-react";
 import IntrestProfile from "./IntrestProfile";
 import type { FoodPreferences, Profile, ProfileFormValues, ProfileMutationResponse } from "../types";
 
@@ -50,36 +49,63 @@ export default function ProfileForm({ profile, foodPreferences }: { profile: Pro
     await uploadAvatar(selected);
   };
 
+  const accountFields = [
+    ["شرکت", profile.company_name, Building2Icon],
+    ["دپارتمان", profile.departeman_name, LayersIcon],
+    ["کد پرسنلی", profile.employee_code, IdCardIcon, "ltr"],
+    ["دسترسی", profile.is_admin ? "ادمین" : "کاربر عادی", ShieldCheckIcon],
+    ["موبایل", profile.mobile, PhoneCallIcon, "ltr"],
+    ["ایمیل", profile.email, MailIcon],
+  ] as const;
+
+  // Retained with the original personal information section for possible reuse.
+  /*
   const personalFields = [
     ["نام", profile.name], ["نام خانوادگی", profile.family],
     ["موبایل", profile.mobile], ["ایمیل", profile.email || "ثبت نشده"],
     ["کد پرسنلی", profile.employee_code], ["شرکت", profile.company_name],
     ["دپارتمان", profile.departeman_name], ["دسترسی", profile.is_admin ? "ادمین" : "کاربر عادی"],
   ] as const;
+  */
 
   return (
     <div className="@container/profile-form min-w-0 space-y-4" dir="rtl">
-      <section aria-label="خلاصه حساب کاربری" className="flex min-w-0 items-start gap-4 rounded-xl border bg-card p-4 sm:items-center sm:p-5">
-        <div className="relative shrink-0">
-          <button type="button" aria-label="تغییر تصویر پروفایل" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className="relative block size-20 overflow-hidden rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--base-green) disabled:opacity-50 sm:size-24">
+      <section aria-labelledby="profile-name" className="min-w-0 overflow-hidden rounded-2xl border bg-card">
+        <div className="flex min-w-0 items-center gap-4 border-b bg-linear-to-l from-(--light-green) to-card p-4 sm:gap-5 sm:p-6">
+          <button
+            type="button"
+            aria-label="تغییر تصویر پروفایل"
+            aria-busy={isUploading}
+            disabled={isUploading}
+            onClick={() => fileInputRef.current?.click()}
+            className="group relative size-16 shrink-0 cursor-pointer rounded-full border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--base-green) disabled:cursor-wait sm:size-20"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview || profile.avatar_url || "/assets/images/blank-profile.webp"} alt={"تصویر پروفایل " + profile.name} className="size-full object-cover" />
-            {isUploading && <span className="absolute inset-0 flex items-center justify-center bg-black/30"><Loader2 className="size-7 animate-spin text-white" aria-hidden="true" /></span>}
+            <img src={preview || profile.avatar_url || "/assets/images/blank-profile.webp"} alt="" className="size-full rounded-full object-cover" />
+            <span className="absolute -bottom-1 -left-1 grid size-7 place-items-center rounded-full border bg-card text-green-700 shadow-sm group-hover:bg-(--light-green) dark:text-(--base-green)">
+              {isUploading
+                ? <Loader2 className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+                : <CameraIcon className="size-4" aria-hidden="true" />}
+            </span>
           </button>
-          <Button type="button" variant="outline" size="icon" aria-label="انتخاب عکس پروفایل" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -left-1 rounded-full border-(--base-green) bg-card text-(--base-green)"><CameraIcon className="size-4" /></Button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" aria-label="فایل تصویر پروفایل" onChange={handleAvatarChange} />
+          <h2 id="profile-name" className="min-w-0 text-lg font-bold leading-relaxed wrap-anywhere sm:text-2xl">{profile.name} {profile.family}</h2>
         </div>
-        <div className="min-w-0 space-y-2">
-          <h2 className="break-words text-lg font-bold leading-7 sm:text-xl">{profile.name} {profile.family}</h2>
-          <div className="space-y-1.5 text-xs leading-6 text-(--secondary-text) sm:text-sm">
-            <p className="flex items-start gap-2"><Building2Icon className="mt-1 size-4 shrink-0" aria-hidden="true" /><span className="wrap-anywhere">{profile.departeman_name} - {profile.company_name}</span></p>
-            <p className="flex items-start gap-2"><PhoneCallIcon className="mt-1 size-4 shrink-0" aria-hidden="true" /><bdi dir="ltr">{profile.mobile}</bdi></p>
-            <p className="flex items-start gap-2"><MailIcon className="mt-1 size-4 shrink-0" aria-hidden="true" /><span className="wrap-anywhere">{profile.email || "ثبت نشده"}</span></p>
-            <p className="flex items-start gap-2"><IdCardIcon className="mt-1 size-4 shrink-0" aria-hidden="true" /><span className="wrap-anywhere">کد پرسنلی: {profile.employee_code}</span></p>
-          </div>
-        </div>
+        <dl className="grid gap-4 px-4 py-5 @min-[24rem]/profile-form:grid-cols-2 @min-[38rem]/profile-form:grid-cols-3 sm:px-6">
+          {accountFields.map(([label, value, Icon, dir]) => (
+            <div key={label} className="min-w-0 space-y-1">
+              <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Icon className="size-4 shrink-0 text-green-700 dark:text-(--base-green)" aria-hidden="true" />
+                {label}
+              </dt>
+              <dd className="ps-6 text-sm leading-6 wrap-anywhere">
+                <bdi dir={value ? dir : "auto"}>{value || "ثبت نشده"}</bdi>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
-      <section aria-labelledby="personal-information-title" className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+      {/* <section aria-labelledby="personal-information-title" className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
         <h2 id="personal-information-title" className="text-lg font-bold">اطلاعات شخصی</h2>
         <div className="grid min-w-0 grid-cols-1 gap-4 @min-[30rem]/profile-form:grid-cols-2">
           {personalFields.map(([label, value], index) => (
@@ -89,13 +115,13 @@ export default function ProfileForm({ profile, foodPreferences }: { profile: Pro
             </div>
           ))}
         </div>
-      </section>
+      </section> */}
       <div className="grid min-w-0 grid-cols-1 items-stretch gap-4 @min-[42rem]/profile-form:grid-cols-2">
-        <section aria-labelledby="food-preferences-title" className="flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4 sm:p-5">
+        <section aria-labelledby="food-preferences-title" className="flex min-w-0 flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-5">
           <h2 id="food-preferences-title" className="text-lg font-bold">علاقه‌مندی‌ها</h2>
           <IntrestProfile form={form} foodPreferences={foodPreferences} userFoodPreferences={profile.food_preferences} />
         </section>
-        <section aria-labelledby="change-password-title" className="flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4 sm:p-5">
+        <section aria-labelledby="change-password-title" className="flex min-w-0 flex-col gap-4 rounded-2xl border bg-card p-4 sm:p-5">
           <h2 id="change-password-title" className="text-lg font-bold">تغییر رمز عبور</h2>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmitChangePassword)} className="flex flex-1 flex-col gap-4">
